@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.2 |
+| 현재 버전 | v0.3 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.6, `docs/2-PRD.md` v0.7, `docs/3-user-scenario.md` v0.4, `docs/4-wireframe.md` v0.3 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/2-PRD.md` v0.8, `docs/3-user-scenario.md` v0.5, `docs/4-wireframe.md` v0.4 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -18,6 +18,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 |------|------|--------|-----------|---------|
 | v0.1 | 2026-11-04 | - | 초안 작성 | PR-01~08, 전체 |
 | v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. `JWT_SECRET` 48자 이상(6.1), 두 쿠키·HS384 고정·리프레시 해시만 저장(6.2), `routes/auth.js`·`repositories/refresh-token-repo.js`·`middlewares/auth.js` 주석(7.2), `api/client.ts` 주석(7.3), 서비스 테스트 대상에 리프레시 회전·재사용 탐지·로그아웃 폐기(5장), 참조 버전 갱신 | 문서 정보, 5장, 6.1, 6.2, 7.2, 7.3 |
+| v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. 3.3·부록 B의 스토어 초기화 조건을 로그아웃·리프레시 실패로 한정(`UNAUTHORIZED` 수신만으로는 아님), 5장 자동 테스트 범위에 서비스 테스트 명시·US-19 조건, 7.1 docs 목록 갱신(AD-C1), 7.2 tests에 `load.js`, 7.3 `todos.ts`에 `get`, 참조 버전 갱신 | 문서 정보, 3.3, 5장, 7.1, 7.2, 7.3, 부록 B |
 
 ---
 
@@ -97,7 +98,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 | 등록·수정·삭제·완료·카테고리 변경 | TanStack Query mutation | 성공 시 관련 쿼리 invalidate. 낙관적 업데이트 없음 (PRD 4.2) |
 | 폼 입력값, 대화상자 열림, 모바일 메뉴 열림 | 컴포넌트 `useState` | 화면을 벗어나면 버릴 값. 스토어에 올리지 않는다 |
 
-- 로그아웃과 `UNAUTHORIZED` 수신 시 `queryClient.clear()`와 스토어 `reset()`을 함께 호출한다 (PRD 4.2, US-03). 스토어는 파일 1개로 두어 `reset()` 하나로 끝낸다.
+- 로그아웃과 리프레시·재시도 실패 시 `queryClient.clear()`와 스토어 `reset()`을 함께 호출한다 (PRD 4.2, US-03). `UNAUTHORIZED` 수신만으로는 호출하지 않는다 (refresh 1회가 먼저, 7.3 `client.ts`). 스토어는 파일 1개로 두어 `reset()` 하나로 끝낸다.
 
 ### 3.4 순환 의존 금지
 
@@ -136,7 +137,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 
 ## 5. 테스트·품질 원칙
 
-2일 일정에 맞춰 자동 테스트는 R-05의 세 가지로 제한한다. 나머지는 US로 수동 검증한다.
+2일 일정에 맞춰 자동 테스트는 R-05의 세 가지와 아래 표의 서비스 테스트로 제한한다. 나머지는 US로 수동 검증한다.
 
 | 종류 | 대상 | 위치 | 도구 |
 |------|------|------|------|
@@ -144,7 +145,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 | 단위 | BR-35 조회 기간 계산. 수용 기준 예(anchorDate 11-03 → 주 11-02~11-08, 월 10-26~12-06) | `frontend/src/lib/calendar-range.test.ts` | `vitest` |
 | 서비스 | 서비스 단위로 검증 가능한 BR 수용 기준: BR-04, BR-06, BR-11, BR-13, BR-14, BR-15(롤백 포함), BR-17, BR-22, BR-46 개수 제한. 인증은 리프레시 회전, 재사용 탐지, 로그아웃 폐기(NFR-06, PRD 6.4). 실제 테스트 DB에 대고 실행하며 `pg`를 mock하지 않는다 | `backend/tests/*-service.test.js` | `node --test` |
 | API 스모크 | 실행 중인 서버에 `fetch`로 US-02, US-12, US-17의 응답 코드·건수를 확인하는 스크립트 1벌 | `backend/tests/smoke.js` | Node 내장 `fetch` |
-| 수동 | 화면 흐름 전부. PRD 9.1 체크리스트를 US-01~19 순서로 수행 | `docs/3-user-scenario.md` | 브라우저 |
+| 수동 | 화면 흐름 전부. PRD 9.1 체크리스트를 US-01~19 순서로 수행 (US-19는 F-03 구현 시) | `docs/3-user-scenario.md` | 브라우저 |
 
 - 테스트 이름은 ID로 시작한다. 예: `ST-01 완료는 날짜와 무관`, `BR-15 이동 실패 시 카테고리 유지`.
 - 실행 명령은 각 패키지에서 `npm test` 하나다. 백엔드는 `node --env-file=.env.test --test tests/`, 프론트는 `vitest run`. 스모크는 `npm run smoke`로 분리한다 (서버가 떠 있어야 한다).
@@ -199,7 +200,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 todolist_app/
 ├── backend/        # Express API, 마이그레이션, 시드, 테스트
 ├── frontend/       # Vite + React SPA
-├── docs/           # 설계 문서 (1~5, 작성 예정 6)
+├── docs/           # 설계 문서 (1~8, schema.sql, assets/; 작성 예정 9-api-design.md, perf-result.md)
 ├── prompts/        # 문서 생성 프롬프트
 ├── .gitignore      # node_modules, dist, .env, .env.test
 └── README.md       # 실행 순서 3줄 (DB 생성 → migrate·seed → dev)
@@ -250,6 +251,7 @@ backend/
     ├── auth-service.test.js
     ├── category-service.test.js
     ├── todo-service.test.js
+    ├── load.js             # k6 부하 시나리오 (PRD 5.1, NFR-01~03)
     └── smoke.js            # 실행 중 서버에 US-02, US-12, US-17 확인
 ```
 
@@ -278,7 +280,7 @@ frontend/
     │   ├── client.ts       # fetch 래퍼: credentials 포함, {code,message} 파싱, UNAUTHORIZED → refresh 1회(동시 요청은 1개 공유) → 재시도 → 실패 시 reset·/login
     │   ├── auth.ts         # signup, login, logout, refresh, me
     │   ├── categories.ts
-    │   └── todos.ts        # list(filter, today), range(from, to, today), create, update, setCompleted, remove
+    │   └── todos.ts        # list(filter, today), range(from, to, today), get(id, today), create, update, setCompleted, remove
     ├── queries/            # TanStack Query hooks. 쿼리 키·invalidate 규칙은 여기만
     │   ├── use-categories.ts
     │   └── use-todos.ts
@@ -359,7 +361,7 @@ frontend/
 - [ ] 3.1 서비스에 `req`/`res`가 없고 SQL은 저장소에만 있다
 - [ ] 3.1 BR-11, BR-15가 서비스 트랜잭션으로 묶였다
 - [ ] 3.3 서버 데이터는 TanStack Query, UI 상태는 Zustand 1개 파일에만 있다
-- [ ] 3.3 로그아웃·`UNAUTHORIZED`에서 `queryClient.clear()`와 `reset()`을 호출한다
+- [ ] 3.3 로그아웃·리프레시 실패에서 `queryClient.clear()`와 `reset()`을 호출한다
 - [ ] 3.5 허용 목록 밖 패키지를 설치하지 않았거나 세 기준을 기록했다
 - [ ] 4장 snake_case → camelCase 변환이 저장소 SELECT 별칭에만 있다
 - [ ] 5장 `npm test`로 ST-01~04 4건과 BR-35 예시가 통과한다

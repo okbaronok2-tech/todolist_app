@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.7 |
+| 현재 버전 | v0.8 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.6, `docs/3-user-scenario.md` v0.4, `docs/4-wireframe.md` v0.3, `docs/5-project-principle.md` v0.2 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/3-user-scenario.md` v0.5, `docs/4-wireframe.md` v0.4, `docs/5-project-principle.md` v0.3 |
 
 ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 (재정의하지 않는다). 이 문서에서 새로 부여하는 ID는 SC(화면), NFR(비기능 요구), R(리스크), A(가정), PD(결정 대기)이며 도메인 정의서 ID와 충돌하지 않는다. 수치에 "가정"이 붙은 것은 측정값이 아니라 목표 설정을 위한 가정이다.
 
@@ -23,6 +23,7 @@ ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 
 | v0.5 | 2026-11-04 | - | 와이어프레임 교차 검토 반영. 내 정보 메뉴 숨김 조건(4.1), 서버 검증 오류의 필드 표시·SC-07 `NOT_FOUND` 재조회(4.2), 모바일 월 뷰 상태 생략·주 뷰 세로 목록 허용(4.3), 참조 문서 갱신 | 문서 정보, 4.1, 4.2, 4.3 |
 | v0.6 | 2026-11-04 | - | 설계 원칙 문서 반영. API 경로 접두어 `/api`·헬스체크(6.3), 프론트 BR-35 단위 테스트(R-05), API 설계 문서는 `docs/9-api-design.md`(6·7·8번은 아키텍처 다이어그램·ERD·실행 계획) | 문서 정보, 6.3, 10.1 |
 | v0.7 | 2026-11-04 | - | 인증 방식 변경. 액세스 토큰 JWT HS384(15분) + 리프레시 토큰(불투명 난수, DB 해시 저장, 회전·재사용 탐지)으로 교체(NFR-06, 6.4). 클라이언트는 `UNAUTHORIZED` 시 refresh 1회 후 재시도(4.2). 로그아웃은 리프레시 폐기 + 두 쿠키 삭제(4.2). `auth` 리소스에 refresh 추가(6.3). `refresh_tokens` 테이블·인덱스(7장). Day 1 오전 작업(8장). R-06 교체, PD-01 결정 변경(closed). 부하 테스트 k6 401 → refresh 재시도(5.1). 참조 버전 갱신 | 문서 정보, 4.2, 5.1, NFR-06, 6.3, 6.4, 7, 8, 10.1, 10.2, 11 |
+| v0.8 | 2026-11-04 | - | 8문서 교차 검토 반영. 4.2 인증 만료·6.4 클라이언트에 `queryClient.clear()` 명시, 7장 `token_hash` 컬럼 UNIQUE 중복 정의 제거(인덱스 `refresh_tokens_token_hash_uk`로 일원화), 참조 버전 갱신 | 문서 정보, 4.2, 6.4, 7 |
 
 ---
 
@@ -118,7 +119,7 @@ F-11을 P0에 둔 이유: F-02(카테고리별 등록)와 F-05(카테고리 필�
 - 삭제(SC-03, UC-08): 확인 대화상자에서 확정해야 삭제하며, 삭제 후 목록에서 사라진다 (BR-27).
 - 목록 필터(SC-03, UC-09): 필터 UI는 단일 선택 2개다 (BR-31). 모든 목록·캘린더 요청에 클라이언트 로컬 날짜 `YYYY-MM-DD`를 `today`로 포함한다 (D-05).
 - 캘린더(SC-05, UC-10): 클라이언트가 BR-35로 조회 기간 `from`/`to`를 산정해 요청한다 (6.3). 날짜 칸 배치는 BR-33, 표시는 BR-36을 따른다. 기본 진입 뷰는 월, anchorDate는 오늘이다 (가정). 캘린더에서 직접 생성·완료 처리는 하지 않는다 (D-12).
-- 인증 만료: 응답 `code`가 `UNAUTHORIZED`이고 요청이 `/api/auth/*`가 아니면 클라이언트(`api/client.ts`)가 `POST /api/auth/refresh`를 1회 호출하고, 성공하면 원 요청을 1회 재시도한다. 동시에 여러 요청이 실패하면 진행 중인 리프레시 1개를 공유한다. 리프레시 실패 또는 재시도 응답도 `UNAUTHORIZED`일 때만 스토어 초기화 후 SC-01로 이동한다 (BR-53, 6.4). 사용자는 액세스 토큰 만료를 느끼지 못한다. HTTP 401이라도 `INVALID_CREDENTIALS`(SC-01 로그인, SC-06 비밀번호 변경)는 현재 화면을 유지하고 오류를 표시한다.
+- 인증 만료: 응답 `code`가 `UNAUTHORIZED`이고 요청이 `/api/auth/*`가 아니면 클라이언트(`api/client.ts`)가 `POST /api/auth/refresh`를 1회 호출하고, 성공하면 원 요청을 1회 재시도한다. 동시에 여러 요청이 실패하면 진행 중인 리프레시 1개를 공유한다. 리프레시 실패 또는 재시도 응답도 `UNAUTHORIZED`일 때만 TanStack Query 캐시(`queryClient.clear()`)와 스토어 초기화 후 SC-01로 이동한다 (BR-53, 6.4). 사용자는 액세스 토큰 만료를 느끼지 못한다. HTTP 401이라도 `INVALID_CREDENTIALS`(SC-01 로그인, SC-06 비밀번호 변경)는 현재 화면을 유지하고 오류를 표시한다.
 - 리소스 없음: 편집 화면(SC-04) 진입 시 `NOT_FOUND`를 받으면 오류 메시지를 표시하고 SC-03으로 이동한다. 목록(SC-03)의 수정·완료·삭제 요청, 카테고리 관리(SC-07)의 이름 변경·삭제 요청이 `NOT_FOUND`면 오류를 표시하고 해당 목록을 다시 조회한다.
 - 캘린더 이동(SC-05): [이전]/[다음]은 anchorDate를 월 뷰에서는 이전/다음 달 1일로, 주 뷰에서는 ±7일, 일 뷰에서는 ±1일로 옮긴다. [오늘]은 anchorDate를 today로 되돌린다.
 - 카테고리 관리(SC-07, UC-11): 기본 카테고리의 삭제·이름 변경 버튼은 비활성이다 (BR-13, BR-17). 삭제 확인 대화상자에 소속 할일이 기본 카테고리로 이동함을 안내한다 (BR-15).
@@ -202,7 +203,7 @@ NFR-06의 액세스 토큰(JWT HS384, 15분) + 리프레시 토큰(불투명 난
 - 발급: 가입·로그인 성공 시 액세스·리프레시 토큰을 둘 다 발급하고 `refresh_tokens`에 행을 삽입한다. 로그인 시 그 사용자의 만료·폐기된 행을 삭제한다 (별도 정리 작업 없음).
 - `POST /api/auth/refresh`: 인증 미들웨어를 거치지 않는다. `refresh_token` 쿠키의 해시로 행을 조회한다. 행 없음 또는 `expires_at` 경과면 401 `UNAUTHORIZED` + 두 쿠키 삭제. `revoked_at`이 이미 있으면(재사용 탐지) 그 사용자의 리프레시 행 전부를 `revoked_at = now()`로 폐기한 뒤 401 + 두 쿠키 삭제. 정상이면 회전한다: 기존 행 `revoked_at = now()`, 새 행 삽입, 새 액세스·리프레시 쿠키 발급, 200 `{ user: { id, name } }`. 회전은 한 트랜잭션이다.
 - `POST /api/auth/logout`: 인증 미들웨어를 거치지 않는다(액세스 만료 상태에서도 로그아웃 가능). `refresh_token` 쿠키가 있고 행이 있으면 `revoked_at = now()`. 항상 두 쿠키를 `Max-Age=0`으로 삭제하는 응답, 204. `HttpOnly` 쿠키는 클라이언트가 직접 지울 수 없다.
-- 클라이언트: `UNAUTHORIZED` 수신 시 refresh 1회 → 원 요청 재시도 → 실패 시 SC-01 이동 (4.2 인증 만료).
+- 클라이언트: `UNAUTHORIZED` 수신 시 refresh 1회 → 원 요청 재시도 → 실패 시 `queryClient.clear()`·스토어 초기화 후 SC-01 이동 (4.2 인증 만료).
 - 서버 측 무효화: 로그아웃·재사용 탐지로 리프레시 토큰은 DB에서 폐기된다. 액세스 토큰 블랙리스트는 없고, 로그아웃 후 최대 15분 잔존한다. 이 잔존은 MVP에서 수용한다 (R-06).
 - 오류 코드는 BR-51 목록 그대로다. 리프레시 실패도 `UNAUTHORIZED`다.
 
@@ -222,7 +223,7 @@ TodoStatus는 DB에 저장하지 않고 서버가 요청마다 ST-01~04 순서�
 | `users` | User | email 대소문자 무시 유일(BR-04), password는 해시 저장 |
 | `categories` | Category | 사용자당 기본 카테고리 1개(BR-13), 이름 정규화 후 사용자 내 유일(BR-14) |
 | `todos` | Todo | 상태 컬럼 없음(도메인 정의서 4.2). BR-22(`start_date <= end_date`), BR-28(`is_completed = (completed_at IS NOT NULL)`)은 `CHECK` 제약으로 보장 |
-| `refresh_tokens` | - (기술 엔티티, NFR-06) | `id BIGINT GENERATED ALWAYS AS IDENTITY PK`, `user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE`, `token_hash CHAR(64) NOT NULL UNIQUE`(SHA-256 hex), `expires_at TIMESTAMPTZ NOT NULL`, `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`, `revoked_at TIMESTAMPTZ NULL`. 리프레시 토큰 원문은 저장하지 않는다 |
+| `refresh_tokens` | - (기술 엔티티, NFR-06) | `id BIGINT GENERATED ALWAYS AS IDENTITY PK`, `user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE`, `token_hash CHAR(64) NOT NULL`(SHA-256 hex, 유일성은 아래 인덱스 `refresh_tokens_token_hash_uk`), `expires_at TIMESTAMPTZ NOT NULL`, `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`, `revoked_at TIMESTAMPTZ NULL`. 리프레시 토큰 원문은 저장하지 않는다 |
 
 인덱스 후보:
 

@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 아키텍처 다이어그램 |
-| 현재 버전 | v0.3 |
+| 현재 버전 | v0.4 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.6, `docs/2-PRD.md` v0.7, `docs/3-user-scenario.md` v0.4, `docs/4-wireframe.md` v0.3, `docs/5-project-principle.md` v0.2, `docs/7-erd.md` v0.2 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/2-PRD.md` v0.8, `docs/3-user-scenario.md` v0.5, `docs/4-wireframe.md` v0.4, `docs/5-project-principle.md` v0.3, `docs/7-erd.md` v0.3 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어그램)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임, PR은 프로젝트 원칙의 ID를 참조만 하며 재정의하지 않는다. 다이어그램은 모두 mermaid 코드 블록이다. 문서 간 표현이 다른 지점은 PRD를 기준으로 그리고 10장에 나열한다.
 
@@ -19,6 +19,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어�
 | v0.1 | 2026-11-04 | - | 초안 작성 | AD-01~15 |
 | v0.2 | 2026-11-04 | - | AD-05 ERD를 docs/7-erd.md로 분리 | 문서 정보, 4장, AD-05, 8장 |
 | v0.3 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. AD-07·AD-08을 HS384·두 쿠키 발급으로 수정, AD-06에 refresh·logout 비보호 경로, AD-14 로그아웃을 인증 미들웨어 없이 리프레시 폐기 + 두 쿠키 삭제로 수정, AD-16(액세스 만료 → 리프레시 → 재시도) 추가, AD-01·AD-04 라벨, AD-A3 변경됨, AD-C8 해결, 참조 버전 갱신 | 문서 정보, 1.2, AD-01, AD-04, AD-06, AD-07, AD-08, AD-14, AD-16, 8장, AD-A3, AD-C8 |
+| v0.4 | 2026-11-04 | - | 8문서 교차 검토 반영. AD-09 인증 실패 분기를 AD-16 리프레시·재시도 후 실패 시 이동으로 수정, AD-14에 auth-service 참여자 추가(라우트는 DB를 직접 호출하지 않음, 원칙 3장), 1장 문서 수 6개·API 설계 문서 경로, 참조 버전 갱신 | 문서 정보, 1장, AD-09, AD-14 |
 
 ---
 
@@ -26,13 +27,13 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어�
 
 ### 1.1 목적
 
-5개 설계 문서에 흩어진 구조·흐름을 그림 한 벌로 모아, 구현자가 레이어 배치·요청 처리 순서·검증 순서·상태 판정을 문서와 대조할 수 있게 한다. 새 규칙을 정하지 않는다.
+6개 설계 문서에 흩어진 구조·흐름을 그림 한 벌로 모아, 구현자가 레이어 배치·요청 처리 순서·검증 순서·상태 판정을 문서와 대조할 수 있게 한다. 새 규칙을 정하지 않는다.
 
 ### 1.2 읽는 법
 
 - 시퀀스 다이어그램의 participant 약어: U 사용자, FE 프론트엔드(React SPA), MW 인증 미들웨어(`middlewares/auth.js`), RT 라우트(`routes/*.js` + `validate.js`), SV 서비스(`services/*.js`), RP 저장소(`repositories/*.js`), DB PostgreSQL 17, EH 오류 미들웨어(`middlewares/error-handler.js`).
 - 거부 응답은 모두 `AppError` → 오류 미들웨어 → `{ code, message }` + HTTP status(PRD 6.3) 경로를 지난다 (PR-06). 시퀀스에서는 지면을 줄이기 위해 `BE-->>FE: 4xx CODE` 한 줄로 축약한다.
-- API 함수명(`todos.create` 등)은 프로젝트 원칙 7.3 `api/todos.ts`의 함수다. 엔드포인트 경로·메서드 상세는 API 설계 문서(작성 예정)에서 정하므로, 원칙 7.2에 적힌 `POST /api/auth/signup|login|logout|refresh`와 PRD 6.3의 `GET /api/health` 외에는 경로를 쓰지 않는다.
+- API 함수명(`todos.create` 등)은 프로젝트 원칙 7.3 `api/todos.ts`의 함수다. 엔드포인트 경로·메서드 상세는 API 설계 문서(`docs/9-api-design.md`, 작성 예정)에서 정하므로, 원칙 7.2에 적힌 `POST /api/auth/signup|login|logout|refresh`와 PRD 6.3의 `GET /api/health` 외에는 경로를 쓰지 않는다.
 - 날짜는 전 구간 `YYYY-MM-DD` 문자열이다 (PR-05). today = 클라이언트 로컬 날짜 (D-05).
 
 ---
@@ -361,7 +362,7 @@ sequenceDiagram
     FE->>MW: todos.create(body) 또는 todos.update(id, body)
     alt 1 인증 실패 (BR-01)
         MW-->>FE: 401 UNAUTHORIZED
-        FE->>U: SC-01 이동 (BR-53, US-16)
+        Note over FE: AD-16 리프레시 1회 → 재시도. 재시도도 실패할 때만 SC-01 이동 (BR-53, US-16)
     else 인증 통과
         MW->>RT: req.userId
         RT->>RT: 2 형식·길이: title 공백 제거 1~100자 (BR-21, BR-41), description 1000자 이하 (BR-42), startDate·endDate 존재·YYYY-MM-DD (BR-21)
@@ -578,6 +579,7 @@ sequenceDiagram
     participant NAV as TopNav (CP-01)
     participant Q as queries 로그아웃 mutation
     participant RT as 라우트 auth.js
+    participant SV as auth-service
     participant DB as PostgreSQL
     participant STORE as app-store (Zustand)
 
@@ -585,10 +587,11 @@ sequenceDiagram
     NAV->>Q: logout()
     Q->>RT: POST /api/auth/logout + Cookie refresh_token (인증 미들웨어 없음)
     alt refresh_token 쿠키 있음
-        RT->>DB: UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = SHA-256(쿠키)
+        RT->>SV: logout(refreshToken)
+        SV->>DB: UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = SHA-256($1) (refresh-token-repo)
         Note over DB: 행이 없어도 오류 아님
     else 쿠키 없음
-        Note over RT: DB 접근 없음
+        Note over RT: 서비스·DB 접근 없음
     end
     RT-->>Q: 204 + Set-Cookie token= Max-Age=0 (Path=/) + Set-Cookie refresh_token= Max-Age=0 (Path=/api/auth)
     Q->>Q: queryClient.clear() (TanStack Query 캐시 초기화)

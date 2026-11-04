@@ -1,0 +1,1322 @@
+# =============================================================================
+# 문서명    : TodoList API 명세 (OpenAPI 3.0.3)
+# 현재 버전 : v0.1
+# 상태      : 초안
+# 작성일    : 2026-11-04
+# 참조 문서 :
+#   - docs/1-domain-definition.md v0.7
+#   - docs/2-PRD.md v0.8 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+#   - docs/3-user-scenario.md v0.5
+#   - docs/5-project-principle.md v0.3
+#   - docs/6-arch-diagram.md v0.4
+#   - docs/7-erd.md v0.3
+#   - docs/8-plan.md v0.3
+#   - docs/schema.sql
+#
+# 변경 이력
+# | 버전 | 날짜       | 작성자 | 변경 내용 | 영향 범위 |
+# |------|------------|--------|-----------|-----------|
+# | v0.1 | 2026-11-04 | -      | 초안 작성 | 전체      |
+#
+# 아래 x-document-info, x-changelog는 이 주석과 같은 내용을 기계가 읽도록 둔 것이다.
+# =============================================================================
+openapi: 3.0.3
+
+info:
+  title: TodoList API
+  version: 0.1.0
+  description: |
+    TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.
+
+    ## 참조 문서
+    - `docs/1-domain-definition.md` v0.7 (F, UC, BR, ST, D)
+    - `docs/2-PRD.md` v0.8 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+    - `docs/3-user-scenario.md` v0.5 (US, 예시 데이터)
+    - `docs/5-project-principle.md` v0.3 (4장 API 규칙, 6.2 쿠키)
+    - `docs/6-arch-diagram.md` v0.4 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
+    - `docs/7-erd.md` v0.3
+    - `docs/8-plan.md` v0.3 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
+    - `docs/schema.sql`
+
+    ## 공통 규칙
+    - 모든 경로는 `/api` 접두어를 가진다 (PRD 6.3).
+    - 필드명은 camelCase (원칙 4장). id는 정수(DB `BIGINT`)를 JSON 숫자로 보낸다 (PRD 7장).
+    - 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열이다 (PRD 7장, PR-05). 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열이다.
+    - 인증: 쿠키 `token`(액세스, JWT HS384, 15분)과 `refresh_token`(리프레시, 불투명, 14일, `Path=/api/auth`). 비보호 경로는 `GET /api/health`, `POST /api/auth/signup|login|refresh|logout` (AD-06, BR-01).
+    - 거부 응답 본문은 `{ "code", "message" }`이며 `code`는 BR-51의 9개 중 하나다. HTTP status 매핑(PRD 6.3):
+      `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400,
+      `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.
+    - 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식(양의 정수, DB 조회 없이 `NOT_FOUND`) → 리소스 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 코드로 거부하고 부분 저장하지 않는다.
+    - 경로·쿼리·본문의 ID가 양의 정수 형식이 아니거나, 타인 소유이거나, 없으면 모두 같은 본문의 `NOT_FOUND`다 (BR-02, BR-16, PRD 6.3). 스키마에 `integer`로 적었어도 형식 위반은 400이 아니라 404다.
+    - 페이지네이션 없음, 전체 반환 (PRD NFR-05, PD-02). 요청 횟수 제한 없음 (PD-03).
+    - 동시 수정은 last-write-wins (BR-54).
+    - BR-51 목록 밖의 오류(예: BR-15 트랜잭션 내부 실패)는 5xx다 (AD-A8). 5xx 본문은 문서에 정의되지 않아 operation별로 적지 않는다.
+
+x-document-info:
+  name: TodoList API 명세 (OpenAPI 3.0.3)
+  version: v0.1
+  status: 초안
+  date: "2026-11-04"
+  references:
+    - { path: docs/1-domain-definition.md, version: v0.7 }
+    - { path: docs/2-PRD.md, version: v0.8 }
+    - { path: docs/3-user-scenario.md, version: v0.5 }
+    - { path: docs/5-project-principle.md, version: v0.3 }
+    - { path: docs/6-arch-diagram.md, version: v0.4 }
+    - { path: docs/7-erd.md, version: v0.3 }
+    - { path: docs/8-plan.md, version: v0.3 }
+    - { path: docs/schema.sql, version: null }
+
+x-changelog:
+  - version: v0.1
+    date: "2026-11-04"
+    author: "-"
+    changes: 초안 작성
+    scope: 전체
+
+servers:
+  - url: http://localhost:3000
+    description: 로컬 개발 (Express `PORT` 기본 3000, 원칙 6.1, T-B01). 운영은 SPA와 같은 origin(HTTPS, NFR-08).
+
+tags:
+  - name: auth
+    description: 가입·로그인·로그아웃·토큰 재발급 (F-01, F-09, UC-01~03, NFR-06, PRD 6.4)
+  - name: users
+    description: 내 정보 (P1, F-03, UC-04)
+  - name: categories
+    description: 카테고리 관리 (F-11, UC-11)
+  - name: todos
+    description: 할일 CRUD·완료 처리·목록 필터·캘린더 기간 조회 (F-02, F-04~F-08, F-10, UC-05~10)
+  - name: health
+    description: 헬스체크 (PRD 6.3, 원칙 6.3)
+
+security:
+  - cookieAuth: []
+
+paths:
+  /api/auth/signup:
+    post:
+      tags: [auth]
+      operationId: signup
+      summary: 회원가입 (자동 로그인)
+      description: |
+        계정 생성 + 기본 카테고리('기본', `isDefault = true`) 생성을 한 트랜잭션으로 수행하고, 로그인과 같은 두 인증 쿠키를 발급한다.
+        실패 시 계정·카테고리 모두 생성되지 않는다.
+
+        - 관련: F-01, UC-01, BR-04, BR-05, BR-11, BR-43~45, BR-52, US-01, SC-02, AD-07, T-B03
+        - 검증 순서: 형식·길이(BR-43~45) → 이메일 중복(BR-04, 대소문자 무시)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+            example:
+              email: haneul.new@example.com
+              password: haneul1234
+              name: 김하늘
+      responses:
+        "201":
+          description: 가입 성공. 두 인증 쿠키 발급.
+          headers:
+            Set-Cookie:
+              $ref: "#/components/headers/SetAuthCookies"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+              example:
+                user: { id: 3, name: 김하늘 }
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/DuplicateEmail"
+
+  /api/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: 로그인
+      description: |
+        자격 증명이 일치하면 두 인증 쿠키를 발급하고, 그 사용자의 만료·폐기된 리프레시 행을 삭제한다 (PRD 6.4).
+        이메일 없음과 비밀번호 틀림은 같은 `INVALID_CREDENTIALS` 본문이다 (BR-06).
+        이메일·비밀번호 형식 위반은 BR-52 순서대로 `VALIDATION_ERROR`다 (AD-C5 결정, T-X02).
+
+        - 관련: F-01, UC-02, BR-06, BR-43, BR-44, BR-52, US-02, SC-01, AD-08, T-B03
+        - 검증 순서: 형식·길이(BR-43, BR-44) → 자격 증명(BR-06)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: seojun@example.com
+              password: seojun1234
+      responses:
+        "200":
+          description: 로그인 성공. 두 인증 쿠키 발급.
+          headers:
+            Set-Cookie:
+              $ref: "#/components/headers/SetAuthCookies"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+              example:
+                user: { id: 2, name: 이서준 }
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/InvalidCredentials"
+
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: 로그아웃
+      description: |
+        인증 미들웨어를 거치지 않는다 (액세스 토큰 만료 상태에서도 가능, PRD 6.4).
+        `refresh_token` 쿠키가 있고 해당 행이 있으면 `revoked_at = now()`로 폐기한다. 쿠키·행이 없어도 오류가 아니다.
+        항상 204와 두 쿠키 삭제(`Max-Age=0`)를 응답한다. 액세스 토큰은 블랙리스트 없이 최대 15분 잔존한다 (R-06).
+
+        - 관련: F-09, UC-03, BR-01, NFR-06, PD-01, R-06, US-03, AD-14, T-B03
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/RefreshTokenCookie"
+      responses:
+        "204":
+          description: 항상 성공. 두 인증 쿠키 삭제.
+          headers:
+            Set-Cookie:
+              $ref: "#/components/headers/ClearAuthCookies"
+
+  /api/auth/refresh:
+    post:
+      tags: [auth]
+      operationId: refreshToken
+      summary: 액세스·리프레시 토큰 재발급 (회전)
+      description: |
+        인증 미들웨어를 거치지 않는다. `refresh_token` 쿠키의 SHA-256 해시로 행을 조회한다.
+        - 정상: 기존 행 `revoked_at = now()` + 새 행 삽입(한 트랜잭션) → 새 두 쿠키 발급, 200.
+        - 행 없음·`expires_at` 경과: 401 `UNAUTHORIZED` + 두 쿠키 삭제.
+        - `revoked_at`이 이미 있음(재사용 탐지): 그 사용자의 리프레시 행 전부 폐기 후 401 `UNAUTHORIZED` + 두 쿠키 삭제.
+
+        클라이언트는 `/api/auth/*`가 아닌 요청이 `UNAUTHORIZED`를 받으면 이 API를 1회 호출하고 원 요청을 1회 재시도한다 (PRD 4.2).
+
+        - 관련: NFR-06, PRD 6.4, BR-01, BR-53, US-16, AD-16, T-B03
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/RefreshTokenCookie"
+      responses:
+        "200":
+          description: 회전 성공. 새 두 인증 쿠키 발급.
+          headers:
+            Set-Cookie:
+              $ref: "#/components/headers/SetAuthCookies"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserResponse"
+              example:
+                user: { id: 2, name: 이서준 }
+        "401":
+          $ref: "#/components/responses/RefreshUnauthorized"
+
+  /api/users/me:
+    get:
+      tags: [users]
+      operationId: getMe
+      summary: 내 정보 조회 (P1)
+      description: |
+        인증된 본인의 `id`, `email`, `name`을 반환한다. `password`는 포함하지 않는다.
+
+        - 관련: F-03, UC-04, BR-03, US-19, SC-06, T-B08
+      responses:
+        "200":
+          description: 내 정보
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: 2
+                email: seojun@example.com
+                name: 이서준
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [users]
+      operationId: updateMe
+      summary: 내 정보 수정 (P1)
+      description: |
+        수정 대상은 인증된 본인으로 고정된다. 본문의 사용자 ID 등 다른 필드는 무시한다 (BR-03).
+        수정 가능 항목은 `name`, 비밀번호(`currentPassword` + `newPassword`)다. 이메일 변경 없음 (D-06).
+        현재 비밀번호가 틀리면 `INVALID_CREDENTIALS`이고 기존 값이 유지된다 (BR-05). `updatedAt`이 갱신된다.
+
+        - 관련: F-03, UC-04, BR-03, BR-05, BR-44, BR-45, BR-52, US-19, SC-06, T-B08
+        - 검증 순서: 인증 → 형식·길이(BR-44, BR-45) → 자격 증명(BR-05)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeRequest"
+            examples:
+              changeName:
+                summary: 이름 변경 (US-19 2단계)
+                value:
+                  name: 이서준(팀장)
+              changePassword:
+                summary: 비밀번호 변경 (US-19 4단계)
+                value:
+                  currentPassword: seojun1234
+                  newPassword: seojun5678
+      responses:
+        "200":
+          description: 수정 후 내 정보
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: 2
+                email: seojun@example.com
+                name: 이서준(팀장)
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedOrInvalidCredentials"
+
+  /api/categories:
+    get:
+      tags: [categories]
+      operationId: listCategories
+      summary: 카테고리 목록
+      description: |
+        본인 카테고리 전체(기본 카테고리 포함)를 반환한다.
+
+        - 관련: F-11, UC-11, BR-02, BR-13, US-04, SC-07, T-B04
+      responses:
+        "200":
+          description: 카테고리 목록 (PS-02 기준 id 3·4·5)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+              example:
+                - { id: 3, name: 기본, isDefault: true }
+                - { id: 4, name: 업무, isDefault: false }
+                - { id: 5, name: 개인, isDefault: false }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [categories]
+      operationId: createCategory
+      summary: 카테고리 추가
+      description: |
+        이름은 공백 제거 후 1~30자(BR-46). 같은 사용자 내 이름은 대소문자 무시·앞뒤 공백 제거 후 유일하며(BR-14),
+        '기본'이라는 이름은 쓸 수 없다(BR-17, `DUPLICATE_CATEGORY_NAME`). 사용자당 기본 포함 최대 20개(BR-46).
+
+        - 관련: F-11, UC-11, BR-14, BR-17, BR-46, BR-52, US-04, US-06, SC-07, T-B04
+        - 검증 순서: 인증 → 형식·길이(BR-46) → 중복(BR-14, BR-17) → 개수 제한(BR-46)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+            example:
+              name: 동아리
+      responses:
+        "201":
+          description: 생성된 카테고리 (예시는 US-04, PS-01이 추가해 id 6)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+              example:
+                id: 6
+                name: 동아리
+                isDefault: false
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/CategoryCreateConflict"
+
+  /api/categories/{id}:
+    parameters:
+      - $ref: "#/components/parameters/CategoryIdPath"
+    patch:
+      tags: [categories]
+      operationId: renameCategory
+      summary: 카테고리 이름 변경
+      description: |
+        기본 카테고리의 이름은 변경할 수 없다(BR-17, `DEFAULT_CATEGORY_PROTECTED`).
+        일반 카테고리를 '기본' 또는 기존 이름(정규화 후 비교)으로 바꾸면 `DUPLICATE_CATEGORY_NAME`이다 (BR-14, BR-17).
+
+        - 관련: F-11, UC-11, BR-02, BR-14, BR-17, BR-46, BR-52, US-04, US-06, SC-07, T-B04
+        - 검증 순서: 인증 → 형식·길이(BR-46) → id 형식 → 존재·소유(BR-02) → 보호 대상(BR-17) → 중복(BR-14, BR-17)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+            example:
+              name: 동아리 활동
+      responses:
+        "200":
+          description: 변경된 카테고리 (예시는 US-04 3단계)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+              example:
+                id: 6
+                name: 동아리 활동
+                isDefault: false
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/DefaultCategoryProtected"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/DuplicateCategoryName"
+    delete:
+      tags: [categories]
+      operationId: deleteCategory
+      summary: 카테고리 삭제
+      description: |
+        소속 할일을 기본 카테고리로 이동한 뒤 삭제한다. 이동과 삭제는 한 트랜잭션이며 할일은 삭제하지 않는다 (BR-15).
+        기본 카테고리는 삭제할 수 없다 (BR-13).
+
+        - 관련: F-11, UC-11, BR-02, BR-13, BR-15, BR-52, US-05, US-06, SC-07, AD-12, T-B04
+        - 검증 순서: 인증 → id 형식 → 존재·소유(BR-02) → 보호 대상(BR-13)
+      responses:
+        "204":
+          description: 삭제 성공. 소속 할일은 기본 카테고리로 이동됨.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/DefaultCategoryProtected"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/todos:
+    get:
+      tags: [todos]
+      operationId: listTodos
+      summary: 할일 목록 필터 조회 / 캘린더 기간 조회
+      description: |
+        캘린더는 별도 리소스가 아니다 (PRD 6.3, AD-11). 한 엔드포인트가 두 용도를 가진다.
+
+        - 목록(SC-03, UC-09): `today` + 선택 `categoryId`, `status`. 두 필터는 AND (BR-31). 미선택은 필터 없음.
+        - 캘린더(SC-05, UC-10): `today` + `from` + `to`. 할일 기간 `[startDate, endDate]`이 `[from, to]`와 하루라도 겹치면 포함(경계일 포함, BR-33).
+          완료 할일도 포함한다(BR-36). 클라이언트는 캘린더 요청에 `categoryId`·`status`를 보내지 않는다 (BR-36).
+
+        `from`/`to`는 둘 다 있거나 둘 다 없어야 한다. 한쪽만 있거나 형식 오류면 `VALIDATION_ERROR` (AD-C4 결정, T-B06).
+        각 항목의 `status`는 요청의 `today`로 ST-01~04 판정한 값이며, `status` 필터 결과와 항상 일치한다 (PRD 6.5).
+        정렬: `endDate` → `startDate` → `createdAt` 오름차순 (도메인 5.4). 결과 0건은 빈 배열(오류 아님).
+
+        - 관련: F-05, F-08, UC-09, UC-10, BR-02, BR-16, BR-31~33, BR-35, BR-36, ST-01~04, D-05, US-12~15, US-17, AD-11, T-B06
+        - 검증 순서: 인증 → 형식(`today`, `from`/`to`, `status`) → `categoryId` 형식 → 카테고리 존재·소유(BR-02, BR-16)
+      parameters:
+        - $ref: "#/components/parameters/Today"
+        - $ref: "#/components/parameters/CategoryIdQuery"
+        - $ref: "#/components/parameters/StatusQuery"
+        - $ref: "#/components/parameters/From"
+        - $ref: "#/components/parameters/To"
+      responses:
+        "200":
+          description: 할일 목록 (기본 정렬)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Todo"
+              examples:
+                noFilter:
+                  summary: PS-02, today=2026-11-03, 필터 없음 → 6, 1, 2, 5, 4, 3, 7 (US-12, T-B06)
+                  value:
+                    - { id: 6, categoryId: 3, title: 헬스장 등록, description: null, startDate: "2026-10-26", endDate: "2026-11-01", isCompleted: false, completedAt: null, status: OVERDUE, createdAt: "2026-10-25T00:06:00.000Z", updatedAt: "2026-10-25T00:06:00.000Z" }
+                    - { id: 1, categoryId: 4, title: 주간 보고서 제출, description: null, startDate: "2026-11-01", endDate: "2026-11-02", isCompleted: true, completedAt: "2026-11-02T09:00:00.000Z", status: COMPLETED, createdAt: "2026-10-25T00:01:00.000Z", updatedAt: "2026-11-02T09:00:00.000Z" }
+                    - { id: 2, categoryId: 4, title: 거래처 견적 회신, description: null, startDate: "2026-11-01", endDate: "2026-11-02", isCompleted: false, completedAt: null, status: OVERDUE, createdAt: "2026-10-25T00:02:00.000Z", updatedAt: "2026-10-25T00:02:00.000Z" }
+                    - { id: 5, categoryId: 4, title: 분기 계획 작성, description: null, startDate: "2026-10-31", endDate: "2026-11-03", isCompleted: false, completedAt: null, status: IN_PROGRESS, createdAt: "2026-10-25T00:05:00.000Z", updatedAt: "2026-10-25T00:05:00.000Z" }
+                    - { id: 4, categoryId: 5, title: 은행 서류 제출, description: null, startDate: "2026-11-03", endDate: "2026-11-03", isCompleted: false, completedAt: null, status: IN_PROGRESS, createdAt: "2026-10-25T00:04:00.000Z", updatedAt: "2026-10-25T00:04:00.000Z" }
+                    - { id: 3, categoryId: 4, title: 팀 회의 자료 준비, description: null, startDate: "2026-11-04", endDate: "2026-11-05", isCompleted: false, completedAt: null, status: NOT_STARTED, createdAt: "2026-10-25T00:03:00.000Z", updatedAt: "2026-10-25T00:03:00.000Z" }
+                    - { id: 7, categoryId: 5, title: 가족 여행 준비, description: null, startDate: "2026-11-08", endDate: "2026-11-10", isCompleted: false, completedAt: null, status: NOT_STARTED, createdAt: "2026-10-25T00:07:00.000Z", updatedAt: "2026-10-25T00:07:00.000Z" }
+                categoryAndStatus:
+                  summary: categoryId=4&status=OVERDUE → 2 (BR-31 AND, T-B06)
+                  value:
+                    - { id: 2, categoryId: 4, title: 거래처 견적 회신, description: null, startDate: "2026-11-01", endDate: "2026-11-02", isCompleted: false, completedAt: null, status: OVERDUE, createdAt: "2026-10-25T00:02:00.000Z", updatedAt: "2026-10-25T00:02:00.000Z" }
+                calendarDay:
+                  summary: 캘린더 일 뷰 from=to=2026-11-03 → 5, 4 (US-15)
+                  value:
+                    - { id: 5, categoryId: 4, title: 분기 계획 작성, description: null, startDate: "2026-10-31", endDate: "2026-11-03", isCompleted: false, completedAt: null, status: IN_PROGRESS, createdAt: "2026-10-25T00:05:00.000Z", updatedAt: "2026-10-25T00:05:00.000Z" }
+                    - { id: 4, categoryId: 5, title: 은행 서류 제출, description: null, startDate: "2026-11-03", endDate: "2026-11-03", isCompleted: false, completedAt: null, status: IN_PROGRESS, createdAt: "2026-10-25T00:04:00.000Z", updatedAt: "2026-10-25T00:04:00.000Z" }
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [todos]
+      operationId: createTodo
+      summary: 할일 등록
+      description: |
+        `categoryId`가 없거나 null이면 기본 카테고리를 적용한다 (BR-12). 타인 소유·미존재·형식 오류 `categoryId`는 `NOT_FOUND` (BR-16).
+        요청의 `isCompleted`·`status`는 무시하고 `isCompleted = false`, `completedAt = null`로 저장한다 (BR-24, BR-26). 과거 날짜 허용 (BR-23).
+        응답의 `status`는 쿼리 `today`로 계산한다 (AD-A7, T-B05).
+
+        - 관련: F-02, F-04, UC-05, BR-12, BR-16, BR-21~24, BR-26, BR-41, BR-42, BR-52, US-07, US-08, US-17, SC-04, AD-09, T-B05
+        - 검증 순서: 인증 → 형식·길이(`today`, BR-21, BR-41, BR-42) → 날짜 범위(BR-22) → `categoryId` 형식 → 카테고리 존재·소유(BR-16)
+      parameters:
+        - $ref: "#/components/parameters/Today"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoCreateRequest"
+            examples:
+              noCategory:
+                summary: 카테고리 미지정 → 기본(3) (US-07 2단계)
+                value:
+                  title: 고객 미팅 준비
+                  startDate: "2026-11-05"
+                  endDate: "2026-11-05"
+              withCategory:
+                summary: 카테고리 업무(4) 지정 (US-07 3단계)
+                value:
+                  title: 견적서 작성
+                  startDate: "2026-11-03"
+                  endDate: "2026-11-04"
+                  categoryId: 4
+      responses:
+        "201":
+          description: 생성된 할일 (예시는 US-07 2단계, today=2026-11-03)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+              example:
+                id: 9
+                categoryId: 3
+                title: 고객 미팅 준비
+                description: null
+                startDate: "2026-11-05"
+                endDate: "2026-11-05"
+                isCompleted: false
+                completedAt: null
+                status: NOT_STARTED
+                createdAt: "2026-11-03T01:00:00.000Z"
+                updatedAt: "2026-11-03T01:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/ValidationOrDateRangeError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/todos/{id}:
+    parameters:
+      - $ref: "#/components/parameters/TodoIdPath"
+    get:
+      tags: [todos]
+      operationId: getTodo
+      summary: 할일 단건 조회 (편집 화면 진입)
+      description: |
+        편집 화면(SC-04) 진입 시 기존 값을 채우기 위한 조회다 (AD-C3 결정, T-X02).
+        `NOT_FOUND`를 받으면 클라이언트는 오류 표시 후 SC-03으로 이동한다 (PRD 4.2).
+
+        - 관련: F-07, UC-06, BR-02, BR-27, US-09, US-11, US-17, SC-04, AD-13, T-B05
+        - 검증 순서: 인증 → 형식(`today`) → id 형식 → 존재·소유(BR-02)
+      parameters:
+        - $ref: "#/components/parameters/Today"
+      responses:
+        "200":
+          description: 할일 (예시는 할일 3, US-09 1단계)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+              example:
+                id: 3
+                categoryId: 4
+                title: 팀 회의 자료 준비
+                description: null
+                startDate: "2026-11-04"
+                endDate: "2026-11-05"
+                isCompleted: false
+                completedAt: null
+                status: NOT_STARTED
+                createdAt: "2026-10-25T00:03:00.000Z"
+                updatedAt: "2026-10-25T00:03:00.000Z"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [todos]
+      operationId: updateTodo
+      summary: 할일 수정
+      description: |
+        편집 화면의 편집 가능 필드 전체를 보낸다. `title`, `startDate`, `endDate`는 수정에서도 필수다 (BR-21).
+        `categoryId`가 없거나 null이면 기본 카테고리로 바뀐다 (BR-12). `description`이 없으면 비운다.
+        `isCompleted`·`completedAt`은 바뀌지 않고(UC-06), 요청의 `isCompleted`·`status`는 무시한다 (BR-26). `updatedAt`이 갱신된다.
+
+        - 관련: F-07, F-04, UC-06, BR-02, BR-12, BR-16, BR-21~23, BR-26, BR-41, BR-42, BR-52, BR-54, US-09, US-16, US-17, SC-04, AD-09, T-B05
+        - 검증 순서: 인증 → 형식·길이(`today`, BR-21, BR-41, BR-42) → 날짜 범위(BR-22) → id·`categoryId` 형식 → 할일 존재·소유(BR-02) → 카테고리 존재·소유(BR-16)
+      parameters:
+        - $ref: "#/components/parameters/Today"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoUpdateRequest"
+            example:
+              title: 팀 회의 자료 준비
+              startDate: "2026-11-03"
+              endDate: "2026-11-06"
+              categoryId: 5
+      responses:
+        "200":
+          description: 수정된 할일 (예시는 US-09 2단계, today=2026-11-03)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+              example:
+                id: 3
+                categoryId: 5
+                title: 팀 회의 자료 준비
+                description: null
+                startDate: "2026-11-03"
+                endDate: "2026-11-06"
+                isCompleted: false
+                completedAt: null
+                status: IN_PROGRESS
+                createdAt: "2026-10-25T00:03:00.000Z"
+                updatedAt: "2026-11-03T02:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/ValidationOrDateRangeError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [todos]
+      operationId: deleteTodo
+      summary: 할일 삭제 (영구)
+      description: |
+        영구 삭제다. 삭제 후 같은 id 조회는 `NOT_FOUND`다 (BR-27).
+
+        - 관련: F-06, UC-08, BR-02, BR-27, US-11, US-17, SC-03, AD-13, T-B05
+        - 검증 순서: 인증 → id 형식 → 존재·소유(BR-02)
+      responses:
+        "204":
+          description: 삭제 성공
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/todos/{id}/completed:
+    parameters:
+      - $ref: "#/components/parameters/TodoIdPath"
+    patch:
+      tags: [todos]
+      operationId: setTodoCompleted
+      summary: 할일 완료 처리 / 완료 취소
+      description: |
+        `isCompleted` 값을 명시 지정한다 (토글 아님, 멱등, D-10). 같은 값을 다시 보내도 결과가 같다.
+        `true`면 `completedAt = now()`, `false`면 `completedAt = null` (BR-25, BR-28). 완료 취소 시 상태는 ST-02~04로 다시 판정된다.
+        클라이언트는 낙관적 갱신 없이 응답의 `status`로 배지를 갱신한다 (PRD 4.2).
+
+        - 관련: F-10, UC-07, BR-02, BR-25, BR-28, ST-01~04, D-10, US-10, US-17, SC-03, AD-10, T-B05
+        - 검증 순서: 인증 → 형식(`today`, `isCompleted`) → id 형식 → 존재·소유(BR-02)
+      parameters:
+        - $ref: "#/components/parameters/Today"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoCompleteRequest"
+            examples:
+              complete:
+                summary: 완료 처리 (US-10 1단계, 할일 2)
+                value:
+                  isCompleted: true
+              uncomplete:
+                summary: 완료 취소 (US-10 2단계, 할일 2 → OVERDUE)
+                value:
+                  isCompleted: false
+      responses:
+        "200":
+          description: 갱신된 할일 (예시는 할일 2 완료 처리, today=2026-11-03)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+              example:
+                id: 2
+                categoryId: 4
+                title: 거래처 견적 회신
+                description: null
+                startDate: "2026-11-01"
+                endDate: "2026-11-02"
+                isCompleted: true
+                completedAt: "2026-11-03T01:30:00.000Z"
+                status: COMPLETED
+                createdAt: "2026-10-25T00:02:00.000Z"
+                updatedAt: "2026-11-03T01:30:00.000Z"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/health:
+    get:
+      tags: [health]
+      operationId: getHealth
+      summary: 헬스체크
+      description: |
+        인증 없이 DB 연결(`SELECT 1`)을 확인한다.
+
+        - 관련: PRD 6.3, 원칙 6.3, T-B01
+      security: []
+      responses:
+        "200":
+          description: DB 연결 정상
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                ok: true
+        "503":
+          description: DB 연결 실패. 본문 형식은 문서에 정의되지 않았다 (T-B01은 status만 규정).
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+      description: |
+        액세스 토큰 쿠키 (NFR-06). JWT, 서명 HS384 고정, claims `sub`(userId)·`iat`·`exp`.
+        속성 `HttpOnly; SameSite=Lax; Path=/; Max-Age=900`, 운영(`NODE_ENV=production`)만 `Secure`.
+        없음·무효·만료는 401 `UNAUTHORIZED` (BR-01, BR-53). 인증 미들웨어는 `refresh_token` 쿠키를 보지 않는다.
+
+  headers:
+    SetAuthCookies:
+      description: |
+        `Set-Cookie` 헤더가 2개 온다 (배열 두 개: `token`, `refresh_token`). 운영에서는 둘 다 `Secure`가 붙는다 (NFR-06).
+        1. `token=<JWT HS384>; HttpOnly; SameSite=Lax; Path=/; Max-Age=900`
+        2. `refresh_token=<불투명 난수 base64url>; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600`
+      schema:
+        type: array
+        minItems: 2
+        maxItems: 2
+        items:
+          type: string
+      example:
+        - "token=eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9...; HttpOnly; SameSite=Lax; Path=/; Max-Age=900"
+        - "refresh_token=Q2F0cy1hcmUtbmljZS1idXQtdGhpcy1pcy1hLXNhbXBsZQ; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600"
+    ClearAuthCookies:
+      description: |
+        `Set-Cookie` 헤더가 2개 온다 (배열 두 개: `token`, `refresh_token`). 둘 다 `Max-Age=0`으로 삭제한다 (PRD 6.4).
+        1. `token=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`
+        2. `refresh_token=; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=0`
+      schema:
+        type: array
+        minItems: 2
+        maxItems: 2
+        items:
+          type: string
+      example:
+        - "token=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0"
+        - "refresh_token=; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=0"
+
+  parameters:
+    Today:
+      name: today
+      in: query
+      required: true
+      description: |
+        기준일. 클라이언트 로컬 날짜 `YYYY-MM-DD` (D-05). 상태 판정(ST-01~04)에 쓴다.
+        누락·형식 오류는 400 `VALIDATION_ERROR` (BR-32, BR-36, PRD 6.3).
+      schema:
+        type: string
+        format: date
+        pattern: '^\d{4}-\d{2}-\d{2}$'
+      example: "2026-11-03"
+    From:
+      name: from
+      in: query
+      required: false
+      description: |
+        캘린더 조회 기간 시작일 (BR-35로 클라이언트가 산정). `to`와 함께 보낸다.
+        한쪽만 있거나 형식 오류면 400 `VALIDATION_ERROR` (AD-C4 결정).
+      schema:
+        type: string
+        format: date
+        pattern: '^\d{4}-\d{2}-\d{2}$'
+      example: "2026-11-02"
+    To:
+      name: to
+      in: query
+      required: false
+      description: |
+        캘린더 조회 기간 종료일 (경계일 포함, BR-33). `from`과 함께 보낸다.
+        한쪽만 있거나 형식 오류면 400 `VALIDATION_ERROR` (AD-C4 결정).
+      schema:
+        type: string
+        format: date
+        pattern: '^\d{4}-\d{2}-\d{2}$'
+      example: "2026-11-08"
+    StatusQuery:
+      name: status
+      in: query
+      required: false
+      description: 상태 필터(단일 선택, BR-31, BR-32). 생략하면 필터 없음. 목록 밖 값은 400 `VALIDATION_ERROR`.
+      schema:
+        $ref: "#/components/schemas/TodoStatus"
+      example: OVERDUE
+    CategoryIdQuery:
+      name: categoryId
+      in: query
+      required: false
+      description: |
+        카테고리 필터(단일 선택, BR-31). 생략하면 필터 없음.
+        양의 정수 형식이 아니거나 타인 소유·미존재면 404 `NOT_FOUND` (BR-02, BR-16, PRD 6.3).
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 4
+    TodoIdPath:
+      name: id
+      in: path
+      required: true
+      description: 할일 id. 양의 정수가 아니거나(예 `abc`, `0`, `-1`, `1.5`) 타인 소유·미존재면 동일 본문의 404 `NOT_FOUND` (BR-02, PRD 6.3).
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 3
+    CategoryIdPath:
+      name: id
+      in: path
+      required: true
+      description: 카테고리 id. 양의 정수가 아니거나 타인 소유·미존재면 동일 본문의 404 `NOT_FOUND` (BR-02, PRD 6.3).
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 4
+    RefreshTokenCookie:
+      name: refresh_token
+      in: cookie
+      required: false
+      description: |
+        리프레시 토큰 쿠키 (NFR-06). 불투명 난수(`crypto.randomBytes(32)` base64url), `Path=/api/auth`라 `/api/auth/*` 요청에만 첨부된다.
+        서버는 SHA-256 hex 해시만 저장한다.
+      schema:
+        type: string
+
+  schemas:
+    TodoStatus:
+      type: string
+      description: |
+        서버가 요청의 `today`로 계산하는 파생 상태 (저장하지 않음, 도메인 4.1·4.2). ST-01부터 순서대로 처음 만족하는 규칙:
+        ST-01 `isCompleted` → `COMPLETED`, ST-02 `today > endDate` → `OVERDUE`,
+        ST-03 `today < startDate` → `NOT_STARTED`, ST-04 그 외 → `IN_PROGRESS`.
+      enum: [NOT_STARTED, IN_PROGRESS, COMPLETED, OVERDUE]
+
+    ErrorCode:
+      type: string
+      description: BR-51 오류 코드. 목록 밖의 코드는 없다.
+      enum:
+        - UNAUTHORIZED
+        - INVALID_CREDENTIALS
+        - NOT_FOUND
+        - VALIDATION_ERROR
+        - INVALID_DATE_RANGE
+        - DUPLICATE_EMAIL
+        - DUPLICATE_CATEGORY_NAME
+        - CATEGORY_LIMIT_EXCEEDED
+        - DEFAULT_CATEGORY_PROTECTED
+
+    ErrorResponse:
+      type: object
+      description: 거부 응답 본문 (PRD 6.3, BR-51).
+      required: [code, message]
+      properties:
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        message:
+          type: string
+          description: 사람이 읽는 설명. 클라이언트 분기는 `code`로 한다 (PRD 4.2).
+
+    AuthUser:
+      type: object
+      description: 가입·로그인·재발급 응답의 사용자 요약 (PRD 6.4, AD-A2).
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+
+    AuthUserResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+
+    User:
+      type: object
+      description: 내 정보 (T-B08). `password`는 포함하지 않는다.
+      required: [id, email, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+
+    Category:
+      type: object
+      required: [id, name, isDefault]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        isDefault:
+          type: boolean
+          description: 기본 카테고리 여부. 사용자당 정확히 1개 true (BR-11, BR-13).
+
+    Todo:
+      type: object
+      required: [id, categoryId, title, description, startDate, endDate, isCompleted, completedAt, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        categoryId:
+          type: integer
+          format: int64
+          description: 소속 카테고리. 항상 값이 있다 (미지정 시 기본 카테고리, BR-12).
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          format: date
+          description: "`YYYY-MM-DD`"
+        endDate:
+          type: string
+          format: date
+          description: "`YYYY-MM-DD`. `startDate <= endDate` (BR-22)."
+        isCompleted:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: "`isCompleted = true`일 때만 값이 있다 (BR-25, BR-28)."
+        status:
+          $ref: "#/components/schemas/TodoStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    HealthResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+
+    Email:
+      type: string
+      format: email
+      maxLength: 254
+      pattern: '^[^@]+@[^@]+$'
+      description: "`local@domain` 형식, 254자 이하 (BR-43). 저장·비교는 대소문자 무시 (BR-04)."
+
+    Password:
+      type: string
+      minLength: 8
+      maxLength: 64
+      description: 8자 이상 64자 이하 (BR-44).
+
+    UserName:
+      type: string
+      minLength: 1
+      maxLength: 50
+      pattern: '\S'
+      description: 공백 제거 후 1~50자 (BR-45). 서버는 trim 후 길이를 검사한다.
+
+    SignupRequest:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          $ref: "#/components/schemas/Email"
+        password:
+          $ref: "#/components/schemas/Password"
+        name:
+          $ref: "#/components/schemas/UserName"
+
+    LoginRequest:
+      type: object
+      description: 형식 위반(BR-43, BR-44)은 `VALIDATION_ERROR` (AD-C5 결정).
+      required: [email, password]
+      properties:
+        email:
+          $ref: "#/components/schemas/Email"
+        password:
+          $ref: "#/components/schemas/Password"
+
+    UpdateMeRequest:
+      type: object
+      description: |
+        본인만 수정한다. 본문의 사용자 ID 등 다른 필드는 무시한다 (BR-03). 이메일 변경 없음 (D-06).
+        비밀번호를 바꿀 때는 `currentPassword`와 `newPassword`를 함께 보낸다. 한쪽만 있으면 `VALIDATION_ERROR`.
+      properties:
+        name:
+          $ref: "#/components/schemas/UserName"
+        currentPassword:
+          type: string
+          description: 현재 비밀번호. 틀리면 401 `INVALID_CREDENTIALS` (BR-05).
+        newPassword:
+          $ref: "#/components/schemas/Password"
+
+    CategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 30
+          pattern: '\S'
+          description: |
+            공백 제거 후 1~30자 (BR-46). 같은 사용자 내 대소문자 무시·앞뒤 공백 제거 후 유일 (BR-14).
+            '기본'은 사용할 수 없다 (BR-17, `DUPLICATE_CATEGORY_NAME`).
+
+    TodoCreateRequest:
+      type: object
+      description: |
+        `isCompleted`, `status` 등 다른 필드는 무시한다 (BR-24, BR-26).
+        `title` 공백만·누락, `startDate`/`endDate` 누락·형식 오류는 `VALIDATION_ERROR` (BR-21).
+        `startDate > endDate`는 `INVALID_DATE_RANGE` (BR-22). 둘 다 위반이면 `VALIDATION_ERROR`가 먼저다 (BR-52).
+      required: [title, startDate, endDate]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '\S'
+          description: 공백 제거 후 1~100자 (BR-21, BR-41). 서버는 trim 후 길이를 검사한다.
+        description:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: 1000자 이하, 비어도 됨 (BR-42).
+        startDate:
+          type: string
+          format: date
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: "`YYYY-MM-DD`. 과거 날짜 허용 (BR-23)."
+        endDate:
+          type: string
+          format: date
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: "`YYYY-MM-DD`. `startDate <= endDate` (BR-22)."
+        categoryId:
+          type: integer
+          format: int64
+          minimum: 1
+          nullable: true
+          description: |
+            생략하거나 null이면 기본 카테고리 (BR-12).
+            양의 정수 형식이 아니거나 타인 소유·미존재면 404 `NOT_FOUND` (BR-16, PRD 6.3).
+
+    TodoUpdateRequest:
+      description: |
+        `TodoCreateRequest`와 같은 필드·제약이다. 편집 가능 필드 전체를 보내며 `title`·`startDate`·`endDate`는 필수다 (BR-21).
+        `categoryId` 생략·null은 기본 카테고리로 변경(BR-12), `description` 생략은 비움.
+        `isCompleted`·`status`는 무시하며 완료 여부는 바뀌지 않는다 (UC-06, BR-26).
+      allOf:
+        - $ref: "#/components/schemas/TodoCreateRequest"
+
+    TodoCompleteRequest:
+      type: object
+      description: 완료 여부 명시 지정 (D-10). 누락·boolean 아님은 `VALIDATION_ERROR`.
+      required: [isCompleted]
+      properties:
+        isCompleted:
+          type: boolean
+
+  responses:
+    Unauthorized:
+      description: |
+        가능한 code: `UNAUTHORIZED`.
+        액세스 토큰 쿠키 없음·무효·만료 (BR-01, BR-53). 데이터는 변경되지 않는다.
+        클라이언트는 `POST /api/auth/refresh` 1회 후 원 요청을 1회 재시도한다 (PRD 4.2, AD-16).
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [UNAUTHORIZED]
+          example:
+            code: UNAUTHORIZED
+            message: 인증이 필요합니다.
+
+    InvalidCredentials:
+      description: |
+        가능한 code: `INVALID_CREDENTIALS`.
+        이메일 없음과 비밀번호 틀림은 같은 본문이다 (BR-06). 클라이언트는 화면을 유지한다 (PRD 4.2).
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [INVALID_CREDENTIALS]
+          example:
+            code: INVALID_CREDENTIALS
+            message: 이메일 또는 비밀번호가 올바르지 않습니다.
+
+    UnauthorizedOrInvalidCredentials:
+      description: |
+        가능한 code: `UNAUTHORIZED`, `INVALID_CREDENTIALS`.
+        `UNAUTHORIZED`는 액세스 토큰 없음·무효·만료 (BR-01). `INVALID_CREDENTIALS`는 현재 비밀번호 불일치 (BR-05), 화면 유지 (PRD 4.2).
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [UNAUTHORIZED, INVALID_CREDENTIALS]
+          examples:
+            unauthorized:
+              value:
+                code: UNAUTHORIZED
+                message: 인증이 필요합니다.
+            invalidCredentials:
+              summary: US-19 3단계
+              value:
+                code: INVALID_CREDENTIALS
+                message: 현재 비밀번호가 올바르지 않습니다.
+
+    RefreshUnauthorized:
+      description: |
+        가능한 code: `UNAUTHORIZED`.
+        리프레시 토큰 행 없음·만료·재사용 탐지(이미 폐기된 토큰) (PRD 6.4). 두 인증 쿠키를 `Max-Age=0`으로 삭제한다.
+        클라이언트는 `queryClient.clear()`·스토어 초기화 후 SC-01로 이동한다.
+      headers:
+        Set-Cookie:
+          $ref: "#/components/headers/ClearAuthCookies"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [UNAUTHORIZED]
+          example:
+            code: UNAUTHORIZED
+            message: 다시 로그인해 주세요.
+
+    NotFound:
+      description: |
+        가능한 code: `NOT_FOUND`.
+        리소스 없음, 타인 소유, 또는 id(경로·쿼리·본문 `categoryId`) 형식이 양의 정수가 아님. 세 경우 모두 같은 본문이다 (BR-02, BR-16, PRD 6.3).
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [NOT_FOUND]
+          example:
+            code: NOT_FOUND
+            message: 요청한 리소스를 찾을 수 없습니다.
+
+    ValidationError:
+      description: |
+        가능한 code: `VALIDATION_ERROR`.
+        입력 형식·길이 위반 (BR-21, BR-32 `today`, BR-41~46, AD-C4 `from`/`to`).
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [VALIDATION_ERROR]
+          example:
+            code: VALIDATION_ERROR
+            message: today는 YYYY-MM-DD 형식이어야 합니다.
+
+    ValidationOrDateRangeError:
+      description: |
+        가능한 code: `VALIDATION_ERROR`, `INVALID_DATE_RANGE`.
+        `VALIDATION_ERROR`는 형식·길이 위반 (BR-21, BR-41, BR-42, `today`). `INVALID_DATE_RANGE`는 `startDate > endDate` (BR-22).
+        둘 다 위반이면 `VALIDATION_ERROR`가 먼저다 (BR-52).
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [VALIDATION_ERROR, INVALID_DATE_RANGE]
+          examples:
+            validation:
+              summary: 제목 공백만 (US-08 1단계)
+              value:
+                code: VALIDATION_ERROR
+                message: 제목은 1자 이상 100자 이하여야 합니다.
+            dateRange:
+              summary: 시작일 11-07, 종료일 11-05 (US-08 2단계)
+              value:
+                code: INVALID_DATE_RANGE
+                message: 시작일은 종료일보다 늦을 수 없습니다.
+
+    DuplicateEmail:
+      description: |
+        가능한 code: `DUPLICATE_EMAIL`.
+        대소문자 무시 기준으로 이미 등록된 이메일 (BR-04). 계정·카테고리 모두 생성되지 않는다.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [DUPLICATE_EMAIL]
+          example:
+            code: DUPLICATE_EMAIL
+            message: 이미 가입된 이메일입니다.
+
+    DuplicateCategoryName:
+      description: |
+        가능한 code: `DUPLICATE_CATEGORY_NAME`.
+        같은 사용자 내 이름 중복(대소문자 무시·앞뒤 공백 제거, BR-14) 또는 '기본' 사용 (BR-17).
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [DUPLICATE_CATEGORY_NAME]
+          example:
+            code: DUPLICATE_CATEGORY_NAME
+            message: 같은 이름의 카테고리가 이미 있습니다.
+
+    CategoryCreateConflict:
+      description: |
+        가능한 code: `DUPLICATE_CATEGORY_NAME`, `CATEGORY_LIMIT_EXCEEDED`.
+        `DUPLICATE_CATEGORY_NAME`은 이름 중복 또는 '기본' 사용 (BR-14, BR-17).
+        `CATEGORY_LIMIT_EXCEEDED`는 이미 20개(기본 포함) 보유 (BR-46). 둘 다 해당하면 BR-52 나열 순서대로 중복이 먼저다.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [DUPLICATE_CATEGORY_NAME, CATEGORY_LIMIT_EXCEEDED]
+          examples:
+            duplicate:
+              summary: 이름 ' 과제 ' (US-04)
+              value:
+                code: DUPLICATE_CATEGORY_NAME
+                message: 같은 이름의 카테고리가 이미 있습니다.
+            limit:
+              summary: 20개 상태에서 추가 (US-04)
+              value:
+                code: CATEGORY_LIMIT_EXCEEDED
+                message: 카테고리는 최대 20개까지 만들 수 있습니다.
+
+    DefaultCategoryProtected:
+      description: |
+        가능한 code: `DEFAULT_CATEGORY_PROTECTED`.
+        기본 카테고리의 삭제(BR-13) 또는 이름 변경(BR-17). 카테고리는 유지된다.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ErrorResponse"
+              - type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [DEFAULT_CATEGORY_PROTECTED]
+          example:
+            code: DEFAULT_CATEGORY_PROTECTED
+            message: 기본 카테고리는 변경하거나 삭제할 수 없습니다.

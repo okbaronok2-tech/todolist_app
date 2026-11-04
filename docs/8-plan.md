@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.2 |
+| 현재 버전 | v0.3 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.6, `docs/2-PRD.md` v0.7, `docs/3-user-scenario.md` v0.4, `docs/4-wireframe.md` v0.3, `docs/5-project-principle.md` v0.2, `docs/6-arch-diagram.md` v0.3, `docs/7-erd.md` v0.2, `docs/schema.sql` |
+| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/2-PRD.md` v0.8, `docs/3-user-scenario.md` v0.5, `docs/4-wireframe.md` v0.4, `docs/5-project-principle.md` v0.3, `docs/6-arch-diagram.md` v0.4, `docs/7-erd.md` v0.3, `docs/schema.sql` |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -18,6 +18,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 |------|------|--------|-----------|---------|
 | v0.1 | 2026-11-04 | - | 초안 작성 | 전체 |
 | v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. T-D01 테이블 5개·인덱스 8개, T-X02 refresh 엔드포인트·비보호 경로, T-B01 `JWT_SECRET` 48자, T-B03 HS384·두 쿠키·리프레시 회전·재사용 탐지·로그아웃 폐기, T-F01 refresh 재시도, T-F03 US-16 (a)/(b), T-X04 k6 401 → refresh, 참조 버전 갱신 | 문서 정보, 2장, T-D01, T-X02, T-B01, T-B03, T-F01, T-F03, T-X04 |
+| v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. T-X02 미결 3건(AD-C8은 이미 해결)과 '작성 예정' 표기 제거 조건, T-B06 필터 결과 순서, T-B07 US-17 데이터·로그인 두 쿠키, T-F01 라우트 6개, T-F03 SC-02 오류 표시 위치·US-01 조건, T-F04 US-04 데이터, T-F06 US-08 날짜, T-F07·F08 월 뷰 칸 수 일반화, T-F09 US-15 순서, T-F10 US-18 단계, T-F11 `me`·US-19 조건을 시나리오·와이어프레임에 맞춤, 참조 버전 갱신 | 문서 정보, T-X02, T-B06, T-B07, T-F01, T-F03, T-F04, T-F06, T-F07, T-F08, T-F09, T-F10, T-F11 |
 
 ---
 
@@ -118,14 +119,14 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 1. `docs/9-api-design.md`에 엔드포인트 전부를 표로 적는다: 메서드, 경로(`/api` 접두어), 인증 필요 여부, 요청 본문·쿼리 필드와 형식, 성공 status·응답 본문, 가능한 오류 코드(BR-51)와 BR-52 순서.
 2. 리소스: `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/refresh`(refresh·logout은 인증 미들웨어 없음, PRD 6.4), `GET /api/health`, `GET|POST /api/categories`, `PATCH|DELETE /api/categories/:id`, `GET|POST /api/todos`, `GET|PATCH|DELETE /api/todos/:id`, `PATCH /api/todos/:id/completed`, `GET|PATCH /api/users/me`(P1).
-3. 아키텍처 문서 10장의 미결 4건을 닫는다: AD-C3(편집 진입용 단건 조회 `GET /api/todos/:id` 추가), AD-C4(캘린더 `from`/`to` 누락·형식 오류는 `VALIDATION_ERROR`), AD-C5(로그인 형식 위반은 BR-52 순서대로 `VALIDATION_ERROR`), AD-C8(로그아웃·refresh는 인증 미들웨어 없음, PRD 6.4에서 확정).
+3. 아키텍처 문서 10장의 미결 3건을 닫는다: AD-C3(편집 진입용 단건 조회 `GET /api/todos/:id` 추가), AD-C4(캘린더 `from`/`to` 누락·형식 오류는 `VALIDATION_ERROR`), AD-C5(로그인 형식 위반은 BR-52 순서대로 `VALIDATION_ERROR`).
 4. 응답 객체 필드명(camelCase), `status` 값(`NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE`), 날짜 문자열 형식을 고정한다.
 
 완료 조건:
 
 - [ ] 모든 엔드포인트가 표 한 줄씩 있고 각 줄에 오류 코드 목록이 있다
-- [ ] AD-C3·C4·C5·C8이 결정과 함께 적혀 있고 `docs/6-arch-diagram.md` 10장 해당 행이 "해결"로 바뀌었다
-- [ ] PRD 6.3·원칙 4장의 API 설계 문서 경로가 `docs/9-api-design.md`를 가리킨다
+- [ ] AD-C3·C4·C5가 결정과 함께 적혀 있고 `docs/6-arch-diagram.md` 10장 해당 행이 "해결"로 바뀌었다
+- [ ] PRD 6.3·원칙 4장·원칙 7.1·아키텍처 1장의 `docs/9-api-design.md` '작성 예정' 표기가 제거됐다
 - [ ] 형식 검증(제목 앞뒤·표 앞뒤 빈 줄, 열 수 동일)을 통과한다
 
 ### T-D01 DB 생성·마이그레이션 러너
@@ -356,7 +357,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 완료 조건:
 
 - [ ] 시드 사용자 2, `today=2026-11-03`, 필터 없음 → id 순서 `6, 1, 2, 5, 4, 3, 7` 7건 (기본 정렬)
-- [ ] `categoryId=4`(업무) → 1, 2, 3, 5 4건
+- [ ] `categoryId=4`(업무) → 1, 2, 5, 3 4건
 - [ ] `status=OVERDUE` → 6, 2 2건. 종료일 11-03인 할일은 포함되지 않는다 (BR-32 경계)
 - [ ] `categoryId=4&status=OVERDUE` → 2 1건 (BR-31 AND)
 - [ ] `status=COMPLETED` → 1 1건, `status=NOT_STARTED` → 3, 7, `status=IN_PROGRESS` → 5, 4
@@ -386,9 +387,9 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 완료 조건:
 
 - [ ] `npm run seed && npm run dev` 후 `npm run smoke`가 종료 코드 0으로 끝난다
-- [ ] US-02: 틀린 비밀번호 401 `INVALID_CREDENTIALS`, 올바른 로그인 200 + `token` 쿠키
+- [ ] US-02: 틀린 비밀번호 401 `INVALID_CREDENTIALS`, 올바른 로그인 200 + `token`·`refresh_token` 쿠키
 - [ ] US-12: 필터 없음 7건, `categoryId=4` 4건, `status=OVERDUE` 2건, 둘 다 1건
-- [ ] US-17: 사용자 1 쿠키로 할일 1 `GET`·`PATCH`·`DELETE`, 카테고리 4 `PATCH`·`DELETE`, `categoryId=4` 필터 모두 404 `NOT_FOUND`이고 사용자 2 데이터가 그대로다
+- [ ] US-17: 사용자 1 쿠키로 할일 1 `GET`·`PATCH`·`DELETE`, `categoryId=3`으로 할일 등록, `categoryId=3` 필터 모두 404 `NOT_FOUND`이고 사용자 2 데이터가 그대로다
 - [ ] 기대값 하나를 일부러 바꾸면 종료 코드 1과 불일치 줄이 출력된다
 
 ### T-F01 프론트 골격·API 클라이언트·스토어·타입
@@ -405,7 +406,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 1. Vite + React 19 + TypeScript(`strict: true`) 프로젝트. `vite.config.ts`에 `/api` → `http://localhost:3000` 프록시.
 2. `types/api.ts`(`ApiError { code, message }`, BR-51 코드 유니온), `types/todo.ts`(Todo, `TodoStatus` 상수 4개, 필터 타입), `types/category.ts`.
 3. `api/client.ts`: `fetch` 래퍼. `credentials: 'include'`, JSON 본문, 실패 시 `{ code, message }`를 `ApiError`로 throw. `code === 'UNAUTHORIZED'`이고 요청이 `/api/auth/*`가 아니면 `POST /api/auth/refresh`를 1회 호출하고 성공 시 원 요청을 1회 재시도한다. 동시에 여러 요청이 실패하면 진행 중인 리프레시 Promise 1개를 공유한다. 리프레시 실패 또는 재시도도 `UNAUTHORIZED`면 스토어 `reset()` + `queryClient.clear()` + `/login` 이동 (BR-53, PRD 4.2, AD-16).
-4. `stores/app-store.ts`: Zustand 1개(`user`, `filter`, `calendar { view, anchorDate }`, `reset()`). `main.tsx`에 `QueryClientProvider`, Router. `App.tsx`에 라우트 7개와 `RequireAuth`(스토어 `user` 없으면 `/login`).
+4. `stores/app-store.ts`: Zustand 1개(`user`, `filter`, `calendar { view, anchorDate }`, `reset()`). `main.tsx`에 `QueryClientProvider`, Router. `App.tsx`에 라우트 6개(`/me`는 T-F11에서 추가)와 `RequireAuth`(스토어 `user` 없으면 `/login`).
 5. `styles.css`: 전역 CSS 1개, `768px` 미디어 쿼리 자리.
 
 완료 조건:
@@ -456,13 +457,13 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 수행 작업:
 
 1. `api/auth.ts`(signup, login, logout, refresh). `LoginPage.tsx`(SC-01): 이메일·비밀번호, 가입 링크, 성공 시 스토어 `user` 저장 → `/todos`, `INVALID_CREDENTIALS`는 단일 메시지.
-2. `SignupPage.tsx`(SC-02): 이메일·비밀번호·이름, 입력 제약 안내(BR-43~45), 성공 시 자동 로그인 → `/todos`, `DUPLICATE_EMAIL`·`VALIDATION_ERROR`는 머물며 표시(필드 판별 가능하면 입력란 아래에도).
+2. `SignupPage.tsx`(SC-02): 이메일·비밀번호·이름, 입력 제약 안내(BR-43~45), 성공 시 자동 로그인 → `/todos`, `DUPLICATE_EMAIL`·`VALIDATION_ERROR`는 머물며 CP-02 오류 영역에 표시.
 3. 로그아웃(`TopNav`): API 호출 → 응답 후 `queryClient.clear()` + 스토어 `reset()` → `/login`.
 
 완료 조건:
 
-- [ ] US-01: 새 이메일로 가입하면 `/todos`로 이동하고 상단 메뉴에 이름이 보인다. 같은 이메일로 다시 가입하면 가입 화면에 머물며 `DUPLICATE_EMAIL` 메시지가 보인다
-- [ ] 7자 비밀번호 입력 시 가입 화면에 머물며 비밀번호 입력란 아래에 오류가 보인다 (PRD 4.2 필드 오류 규칙)
+- [ ] US-01: 새 이메일로 가입하면 `/todos`로 이동하고 할일 0건 빈 목록 안내가 보인다. 같은 이메일로 다시 가입하면 가입 화면에 머물며 `DUPLICATE_EMAIL` 메시지가 보인다
+- [ ] 7자 비밀번호 입력 시 가입 화면에 머물며 CP-02 오류 영역에 `VALIDATION_ERROR` 메시지가 보인다
 - [ ] US-02: 틀린 비밀번호와 없는 이메일에서 동일한 단일 메시지가 보이고, 올바른 입력으로 `/todos` 이동
 - [ ] US-03: 로그아웃 후 `/login`으로 이동하고, 뒤로 가기로 `/todos`에 가도 목록 데이터가 보이지 않고 `/login`으로 돌아온다
 - [ ] US-16 (a): `token` 쿠키만 지운(또는 만료) 상태에서 저장 요청을 하면 자동 갱신되어 저장이 성공하고 화면 이동이 없다
@@ -486,7 +487,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] US-04: `운동` 추가 → 목록에 나타남. `운동`을 ` 운동 `으로 변경 시 `DUPLICATE_CATEGORY_NAME` 메시지. `헬스`로 변경 성공
+- [ ] US-04: `동아리` 추가 → 목록 3개. `동아리`를 `동아리 활동`으로 변경 → 반영, SC-04 선택 목록에 표시. 추가 확인: ` 과제 `로 변경 시 `DUPLICATE_CATEGORY_NAME` 메시지 (BR-14)
 - [ ] US-05: 할일이 속한 카테고리 삭제 → 확인 대화상자 안내 문구 → 삭제 후 할일 목록에서 그 할일의 카테고리가 `기본`으로 보인다
 - [ ] US-06: 기본 카테고리 행의 변경·삭제 버튼이 비활성이고, 새 카테고리 이름 `기본` 입력 시 `DUPLICATE_CATEGORY_NAME` 메시지
 - [ ] 카테고리 20개 상태에서 추가 시 `CATEGORY_LIMIT_EXCEEDED` 메시지가 보인다
@@ -535,7 +536,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 완료 조건:
 
 - [ ] US-07: 카테고리 미선택 등록 → 목록에 `기본`으로 표시. `업무` 선택 등록 → `업무`로 표시
-- [ ] US-08: 제목 공백만 → 제목란 아래 오류. 시작일 11-05, 종료일 11-04 → 사전 안내가 보이고 저장 시 서버 `INVALID_DATE_RANGE`가 날짜란 아래 표시. 과거 날짜(10-01~10-02)는 저장되고 `기한 초과`로 표시
+- [ ] US-08: 제목 공백만 → 제목란 아래 오류. 시작일 11-07, 종료일 11-05 → 사전 안내가 보이고 저장 시 서버 `INVALID_DATE_RANGE`가 날짜란 아래 표시. 과거 날짜(10-20~10-22)는 저장되고 `기한 초과`로 표시
 - [ ] US-09: 할일 3 편집 진입 시 기존 값이 채워져 있고, 제목·기간 변경 저장 후 목록에 반영되며 완료 여부는 그대로다
 - [ ] 없는 id로 `/todos/999/edit` 진입 시 오류 메시지 후 `/todos`로 이동한다
 - [ ] 취소 버튼은 저장 없이 `/todos`로 돌아간다
@@ -553,7 +554,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 수행 작업:
 
 1. `lib/date.ts`: 로컬 today → `YYYY-MM-DD`, 날짜 더하기, 비교, 요일 계산. 전부 문자열 입출력, 내부에서만 `Date` 사용(UTC 고정).
-2. `lib/calendar-range.ts`: `range(view, anchorDate) → { from, to }`(일: 당일, 주: 월~일, 월: 1일이 속한 주의 월요일 ~ 말일이 속한 주의 일요일), `move(view, anchorDate, ±1)`(월: 이전/다음 달 1일, 주: ±7, 일: ±1), 월 뷰 42칸 날짜 배열.
+2. `lib/calendar-range.ts`: `range(view, anchorDate) → { from, to }`(일: 당일, 주: 월~일, 월: 1일이 속한 주의 월요일 ~ 말일이 속한 주의 일요일), `move(view, anchorDate, ±1)`(월: 이전/다음 달 1일, 주: ±7, 일: ±1), 월 뷰 날짜 배열(BR-35 범위, 28~42칸).
 3. `lib/calendar-range.test.ts`(vitest): BR-35 수용 기준 예와 PRD 4.2 이동 규칙.
 
 완료 조건:
@@ -578,7 +579,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 수행 작업:
 
 1. `CalendarPage.tsx`(SC-05): 스토어 `calendar.view`·`anchorDate`(초기값 today, 월), [이전][오늘][다음], 기간 표시, 뷰 전환 버튼, `useTodos.range(from, to, today)` 조회(필터 미적용).
-2. `components/calendar/MonthView.tsx`: 요일 헤더(월~일), 42칸, 이웃 달 날짜 구분, today 강조, 칸마다 겹치는 할일(BR-33, `[startDate, endDate]`이 칸 날짜를 포함)을 `StatusBadge compact` + 제목으로 표시. 클릭 시 `/todos/:id/edit`.
+2. `components/calendar/MonthView.tsx`: 요일 헤더(월~일), BR-35 범위 칸(2026-11은 42칸), 이웃 달 날짜 구분, today 강조, 칸마다 겹치는 할일(BR-33, `[startDate, endDate]`이 칸 날짜를 포함)을 `StatusBadge compact` + 제목으로 표시. 클릭 시 `/todos/:id/edit`.
 
 완료 조건:
 
@@ -607,7 +608,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 완료 조건:
 
 - [ ] US-14: 주 뷰 11-02 ~ 11-08에서 11-02 칸 `1, 2, 5`, 11-03 칸 `5, 4`, 11-04·11-05 칸 `3`, 11-08 칸 `7`, 11-06·11-07 칸 비어 있음. `헬스장 등록`(10-26~11-01)은 보이지 않는다
-- [ ] US-15: 일 뷰 11-03에 `분기 계획 작성`(진행중, 10-31~11-03, 업무), `은행 서류 제출`(진행중, 11-03~11-03, 개인) 2건. [다음] → 11-04에 `팀 회의 자료 준비`(시작 전). [이전] 두 번 → 11-02
+- [ ] US-15: 일 뷰 11-03에 `분기 계획 작성`(진행중, 10-31~11-03, 업무), `은행 서류 제출`(진행중, 11-03~11-03, 개인) 2건. [이전] → 11-02에 할일 1, 2, 5. [다음] 두 번 → 11-04에 `팀 회의 자료 준비`(시작 전)
 - [ ] 월 뷰 [다음] → 2026-12(11-30 ~ 2027-01-03), [오늘] → 2026-11로 복귀
 - [ ] 주 뷰 [다음] → 11-09 ~ 11-15에 `가족 여행 준비`가 11-09·11-10 칸에 보인다
 - [ ] 월 → 주 → 일 전환 시 anchorDate가 유지된다 (11-03 기준 같은 날이 표시됨)
@@ -629,7 +630,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] US-18: 뷰포트 375px에서 가입 → 로그인 → 카테고리 추가 → 할일 등록 → 목록 필터 → 완료 → 캘린더 월/주/일 → 로그아웃이 가로 스크롤 없이 수행된다
+- [ ] US-18: 뷰포트 375px에서 가입 화면 확인 후 뒤로 가기 → 로그인 → 할일 등록 → 완료 → 상태 필터 → 편집 → 삭제 → 카테고리 추가 → 캘린더 월 뷰 → 로그아웃(US-18 1~10단계)이 가로 스크롤 없이 수행된다
 - [ ] 375px에서 `[메뉴]` 토글로 메뉴 5개(또는 4개)에 접근할 수 있다
 - [ ] 375px 월 뷰에서 11-01 칸에 점 4개, 11-02 칸에 점 3개가 보인다
 - [ ] 375px 주 뷰가 날짜별 세로 목록이고 11-02에 3건, 11-03에 2건이 배지와 함께 보인다
@@ -738,11 +739,11 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 수행 작업:
 
-1. `MePage.tsx`(SC-06): 이름 수정, 비밀번호 변경(현재·새 비밀번호), 저장. 라우트 `/me`와 `TopNav`의 `내 정보` 메뉴를 켠다. `INVALID_CREDENTIALS`는 화면 유지 + 오류 표시 (PRD 4.2).
+1. `MePage.tsx`(SC-06): 이름 수정, 비밀번호 변경(현재·새 비밀번호), 저장. 라우트 `/me`와 `TopNav`의 `내 정보` 메뉴를 켠다. `api/auth.ts`에 `me`(`/api/users/me` 조회·수정)를 추가한다 (원칙 7.3). `INVALID_CREDENTIALS`는 화면 유지 + 오류 표시 (PRD 4.2).
 
 완료 조건:
 
-- [ ] US-19: 이름 변경 후 상단 메뉴의 이름이 바뀐다
+- [ ] US-19: 이름 `이서준(팀장)`으로 저장 → SC-06에 반영. 비밀번호 변경 후 옛 비밀번호 로그인 실패, 새 비밀번호 성공
 - [ ] 현재 비밀번호 틀림 → 화면 유지 + 오류 메시지, `/login`으로 이동하지 않는다
 - [ ] 비밀번호 변경 후 로그아웃 → 새 비밀번호로 로그인된다
 - [ ] 상단 메뉴에 `내 정보`가 보이고 `/me`가 `RequireAuth` 아래에 있다

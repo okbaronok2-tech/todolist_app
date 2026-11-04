@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList ERD |
-| 현재 버전 | v0.2 |
+| 현재 버전 | v0.3 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.6, `docs/2-PRD.md` v0.7, `docs/6-arch-diagram.md` v0.3 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/2-PRD.md` v0.8, `docs/6-arch-diagram.md` v0.4 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 ERD-xx(다이어그램·표)와 ERD-Cx(확인 필요)뿐이다. BR, ST, D, F, UC는 도메인 정의서, NFR, PD는 PRD, AD는 아키텍처 다이어그램의 ID를 참조만 하며 재정의하지 않는다. 문서 간 표현이 다른 지점은 PRD 7장을 기준으로 하고 9장에 나열한다. 최종 DDL은 구현 시 확정한다 (PRD 7장).
 
@@ -18,6 +18,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 ERD-xx(다이어그램·�
 |------|------|--------|-----------|---------|
 | v0.1 | 2026-11-04 | - | 초안 작성. `docs/6-arch-diagram.md` AD-05에서 분리·확장 | ERD-01~07, ERD-C1~C8 |
 | v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. ERD-02에 `refresh_tokens` 엔티티·관계 추가, ERD-08 컬럼 명세 추가, ERD-06에 FK·인덱스·유일 인덱스 행 추가, ERD-C9 추가, 참조 버전 갱신. ERD-01은 변경 없음 | 문서 정보, ERD-02, ERD-06, ERD-08, 8장, ERD-C9 |
+| v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. `schema.sql` 결정을 본문에 반영: ERD-02 코멘트(ON DELETE, 복합 FK, `DEFAULT false`), ERD-03~05 기본값 `now()`·`false`와 FK ON DELETE·복합 FK, ERD-06에 제약·인덱스 이름, FK 동작 확정, `categories UNIQUE (id, user_id)` 행 추가, ERD-C2·C5·C6·C7 해결 표기, 참조 버전 갱신 | 문서 정보, ERD-02, ERD-03, ERD-04, ERD-05, ERD-06, 9장 |
 
 ---
 
@@ -115,17 +116,17 @@ erDiagram
 
     categories {
         bigint id PK "GENERATED ALWAYS AS IDENTITY"
-        bigint user_id FK "users.id BR-16"
+        bigint user_id FK "users.id ON DELETE CASCADE BR-16"
         varchar name "UNIQUE (user_id, lower(btrim(name))) BR-14, BR-17, BR-46"
-        boolean is_default "UNIQUE (user_id) WHERE is_default BR-13"
+        boolean is_default "DEFAULT false, UNIQUE (user_id) WHERE is_default BR-13"
         timestamptz created_at "NOT NULL"
         timestamptz updated_at "NOT NULL"
     }
 
     todos {
         bigint id PK "GENERATED ALWAYS AS IDENTITY"
-        bigint user_id FK "users.id BR-02"
-        bigint category_id FK "categories.id, 같은 user_id 소유 BR-16"
+        bigint user_id FK "users.id ON DELETE CASCADE BR-02"
+        bigint category_id FK "categories(id, user_id) 복합 FK ON DELETE RESTRICT BR-16"
         varchar title "BR-21, BR-41"
         text description "NULL 허용 BR-42"
         date start_date "YYYY-MM-DD 문자열로 반환 BR-21"
@@ -151,35 +152,35 @@ NULL 열은 도메인 정의서 3.1의 필수 O/X에서 옮겼다. 기본값은 
 | `email` | `varchar` | NOT NULL | - | `UNIQUE (lower(email))`. 서버 검증, DDL 길이 미지정(PRD 7장) | `email` | BR-04, BR-43 |
 | `password` | `varchar` | NOT NULL | - | bcrypt cost 10 해시 저장 (NFR-07). 서버 검증, DDL 길이 미지정(PRD 7장) | `password` | BR-05, BR-44 |
 | `name` | `varchar` | NOT NULL | - | 서버 검증, DDL 길이 미지정(PRD 7장) | `name` | BR-45 |
-| `created_at` | `timestamptz` | NOT NULL | - (ERD-C7) | - | `createdAt` | - |
-| `updated_at` | `timestamptz` | NOT NULL | - (ERD-C7) | - | `updatedAt` | - |
+| `created_at` | `timestamptz` | NOT NULL | `now()` (ERD-C7) | - | `createdAt` | - |
+| `updated_at` | `timestamptz` | NOT NULL | `now()` (ERD-C7) | - | `updatedAt` | - |
 
 ### ERD-04 `categories`
 
 | 컬럼 | 타입 | NULL | 기본값 | 제약 | 도메인 속성명 | 관련 BR |
 |------|------|------|--------|------|---------------|---------|
 | `id` | `bigint` | NOT NULL | `GENERATED ALWAYS AS IDENTITY` | PK | `id` | BR-02 |
-| `user_id` | `bigint` | NOT NULL | - | FK `users(id)` | `userId` | BR-16 |
+| `user_id` | `bigint` | NOT NULL | - | FK `users(id) ON DELETE CASCADE` | `userId` | BR-16 |
 | `name` | `varchar` | NOT NULL | - | `UNIQUE (user_id, lower(btrim(name)))`. 서버 검증, DDL 길이 미지정(PRD 7장) | `name` | BR-14, BR-17, BR-46 |
-| `is_default` | `boolean` | NOT NULL | - (ERD-C5) | `UNIQUE (user_id) WHERE is_default` | `isDefault` | BR-11, BR-13 |
-| `created_at` | `timestamptz` | NOT NULL | - (ERD-C7) | - | `createdAt` | - |
-| `updated_at` | `timestamptz` | NOT NULL | - (ERD-C7) | - | `updatedAt` | - |
+| `is_default` | `boolean` | NOT NULL | `false` (ERD-C5) | `UNIQUE (user_id) WHERE is_default` | `isDefault` | BR-11, BR-13 |
+| `created_at` | `timestamptz` | NOT NULL | `now()` (ERD-C7) | - | `createdAt` | - |
+| `updated_at` | `timestamptz` | NOT NULL | `now()` (ERD-C7) | - | `updatedAt` | - |
 
 ### ERD-05 `todos`
 
 | 컬럼 | 타입 | NULL | 기본값 | 제약 | 도메인 속성명 | 관련 BR |
 |------|------|------|--------|------|---------------|---------|
 | `id` | `bigint` | NOT NULL | `GENERATED ALWAYS AS IDENTITY` | PK | `id` | BR-02 |
-| `user_id` | `bigint` | NOT NULL | - | FK `users(id)` | `userId` | BR-02 |
-| `category_id` | `bigint` | NOT NULL | - | FK `categories(id)`. 같은 사용자 소유 검증은 ERD-C6 | `categoryId` | BR-12, BR-16 |
+| `user_id` | `bigint` | NOT NULL | - | FK `users(id) ON DELETE CASCADE` | `userId` | BR-02 |
+| `category_id` | `bigint` | NOT NULL | - | FK `categories(id, user_id)` 복합, `ON DELETE RESTRICT` (ERD-C6) | `categoryId` | BR-12, BR-16 |
 | `title` | `varchar` | NOT NULL | - | 서버 검증, DDL 길이 미지정(PRD 7장) | `title` | BR-21, BR-41 |
 | `description` | `text` | NULL | - | 서버 검증 1000자 이하 (BR-42), DDL 길이 미지정(PRD 7장) | `description` | BR-42 |
 | `start_date` | `date` | NOT NULL | - | `CHECK (start_date <= end_date)` | `startDate` | BR-21, BR-22 |
 | `end_date` | `date` | NOT NULL | - | 위 CHECK | `endDate` | BR-21, BR-22 |
 | `is_completed` | `boolean` | NOT NULL | `false` | `CHECK (is_completed = (completed_at IS NOT NULL))` | `isCompleted` | BR-24, BR-28 |
 | `completed_at` | `timestamptz` | NULL | - | 위 CHECK | `completedAt` | BR-25, BR-28 |
-| `created_at` | `timestamptz` | NOT NULL | - (ERD-C7) | - | `createdAt` | - |
-| `updated_at` | `timestamptz` | NOT NULL | - (ERD-C7) | - | `updatedAt` | - |
+| `created_at` | `timestamptz` | NOT NULL | `now()` (ERD-C7) | - | `createdAt` | - |
+| `updated_at` | `timestamptz` | NOT NULL | `now()` (ERD-C7) | - | `updatedAt` | - |
 
 ### ERD-08 `refresh_tokens`
 
@@ -200,23 +201,24 @@ NULL 열은 도메인 정의서 3.1의 필수 O/X에서 옮겼다. 기본값은 
 
 ### ERD-06 제약·인덱스
 
-PRD 7장의 인덱스 8개(`refresh_tokens` 2개 포함), CHECK 2개, 외래 키 4개다. `users`·`categories`·`todos` FK의 ON DELETE 동작은 어느 문서에도 없다 (ERD-C2). `refresh_tokens.user_id` FK는 PRD 7장이 `ON DELETE CASCADE`로 정한다. 카테고리 삭제 시 할일 이동은 애플리케이션 트랜잭션이 처리한다 (BR-15, AD-12).
+PRD 7장의 인덱스 8개(`refresh_tokens` 2개 포함, PK·유일 제약의 암묵 인덱스 제외), CHECK 2개, 외래 키 4개다. 이름은 `docs/schema.sql` 기준이다. `user_id` FK는 `ON DELETE CASCADE`, `todos.category_id` FK는 `ON DELETE RESTRICT`다 (ERD-C2). `refresh_tokens.user_id` FK는 PRD 7장이 `ON DELETE CASCADE`로 정한다. 카테고리 삭제 시 할일 이동은 애플리케이션 트랜잭션이 처리한다 (BR-15, AD-12).
 
 | 종류 | 테이블 | 정의 | 목적 BR / UC |
 |------|--------|------|--------------|
-| 유일 인덱스 | `users` | `UNIQUE (lower(email))` | BR-04 |
-| 유일 인덱스 | `categories` | `UNIQUE (user_id, lower(btrim(name)))` | BR-14 (ERD-C8) |
-| 부분 유일 인덱스 | `categories` | `UNIQUE (user_id) WHERE is_default` | BR-13 |
-| 인덱스 | `todos` | `(user_id, end_date, start_date, created_at)` | 목록 기본 정렬, 상태 필터 (UC-09, BR-31, BR-32) |
-| 인덱스 | `todos` | `(user_id, start_date, end_date)` | 캘린더 기간 겹침 (UC-10, BR-33) |
-| 인덱스 | `todos` | `(user_id, category_id)` | 카테고리 필터 (BR-31), 카테고리 삭제 시 이동 (UC-11, BR-15) |
+| 유일 인덱스 | `users` | `UNIQUE (lower(email))` (`users_email_lower_uk`) | BR-04 |
+| 유일 인덱스 | `categories` | `UNIQUE (user_id, lower(btrim(name)))` (`categories_user_name_uk`) | BR-14 (ERD-C8) |
+| 부분 유일 인덱스 | `categories` | `UNIQUE (user_id) WHERE is_default` (`categories_user_default_uk`) | BR-13 |
+| 유일 제약 | `categories` | `UNIQUE (id, user_id)` (복합 FK 참조 대상, ERD-C6) | BR-16 |
+| 인덱스 | `todos` | `(user_id, end_date, start_date, created_at)` (`todos_user_end_start_created_idx`) | 목록 기본 정렬, 상태 필터 (UC-09, BR-31, BR-32) |
+| 인덱스 | `todos` | `(user_id, start_date, end_date)` (`todos_user_start_end_idx`) | 캘린더 기간 겹침 (UC-10, BR-33) |
+| 인덱스 | `todos` | `(user_id, category_id)` (`todos_user_category_idx`) | 카테고리 필터 (BR-31), 카테고리 삭제 시 이동 (UC-11, BR-15) |
 | 인덱스 | `refresh_tokens` | `(user_id)` (`refresh_tokens_user_idx`) | 로그아웃·재사용 탐지 시 사용자 전체 폐기, 로그인 시 만료·폐기 행 삭제 (NFR-06, PRD 6.4) |
 | 유일 인덱스 | `refresh_tokens` | `UNIQUE (token_hash)` (`refresh_tokens_token_hash_uk`) | 리프레시 쿠키 해시 조회 (NFR-06, PRD 6.4) |
-| CHECK | `todos` | `start_date <= end_date` | BR-22 |
-| CHECK | `todos` | `is_completed = (completed_at IS NOT NULL)` | BR-28 |
-| FK | `categories` | `user_id` → `users(id)`. ON DELETE 미정, 확인 필요 | BR-16 |
-| FK | `todos` | `user_id` → `users(id)`. ON DELETE 미정, 확인 필요 | BR-02 |
-| FK | `todos` | `category_id` → `categories(id)`. ON DELETE 미정, 확인 필요 | BR-12, BR-15, BR-16 |
+| CHECK | `todos` | `start_date <= end_date` (`todos_date_range_chk`) | BR-22 |
+| CHECK | `todos` | `is_completed = (completed_at IS NOT NULL)` (`todos_completed_chk`) | BR-28 |
+| FK | `categories` | `user_id` → `users(id) ON DELETE CASCADE` (ERD-C2) | BR-16 |
+| FK | `todos` | `user_id` → `users(id) ON DELETE CASCADE` (ERD-C2) | BR-02 |
+| FK | `todos` | `(category_id, user_id)` → `categories(id, user_id) ON DELETE RESTRICT` (`todos_category_fk`, ERD-C2·C6) | BR-12, BR-15, BR-16 |
 | FK | `refresh_tokens` | `user_id` → `users(id) ON DELETE CASCADE` | NFR-06 |
 
 ---
@@ -292,11 +294,11 @@ END
 | ID | 내용 | 관련 ID |
 |----|------|---------|
 | ERD-C1 | 도메인 정의서 3.2는 id를 `string`으로, PRD 7장은 `BIGINT GENERATED ALWAYS AS IDENTITY`로 적는다. 도메인 정의서 3.2는 관계 파악용이므로 물리 ERD는 PRD를 따랐고 개념 ERD(ERD-01)는 도메인 표기를 유지했다 | 도메인 3.2, PRD 7장 |
-| ERD-C2 | FK 3개의 ON DELETE 동작이 어느 문서에도 없다. 회원 탈퇴는 비범위(D-04)이고 카테고리 삭제는 이동 후 삭제(BR-15)다. `schema.sql` 결정: `user_id` FK는 `ON DELETE CASCADE`, `category_id` FK는 `ON DELETE RESTRICT`(BR-15 이동이 선행되므로 보호) | PRD 7장, D-04, BR-15 |
+| ERD-C2 | FK 3개의 ON DELETE 동작이 어느 문서에도 없다. 회원 탈퇴는 비범위(D-04)이고 카테고리 삭제는 이동 후 삭제(BR-15)다. `schema.sql` 결정: `user_id` FK는 `ON DELETE CASCADE`, `category_id` FK는 `ON DELETE RESTRICT`(BR-15 이동이 선행되므로 보호). 해결, ERD-02·04·05·06에 반영 | PRD 7장, D-04, BR-15 |
 | ERD-C3 | `varchar` 길이가 미정이다. BR-41~46은 서버 검증이며 DDL 길이는 구현 시 확정한다 (PRD 7장). 정한다면 BR-41~46 상한과 맞춰야 한다 | PRD 7장, BR-41~46 |
 | ERD-C4 | 도메인 정의서 3.1은 email을 시스템 전체 유일로, BR-04는 대소문자 무시로 적는다. 도메인 3.2 다이어그램은 `email UK`로 표기하고, PRD 7장은 `UNIQUE (lower(email))` 함수 인덱스다. 물리 ERD는 함수 인덱스를 코멘트로 적었다 (`UK` 마커는 mermaid 9.x 미지원이라 쓰지 않는다). 컬럼 자체의 `UNIQUE` 제약은 아니다 | 도메인 3.1, 3.2, BR-04, PRD 7장 |
-| ERD-C5 | `categories.is_default`의 기본값이 PRD 7장에 없다. 도메인 3.1은 필수 O로만 적는다 (BR-11은 가입 시 `isDefault = true`로 생성). `schema.sql` 결정: `DEFAULT false` | 도메인 3.1, BR-11, PRD 7장 |
-| ERD-C6 | `todos.category_id`가 같은 `user_id` 소유여야 한다(BR-16)는 DB 제약(복합 FK 등)이 PRD 7장에 없다. 아키텍처 다이어그램은 서비스 검증으로 그렸다. `schema.sql` 결정: `categories UNIQUE (id, user_id)` + `todos FOREIGN KEY (category_id, user_id)` 복합 FK로 DB에서도 보장 | BR-16, PRD 7장, AD-09 |
-| ERD-C7 | `created_at`, `updated_at`의 기본값(`now()` 등)과 `updated_at` 갱신 방식(트리거 또는 애플리케이션)이 PRD 7장에 없다. NULL 열은 도메인 3.1의 필수 O에서 옮겼다. `schema.sql` 결정: 둘 다 `DEFAULT now()`, `updated_at` 갱신은 애플리케이션 UPDATE 문에서 | 도메인 3.1, PRD 7장 |
+| ERD-C5 | `categories.is_default`의 기본값이 PRD 7장에 없다. 도메인 3.1은 필수 O로만 적는다 (BR-11은 가입 시 `isDefault = true`로 생성). `schema.sql` 결정: `DEFAULT false`. 해결, ERD-02·04에 반영 | 도메인 3.1, BR-11, PRD 7장 |
+| ERD-C6 | `todos.category_id`가 같은 `user_id` 소유여야 한다(BR-16)는 DB 제약(복합 FK 등)이 PRD 7장에 없다. 아키텍처 다이어그램은 서비스 검증으로 그렸다. `schema.sql` 결정: `categories UNIQUE (id, user_id)` + `todos FOREIGN KEY (category_id, user_id)` 복합 FK로 DB에서도 보장. 해결, ERD-02·05·06에 반영 | BR-16, PRD 7장, AD-09 |
+| ERD-C7 | `created_at`, `updated_at`의 기본값(`now()` 등)과 `updated_at` 갱신 방식(트리거 또는 애플리케이션)이 PRD 7장에 없다. NULL 열은 도메인 3.1의 필수 O에서 옮겼다. `schema.sql` 결정: 둘 다 `DEFAULT now()`, `updated_at` 갱신은 애플리케이션 UPDATE 문에서. 해결, ERD-03~05에 반영 | 도메인 3.1, PRD 7장 |
 | ERD-C8 | 이전 AD-05는 `categories` 이름 유일 인덱스 목적에 BR-17도 적었으나 PRD 7장은 BR-14만 적는다. ERD-06은 PRD를 따랐다. ERD-02의 `name` 코멘트에는 BR-17이 남아 있다 (BR-17은 '기본' 이름 금지 규칙) | PRD 7장, BR-14, BR-17 |
 | ERD-C9 | `refresh_tokens`는 도메인 정의서 3장에 없는 기술 엔티티다. PRD NFR-06 근거로 물리 모델(ERD-02, ERD-08)에만 둔다. 개념 ERD(ERD-01)와 7.1 이름 대응에는 넣지 않는다 | PRD NFR-06, 6.4, 7장 |
