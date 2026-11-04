@@ -26,14 +26,16 @@ export async function migrate() {
 // 시나리오 3장 샘플 데이터. TRUNCATE ... RESTART IDENTITY로 id가 항상 1부터 (원칙 5장)
 export async function seed() {
   await pool.query(await readFile(path.join(here, 'seed.sql'), 'utf8'));
-  console.log('seeded');
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const cmd = process.argv[2] ?? 'migrate';
   try {
     if (cmd === 'migrate') await migrate();
-    else if (cmd === 'seed') await seed();
+    else if (cmd === 'seed') {
+      await seed();
+      console.log('seeded');
+    }
     else throw new Error(`unknown command: ${cmd}`);
   } finally {
     await pool.end();

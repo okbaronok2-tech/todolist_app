@@ -8,7 +8,7 @@
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.4 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.5 |
 
 ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 (재정의하지 않는다). 이 문서에서 새로 부여하는 ID는 SC(화면), NFR(비기능 요구), R(리스크), A(가정), PD(결정 대기)이며 도메인 정의서 ID와 충돌하지 않는다. 수치에 "가정"이 붙은 것은 측정값이 아니라 목표 설정을 위한 가정이다.
 

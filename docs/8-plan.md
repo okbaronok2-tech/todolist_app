@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.4 |
+| 현재 버전 | v0.5 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.4, `docs/6-arch-diagram.md` v0.5, `docs/7-erd.md` v0.4, `docs/schema.sql`, `docs/9-api-design.md` v0.1 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.5, `docs/6-arch-diagram.md` v0.5, `docs/7-erd.md` v0.4, `docs/schema.sql`, `docs/9-api-design.md` v0.1 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -20,6 +20,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 | v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. T-D01 테이블 5개·인덱스 8개, T-X02 refresh 엔드포인트·비보호 경로, T-B01 `JWT_SECRET` 48자, T-B03 HS384·두 쿠키·리프레시 회전·재사용 탐지·로그아웃 폐기, T-F01 refresh 재시도, T-F03 US-16 (a)/(b), T-X04 k6 401 → refresh, 참조 버전 갱신 | 문서 정보, 2장, T-D01, T-X02, T-B01, T-B03, T-F01, T-F03, T-X04 |
 | v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. T-X02 미결 3건(AD-C8은 이미 해결)과 '작성 예정' 표기 제거 조건, T-B06 필터 결과 순서, T-B07 US-17 데이터·로그인 두 쿠키, T-F01 라우트 6개, T-F03 SC-02 오류 표시 위치·US-01 조건, T-F04 US-04 데이터, T-F06 US-08 날짜, T-F07·F08 월 뷰 칸 수 일반화, T-F09 US-15 순서, T-F10 US-18 단계, T-F11 `me`·US-19 조건을 시나리오·와이어프레임에 맞춤, 참조 버전 갱신 | 문서 정보, T-X02, T-B06, T-B07, T-F01, T-F03, T-F04, T-F06, T-F07, T-F08, T-F09, T-F10, T-F11 |
 | v0.4 | 2026-11-04 | - | T-X01·T-X02·T-D01·T-D02 완료 조건 체크, 참조 문서에 `docs/9-api-design.md` 추가, 참조 버전 갱신 | 문서 정보, T-X01, T-X02, T-D01, T-D02 |
+| v0.5 | 2026-11-04 | - | T-B01~T-B08 완료 조건 체크(85개). 테스트 실행은 `node --test "tests/*.test.js" --test-concurrency=1`(Node 24는 디렉터리 인자 미지원, 테스트 DB 공유로 직렬) | 문서 정보, T-B01~T-B08 |
 
 ---
 
@@ -201,14 +202,14 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] `JWT_SECRET` 없이 `npm run dev`를 실행하면 종료 코드가 0이 아니고 원인이 출력된다
-- [ ] `GET /api/health`가 200 `{ "ok": true }`를 반환한다
-- [ ] DB를 중지한 상태에서 `GET /api/health`가 503을 반환한다
-- [ ] `GET /api/nope`가 404 `{ "code": "NOT_FOUND", "message": ... }`를 반환한다
-- [ ] 라우트에서 `throw new AppError('VALIDATION_ERROR', 'x')`를 던지면 400 `{ "code": "VALIDATION_ERROR", "message": "x" }`가 온다
-- [ ] 4xx 로그 1줄에 `ts, method, path, status, code, message`가 있고 stack이 없다
-- [ ] `errors/codes.js` 밖에 HTTP status 숫자 리터럴이 없다 (`grep -rn 'status(4\|status(5' src/` 결과 없음)
-- [ ] `Ctrl+C`로 종료 시 pool 종료 로그 후 프로세스가 끝난다
+- [x] `JWT_SECRET` 없이 `npm run dev`를 실행하면 종료 코드가 0이 아니고 원인이 출력된다
+- [x] `GET /api/health`가 200 `{ "ok": true }`를 반환한다
+- [x] DB를 중지한 상태에서 `GET /api/health`가 503을 반환한다
+- [x] `GET /api/nope`가 404 `{ "code": "NOT_FOUND", "message": ... }`를 반환한다
+- [x] 라우트에서 `throw new AppError('VALIDATION_ERROR', 'x')`를 던지면 400 `{ "code": "VALIDATION_ERROR", "message": "x" }`가 온다
+- [x] 4xx 로그 1줄에 `ts, method, path, status, code, message`가 있고 stack이 없다
+- [x] `errors/codes.js` 밖에 HTTP status 숫자 리터럴이 없다 (`grep -rn 'status(4\|status(5' src/` 결과 없음)
+- [x] `Ctrl+C`로 종료 시 pool 종료 로그 후 프로세스가 끝난다
 
 ### T-B02 입력 검증 모듈
 
@@ -227,16 +228,16 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] 7자 비밀번호는 거부, 8자·64자는 통과한다
-- [ ] `@` 없는 이메일, 255자 이메일은 거부한다
-- [ ] 공백만 있는 제목, 101자 제목은 거부하고 100자 제목은 통과한다
-- [ ] 1001자 설명은 거부하고 설명 없음은 통과한다
-- [ ] 31자 카테고리명은 거부한다
-- [ ] 제목 없음 + `startDate > endDate` 입력에서 `VALIDATION_ERROR`가 먼저 나온다 (BR-52)
-- [ ] `startDate = endDate`는 통과, `startDate > endDate`는 `INVALID_DATE_RANGE`다
-- [ ] `today`가 없거나 `2026-1-3` 같은 형식이면 `VALIDATION_ERROR`다
-- [ ] ID `abc`, `0`, `-1`, `1.5`는 `NOT_FOUND`, `1`은 통과한다
-- [ ] 위 항목이 `tests/`의 테스트 또는 `node -e` 호출 결과로 확인됐다
+- [x] 7자 비밀번호는 거부, 8자·64자는 통과한다
+- [x] `@` 없는 이메일, 255자 이메일은 거부한다
+- [x] 공백만 있는 제목, 101자 제목은 거부하고 100자 제목은 통과한다
+- [x] 1001자 설명은 거부하고 설명 없음은 통과한다
+- [x] 31자 카테고리명은 거부한다
+- [x] 제목 없음 + `startDate > endDate` 입력에서 `VALIDATION_ERROR`가 먼저 나온다 (BR-52)
+- [x] `startDate = endDate`는 통과, `startDate > endDate`는 `INVALID_DATE_RANGE`다
+- [x] `today`가 없거나 `2026-1-3` 같은 형식이면 `VALIDATION_ERROR`다
+- [x] ID `abc`, `0`, `-1`, `1.5`는 `NOT_FOUND`, `1`은 통과한다
+- [x] 위 항목이 `tests/`의 테스트 또는 `node -e` 호출 결과로 확인됐다
 
 ### T-B03 인증 API
 
@@ -256,26 +257,26 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] 새 이메일로 가입하면 201, `Set-Cookie: token=...; HttpOnly; SameSite=Lax; Path=/; Max-Age=900`와 `Set-Cookie: refresh_token=...; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600`가 오고 응답에 `user.id`, `user.name`이 있다
-- [ ] 액세스 토큰 헤더의 `alg`가 `HS384`이고 claims에 `sub`, `iat`, `exp`가 있다. 다른 알고리즘으로 서명한 토큰은 401 `UNAUTHORIZED`다 (`algorithms` 고정)
-- [ ] 가입·로그인 직후 `refresh_tokens`에 그 사용자의 행이 1개 늘고 `token_hash`가 64자 hex이며 쿠키 원문과 다르다
-- [ ] `POST /api/auth/refresh`가 200 `{ user: { id, name } }`과 새 `token`·`refresh_token` 쿠키를 돌려주고, 기존 행은 `revoked_at`이 채워지고 새 행이 1개 생긴다 (회전)
-- [ ] 회전 후 기존 리프레시 토큰으로 다시 refresh하면 401 `UNAUTHORIZED` + 두 쿠키 `Max-Age=0`이고, 그 사용자의 리프레시 행 전부가 `revoked_at`을 가진다 (재사용 탐지). 직전에 받은 새 토큰도 더는 통하지 않는다
-- [ ] `expires_at`을 과거로 바꾼 리프레시 토큰으로 refresh하면 401 `UNAUTHORIZED`다
-- [ ] 로그인하면 그 사용자의 만료·폐기된 리프레시 행이 삭제된다
-- [ ] `JWT_SECRET`이 47자이면 기동에 실패하고 48자이면 기동된다
-- [ ] 가입 직후 해당 사용자의 카테고리가 `name = '기본'`, `is_default = true` 1개다 (BR-11)
-- [ ] 대소문자만 다른 기존 이메일로 가입하면 409 `DUPLICATE_EMAIL`이고 사용자·카테고리 행 수가 변하지 않는다 (BR-04)
-- [ ] 기본 카테고리 생성이 실패하도록 만든 테스트에서 사용자 행도 생성되지 않는다 (트랜잭션)
-- [ ] 없는 이메일과 틀린 비밀번호가 동일한 401 `INVALID_CREDENTIALS` 본문을 반환한다 (BR-06)
-- [ ] 시드 사용자 `seojun@example.com` / `seojun1234`로 로그인하면 200과 쿠키가 온다
-- [ ] 쿠키 없이 `POST /api/auth/logout`을 호출해도 204이고 두 쿠키 `Max-Age=0`이 온다 (인증 미들웨어 없음, AD-C8 해결)
-- [ ] 로그아웃 응답에 `token`·`refresh_token` 두 쿠키의 `Max-Age=0`이 있고, 그 뒤 쿠키 없는 보호 API 요청은 401 `UNAUTHORIZED`다
-- [ ] 로그아웃 후 그 리프레시 토큰으로 `POST /api/auth/refresh`하면 401 `UNAUTHORIZED`다 (DB 폐기)
-- [ ] 만료된 액세스 토큰(`exp` 과거)으로 보호 API를 요청하면 401 `UNAUTHORIZED`다 (BR-53). `refresh_token` 쿠키를 함께 보내도 미들웨어는 보지 않는다
-- [ ] `NODE_ENV=production`일 때만 두 쿠키에 `Secure`가 붙는다
-- [ ] 응답·로그 어디에도 `password`, 해시, 액세스·리프레시 토큰 값이 출력되지 않는다
-- [ ] `npm test`에서 `auth-service.test.js`가 통과한다 (회전·재사용 탐지·폐기 케이스 포함)
+- [x] 새 이메일로 가입하면 201, `Set-Cookie: token=...; HttpOnly; SameSite=Lax; Path=/; Max-Age=900`와 `Set-Cookie: refresh_token=...; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600`가 오고 응답에 `user.id`, `user.name`이 있다
+- [x] 액세스 토큰 헤더의 `alg`가 `HS384`이고 claims에 `sub`, `iat`, `exp`가 있다. 다른 알고리즘으로 서명한 토큰은 401 `UNAUTHORIZED`다 (`algorithms` 고정)
+- [x] 가입·로그인 직후 `refresh_tokens`에 그 사용자의 행이 1개 늘고 `token_hash`가 64자 hex이며 쿠키 원문과 다르다
+- [x] `POST /api/auth/refresh`가 200 `{ user: { id, name } }`과 새 `token`·`refresh_token` 쿠키를 돌려주고, 기존 행은 `revoked_at`이 채워지고 새 행이 1개 생긴다 (회전)
+- [x] 회전 후 기존 리프레시 토큰으로 다시 refresh하면 401 `UNAUTHORIZED` + 두 쿠키 `Max-Age=0`이고, 그 사용자의 리프레시 행 전부가 `revoked_at`을 가진다 (재사용 탐지). 직전에 받은 새 토큰도 더는 통하지 않는다
+- [x] `expires_at`을 과거로 바꾼 리프레시 토큰으로 refresh하면 401 `UNAUTHORIZED`다
+- [x] 로그인하면 그 사용자의 만료·폐기된 리프레시 행이 삭제된다
+- [x] `JWT_SECRET`이 47자이면 기동에 실패하고 48자이면 기동된다
+- [x] 가입 직후 해당 사용자의 카테고리가 `name = '기본'`, `is_default = true` 1개다 (BR-11)
+- [x] 대소문자만 다른 기존 이메일로 가입하면 409 `DUPLICATE_EMAIL`이고 사용자·카테고리 행 수가 변하지 않는다 (BR-04)
+- [x] 기본 카테고리 생성이 실패하도록 만든 테스트에서 사용자 행도 생성되지 않는다 (트랜잭션)
+- [x] 없는 이메일과 틀린 비밀번호가 동일한 401 `INVALID_CREDENTIALS` 본문을 반환한다 (BR-06)
+- [x] 시드 사용자 `seojun@example.com` / `seojun1234`로 로그인하면 200과 쿠키가 온다
+- [x] 쿠키 없이 `POST /api/auth/logout`을 호출해도 204이고 두 쿠키 `Max-Age=0`이 온다 (인증 미들웨어 없음, AD-C8 해결)
+- [x] 로그아웃 응답에 `token`·`refresh_token` 두 쿠키의 `Max-Age=0`이 있고, 그 뒤 쿠키 없는 보호 API 요청은 401 `UNAUTHORIZED`다
+- [x] 로그아웃 후 그 리프레시 토큰으로 `POST /api/auth/refresh`하면 401 `UNAUTHORIZED`다 (DB 폐기)
+- [x] 만료된 액세스 토큰(`exp` 과거)으로 보호 API를 요청하면 401 `UNAUTHORIZED`다 (BR-53). `refresh_token` 쿠키를 함께 보내도 미들웨어는 보지 않는다
+- [x] `NODE_ENV=production`일 때만 두 쿠키에 `Secure`가 붙는다
+- [x] 응답·로그 어디에도 `password`, 해시, 액세스·리프레시 토큰 값이 출력되지 않는다
+- [x] `npm test`에서 `auth-service.test.js`가 통과한다 (회전·재사용 탐지·폐기 케이스 포함)
 
 ### T-B04 카테고리 API
 
@@ -295,17 +296,17 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] 시드 사용자 2의 `GET /api/categories`가 id 3·4·5 3건을 반환하고 사용자 1의 카테고리는 없다
-- [ ] `업무`가 있는 사용자가 ` 업무 `(공백, 대소문자 변형)로 생성하면 409 `DUPLICATE_CATEGORY_NAME`이다 (BR-14)
-- [ ] 다른 사용자는 같은 이름 `업무`를 만들 수 있다
-- [ ] `기본`이라는 이름으로 생성·변경하면 409 `DUPLICATE_CATEGORY_NAME`이다 (BR-17)
-- [ ] 기본 카테고리 이름 변경·삭제는 403 `DEFAULT_CATEGORY_PROTECTED`이고 행이 유지된다 (BR-13, BR-17)
-- [ ] 카테고리 20개인 사용자의 생성 요청은 409 `CATEGORY_LIMIT_EXCEEDED`다 (BR-46)
-- [ ] 할일 N건이 속한 카테고리를 삭제하면 그 N건의 `category_id`가 기본 카테고리 id가 되고 `todos` 행 수가 변하지 않는다 (BR-15)
-- [ ] 이동 UPDATE를 실패시킨 테스트에서 카테고리가 삭제되지 않는다 (롤백)
-- [ ] 타인 카테고리 id로 `PATCH`·`DELETE`하면 존재하지 않는 id와 동일한 404 `NOT_FOUND` 본문이고 타인 데이터는 변하지 않는다 (BR-02)
-- [ ] `id = abc`로 요청하면 DB 조회 없이 404 `NOT_FOUND`다
-- [ ] `npm test`에서 `category-service.test.js`가 통과한다
+- [x] 시드 사용자 2의 `GET /api/categories`가 id 3·4·5 3건을 반환하고 사용자 1의 카테고리는 없다
+- [x] `업무`가 있는 사용자가 ` 업무 `(공백, 대소문자 변형)로 생성하면 409 `DUPLICATE_CATEGORY_NAME`이다 (BR-14)
+- [x] 다른 사용자는 같은 이름 `업무`를 만들 수 있다
+- [x] `기본`이라는 이름으로 생성·변경하면 409 `DUPLICATE_CATEGORY_NAME`이다 (BR-17)
+- [x] 기본 카테고리 이름 변경·삭제는 403 `DEFAULT_CATEGORY_PROTECTED`이고 행이 유지된다 (BR-13, BR-17)
+- [x] 카테고리 20개인 사용자의 생성 요청은 409 `CATEGORY_LIMIT_EXCEEDED`다 (BR-46)
+- [x] 할일 N건이 속한 카테고리를 삭제하면 그 N건의 `category_id`가 기본 카테고리 id가 되고 `todos` 행 수가 변하지 않는다 (BR-15)
+- [x] 이동 UPDATE를 실패시킨 테스트에서 카테고리가 삭제되지 않는다 (롤백)
+- [x] 타인 카테고리 id로 `PATCH`·`DELETE`하면 존재하지 않는 id와 동일한 404 `NOT_FOUND` 본문이고 타인 데이터는 변하지 않는다 (BR-02)
+- [x] `id = abc`로 요청하면 DB 조회 없이 404 `NOT_FOUND`다
+- [x] `npm test`에서 `category-service.test.js`가 통과한다
 
 ### T-B05 할일 CRUD·완료 처리·상태 판정
 
@@ -326,19 +327,19 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] `todo-status.test.js` 4건이 통과한다: 11-01~11-02 완료 → `COMPLETED`, 11-01~11-02 미완료 → `OVERDUE`, 11-04~11-05 미완료 → `NOT_STARTED`, 11-03~11-03 미완료 → `IN_PROGRESS` (today = 2026-11-03)
-- [ ] `categoryId` 없이 생성한 할일의 `categoryId`가 그 사용자의 기본 카테고리 id다 (BR-12)
-- [ ] 수정 시 `categoryId: null`을 보내면 기본 카테고리로 바뀐다 (BR-12)
-- [ ] 타인 소유 또는 없는 `categoryId`로 생성·수정하면 404 `NOT_FOUND`다 (BR-16)
-- [ ] 생성 요청의 `isCompleted: true`는 무시되어 `isCompleted = false`, `completedAt = null`로 저장된다 (BR-24)
-- [ ] `startDate > endDate`는 400 `INVALID_DATE_RANGE`, 같은 날짜는 저장된다 (BR-22). 과거 날짜도 저장된다 (BR-23)
-- [ ] `PATCH /completed { isCompleted: true }` 후 `completedAt`이 null이 아니고 `status = COMPLETED`, 같은 요청을 다시 보내도 결과가 같다 (BR-25, D-10)
-- [ ] `{ isCompleted: false }` 후 `completedAt = null`이고 `status`가 날짜로 다시 판정된다
-- [ ] `PATCH /:id`로 제목만 바꾸면 `isCompleted`·`completedAt`이 유지되고 `updatedAt`이 갱신된다 (UC-06)
-- [ ] 삭제 후 같은 id 조회는 404 `NOT_FOUND`다 (BR-27)
-- [ ] 타인 할일 id로 `GET`·`PATCH`·`DELETE`하면 없는 id와 동일한 404 본문이다 (BR-02)
-- [ ] 응답의 날짜 필드가 `YYYY-MM-DD` 문자열이고 `status` 값이 상수 4개 중 하나다
-- [ ] `npm test`에서 `todo-status.test.js`, `todo-service.test.js`가 통과한다
+- [x] `todo-status.test.js` 4건이 통과한다: 11-01~11-02 완료 → `COMPLETED`, 11-01~11-02 미완료 → `OVERDUE`, 11-04~11-05 미완료 → `NOT_STARTED`, 11-03~11-03 미완료 → `IN_PROGRESS` (today = 2026-11-03)
+- [x] `categoryId` 없이 생성한 할일의 `categoryId`가 그 사용자의 기본 카테고리 id다 (BR-12)
+- [x] 수정 시 `categoryId: null`을 보내면 기본 카테고리로 바뀐다 (BR-12)
+- [x] 타인 소유 또는 없는 `categoryId`로 생성·수정하면 404 `NOT_FOUND`다 (BR-16)
+- [x] 생성 요청의 `isCompleted: true`는 무시되어 `isCompleted = false`, `completedAt = null`로 저장된다 (BR-24)
+- [x] `startDate > endDate`는 400 `INVALID_DATE_RANGE`, 같은 날짜는 저장된다 (BR-22). 과거 날짜도 저장된다 (BR-23)
+- [x] `PATCH /completed { isCompleted: true }` 후 `completedAt`이 null이 아니고 `status = COMPLETED`, 같은 요청을 다시 보내도 결과가 같다 (BR-25, D-10)
+- [x] `{ isCompleted: false }` 후 `completedAt = null`이고 `status`가 날짜로 다시 판정된다
+- [x] `PATCH /:id`로 제목만 바꾸면 `isCompleted`·`completedAt`이 유지되고 `updatedAt`이 갱신된다 (UC-06)
+- [x] 삭제 후 같은 id 조회는 404 `NOT_FOUND`다 (BR-27)
+- [x] 타인 할일 id로 `GET`·`PATCH`·`DELETE`하면 없는 id와 동일한 404 본문이다 (BR-02)
+- [x] 응답의 날짜 필드가 `YYYY-MM-DD` 문자열이고 `status` 값이 상수 4개 중 하나다
+- [x] `npm test`에서 `todo-status.test.js`, `todo-service.test.js`가 통과한다
 
 ### T-B06 할일 목록 필터·캘린더 기간 조회
 
@@ -357,18 +358,18 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] 시드 사용자 2, `today=2026-11-03`, 필터 없음 → id 순서 `6, 1, 2, 5, 4, 3, 7` 7건 (기본 정렬)
-- [ ] `categoryId=4`(업무) → 1, 2, 5, 3 4건
-- [ ] `status=OVERDUE` → 6, 2 2건. 종료일 11-03인 할일은 포함되지 않는다 (BR-32 경계)
-- [ ] `categoryId=4&status=OVERDUE` → 2 1건 (BR-31 AND)
-- [ ] `status=COMPLETED` → 1 1건, `status=NOT_STARTED` → 3, 7, `status=IN_PROGRESS` → 5, 4
-- [ ] 응답의 `status` 값이 같은 요청의 `status` 필터와 항상 일치한다 (PRD 6.5)
-- [ ] `categoryId=2`(타인) 또는 `categoryId=999` → 404 `NOT_FOUND`
-- [ ] `today` 누락·형식 오류 → 400 `VALIDATION_ERROR`
-- [ ] `from=2026-11-02&to=2026-11-08` → 1, 2, 5, 4, 3, 7 (6은 제외, 7은 11-08 경계 포함) (BR-33)
-- [ ] `from=2026-10-26&to=2026-12-06` → 7건 전부
-- [ ] `from`만 있고 `to`가 없으면 400 `VALIDATION_ERROR`
-- [ ] 사용자 1로 같은 요청을 하면 id 8 1건만 온다 (NFR-10)
+- [x] 시드 사용자 2, `today=2026-11-03`, 필터 없음 → id 순서 `6, 1, 2, 5, 4, 3, 7` 7건 (기본 정렬)
+- [x] `categoryId=4`(업무) → 1, 2, 5, 3 4건
+- [x] `status=OVERDUE` → 6, 2 2건. 종료일 11-03인 할일은 포함되지 않는다 (BR-32 경계)
+- [x] `categoryId=4&status=OVERDUE` → 2 1건 (BR-31 AND)
+- [x] `status=COMPLETED` → 1 1건, `status=NOT_STARTED` → 3, 7, `status=IN_PROGRESS` → 5, 4
+- [x] 응답의 `status` 값이 같은 요청의 `status` 필터와 항상 일치한다 (PRD 6.5)
+- [x] `categoryId=2`(타인) 또는 `categoryId=999` → 404 `NOT_FOUND`
+- [x] `today` 누락·형식 오류 → 400 `VALIDATION_ERROR`
+- [x] `from=2026-11-02&to=2026-11-08` → 1, 2, 5, 4, 3, 7 (6은 제외, 7은 11-08 경계 포함) (BR-33)
+- [x] `from=2026-10-26&to=2026-12-06` → 7건 전부
+- [x] `from`만 있고 `to`가 없으면 400 `VALIDATION_ERROR`
+- [x] 사용자 1로 같은 요청을 하면 id 8 1건만 온다 (NFR-10)
 
 ### T-B07 API 스모크 스크립트
 
@@ -387,11 +388,11 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] `npm run seed && npm run dev` 후 `npm run smoke`가 종료 코드 0으로 끝난다
-- [ ] US-02: 틀린 비밀번호 401 `INVALID_CREDENTIALS`, 올바른 로그인 200 + `token`·`refresh_token` 쿠키
-- [ ] US-12: 필터 없음 7건, `categoryId=4` 4건, `status=OVERDUE` 2건, 둘 다 1건
-- [ ] US-17: 사용자 1 쿠키로 할일 1 `GET`·`PATCH`·`DELETE`, `categoryId=3`으로 할일 등록, `categoryId=3` 필터 모두 404 `NOT_FOUND`이고 사용자 2 데이터가 그대로다
-- [ ] 기대값 하나를 일부러 바꾸면 종료 코드 1과 불일치 줄이 출력된다
+- [x] `npm run seed && npm run dev` 후 `npm run smoke`가 종료 코드 0으로 끝난다
+- [x] US-02: 틀린 비밀번호 401 `INVALID_CREDENTIALS`, 올바른 로그인 200 + `token`·`refresh_token` 쿠키
+- [x] US-12: 필터 없음 7건, `categoryId=4` 4건, `status=OVERDUE` 2건, 둘 다 1건
+- [x] US-17: 사용자 1 쿠키로 할일 1 `GET`·`PATCH`·`DELETE`, `categoryId=3`으로 할일 등록, `categoryId=3` 필터 모두 404 `NOT_FOUND`이고 사용자 2 데이터가 그대로다
+- [x] 기대값 하나를 일부러 바꾸면 종료 코드 1과 불일치 줄이 출력된다
 
 ### T-F01 프론트 골격·API 클라이언트·스토어·타입
 
@@ -722,12 +723,12 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] `GET /api/users/me`가 로그인 사용자의 `id, email, name`을 반환하고 `password`는 없다
-- [ ] 이름 변경 후 재조회 시 바뀌어 있고 `updatedAt`이 갱신됐다
-- [ ] 현재 비밀번호가 틀리면 401 `INVALID_CREDENTIALS`이고 기존 비밀번호로 로그인된다 (BR-05)
-- [ ] 변경 후 새 비밀번호로 로그인되고 옛 비밀번호는 `INVALID_CREDENTIALS`다
-- [ ] 7자 새 비밀번호, 51자 이름은 400 `VALIDATION_ERROR`다
-- [ ] 본문에 `id: 1`을 넣어도 본인 정보만 바뀐다 (BR-03)
+- [x] `GET /api/users/me`가 로그인 사용자의 `id, email, name`을 반환하고 `password`는 없다
+- [x] 이름 변경 후 재조회 시 바뀌어 있고 `updatedAt`이 갱신됐다
+- [x] 현재 비밀번호가 틀리면 401 `INVALID_CREDENTIALS`이고 기존 비밀번호로 로그인된다 (BR-05)
+- [x] 변경 후 새 비밀번호로 로그인되고 옛 비밀번호는 `INVALID_CREDENTIALS`다
+- [x] 7자 새 비밀번호, 51자 이름은 400 `VALIDATION_ERROR`다
+- [x] 본문에 `id: 1`을 넣어도 본인 정보만 바뀐다 (BR-03)
 
 ### T-F11 (P1) 내 정보 화면
 

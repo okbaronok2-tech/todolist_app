@@ -4,7 +4,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.4 |
+| 현재 버전 | v0.5 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
@@ -20,6 +20,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. `JWT_SECRET` 48자 이상(6.1), 두 쿠키·HS384 고정·리프레시 해시만 저장(6.2), `routes/auth.js`·`repositories/refresh-token-repo.js`·`middlewares/auth.js` 주석(7.2), `api/client.ts` 주석(7.3), 서비스 테스트 대상에 리프레시 회전·재사용 탐지·로그아웃 폐기(5장), 참조 버전 갱신 | 문서 정보, 5장, 6.1, 6.2, 7.2, 7.3 |
 | v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. 3.3·부록 B의 스토어 초기화 조건을 로그아웃·리프레시 실패로 한정(`UNAUTHORIZED` 수신만으로는 아님), 5장 자동 테스트 범위에 서비스 테스트 명시·US-19 조건, 7.1 docs 목록 갱신(AD-C1), 7.2 tests에 `load.js`, 7.3 `todos.ts`에 `get`, 참조 버전 갱신 | 문서 정보, 3.3, 5장, 7.1, 7.2, 7.3, 부록 B |
 | v0.4 | 2026-11-04 | - | 4장·7.1의 `docs/9-api-design.md` '작성 예정' 표기 제거(8-plan T-X02), 참조 버전 갱신 | 문서 정보, 4장, 7.1 |
+| v0.5 | 2026-11-04 | - | 백엔드 리뷰 반영. 5장 단위 테스트에 입력 검증, 스모크에 T-B01·T-B03 HTTP 조건, 7.2 tests에 `validate.test.js`·`user-service.test.js` | 문서 정보, 5장, 7.2 |
 
 ---
 
@@ -143,9 +144,10 @@ pages (SC-01~07, 라우팅·화면 조립)
 | 종류 | 대상 | 위치 | 도구 |
 |------|------|------|------|
 | 단위 | ST-01~04 판정 함수. 도메인 정의서 4.3 검증 예 4건을 그대로 옮긴다 | `backend/tests/todo-status.test.js` | `node --test` |
+| 단위 | 입력 검증 함수(BR-21, BR-22, BR-32, BR-41~46, ID 형식). 8-plan T-B02 완료 조건 | `backend/tests/validate.test.js` | `node --test` |
 | 단위 | BR-35 조회 기간 계산. 수용 기준 예(anchorDate 11-03 → 주 11-02~11-08, 월 10-26~12-06) | `frontend/src/lib/calendar-range.test.ts` | `vitest` |
 | 서비스 | 서비스 단위로 검증 가능한 BR 수용 기준: BR-04, BR-06, BR-11, BR-13, BR-14, BR-15(롤백 포함), BR-17, BR-22, BR-46 개수 제한. 인증은 리프레시 회전, 재사용 탐지, 로그아웃 폐기(NFR-06, PRD 6.4). 실제 테스트 DB에 대고 실행하며 `pg`를 mock하지 않는다 | `backend/tests/*-service.test.js` | `node --test` |
-| API 스모크 | 실행 중인 서버에 `fetch`로 US-02, US-12, US-17의 응답 코드·건수를 확인하는 스크립트 1벌 | `backend/tests/smoke.js` | Node 내장 `fetch` |
+| API 스모크 | 실행 중인 서버에 `fetch`로 US-02, US-12, US-17의 응답 코드·건수와 T-B01·T-B03의 HTTP 조건(쿠키 속성, 알고리즘, 회전·재사용, 로그아웃)을 확인하는 스크립트 1벌 | `backend/tests/smoke.js` | Node 내장 `fetch` |
 | 수동 | 화면 흐름 전부. PRD 9.1 체크리스트를 US-01~19 순서로 수행 (US-19는 F-03 구현 시) | `docs/3-user-scenario.md` | 브라우저 |
 
 - 테스트 이름은 ID로 시작한다. 예: `ST-01 완료는 날짜와 무관`, `BR-15 이동 실패 시 카테고리 유지`.
@@ -249,11 +251,13 @@ backend/
 └── tests/
     ├── setup.js            # 테스트 DB migrate + seed 재적용
     ├── todo-status.test.js # ST-01~04
+    ├── validate.test.js    # BR-21·22·32·41~46, ID 형식 (T-B02)
     ├── auth-service.test.js
     ├── category-service.test.js
     ├── todo-service.test.js
+    ├── user-service.test.js # BR-03, BR-05 (P1)
     ├── load.js             # k6 부하 시나리오 (PRD 5.1, NFR-01~03)
-    └── smoke.js            # 실행 중 서버에 US-02, US-12, US-17 확인
+    └── smoke.js            # 실행 중 서버에 US-02, US-12, US-17 + T-B01·T-B03 HTTP 조건 확인
 ```
 
 금지 사항:

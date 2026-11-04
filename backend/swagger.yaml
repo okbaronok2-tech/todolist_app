@@ -1,16 +1,16 @@
 # =============================================================================
 # 문서명    : TodoList API 명세 (OpenAPI 3.0.3)
-# 현재 버전 : v0.2
+# 현재 버전 : v0.4
 # 상태      : 초안
 # 작성일    : 2026-11-04
 # 참조 문서 :
 #   - docs/1-domain-definition.md v0.8
 #   - docs/2-PRD.md v0.9 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
 #   - docs/3-user-scenario.md v0.6
-#   - docs/5-project-principle.md v0.4
+#   - docs/5-project-principle.md v0.5
 #   - docs/6-arch-diagram.md v0.5
 #   - docs/7-erd.md v0.4
-#   - docs/8-plan.md v0.4
+#   - docs/8-plan.md v0.5
 #   - docs/schema.sql
 #   - docs/9-api-design.md v0.1 (같은 내용의 표)
 #
@@ -19,6 +19,8 @@
 # |------|------------|--------|-----------|-----------|
 # | v0.1 | 2026-11-04 | -      | 초안 작성 | 전체      |
 # | v0.2 | 2026-11-04 | -      | 참조 버전 갱신, docs/9-api-design.md v0.1 추가 (내용 동일) | 머리 주석, info, x-document-info |
+# | v0.3 | 2026-11-04 | -      | 참조 버전 갱신 (8-plan v0.5, 내용 동일) | 머리 주석, info, x-document-info |
+# | v0.4 | 2026-11-04 | -      | 참조 버전 갱신 (원칙 v0.5, 내용 동일) | 머리 주석, info, x-document-info |
 #
 # 아래 x-document-info, x-changelog는 이 주석과 같은 내용을 기계가 읽도록 둔 것이다.
 # =============================================================================
@@ -26,7 +28,7 @@ openapi: 3.0.3
 
 info:
   title: TodoList API
-  version: 0.2.0
+  version: 0.4.0
   description: |
     TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.
 
@@ -34,10 +36,10 @@ info:
     - `docs/1-domain-definition.md` v0.8 (F, UC, BR, ST, D)
     - `docs/2-PRD.md` v0.9 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
     - `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)
-    - `docs/5-project-principle.md` v0.4 (4장 API 규칙, 6.2 쿠키)
+    - `docs/5-project-principle.md` v0.5 (4장 API 규칙, 6.2 쿠키)
     - `docs/6-arch-diagram.md` v0.5 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
     - `docs/7-erd.md` v0.4
-    - `docs/8-plan.md` v0.4 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
+    - `docs/8-plan.md` v0.5 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
     - `docs/schema.sql`
     - `docs/9-api-design.md` v0.1 (같은 내용의 표)
 
@@ -57,17 +59,17 @@ info:
 
 x-document-info:
   name: TodoList API 명세 (OpenAPI 3.0.3)
-  version: v0.2
+  version: v0.4
   status: 초안
   date: "2026-11-04"
   references:
     - { path: docs/1-domain-definition.md, version: v0.8 }
     - { path: docs/2-PRD.md, version: v0.9 }
     - { path: docs/3-user-scenario.md, version: v0.6 }
-    - { path: docs/5-project-principle.md, version: v0.4 }
+    - { path: docs/5-project-principle.md, version: v0.5 }
     - { path: docs/6-arch-diagram.md, version: v0.5 }
     - { path: docs/7-erd.md, version: v0.4 }
-    - { path: docs/8-plan.md, version: v0.4 }
+    - { path: docs/8-plan.md, version: v0.5 }
     - { path: docs/schema.sql, version: null }
     - { path: docs/9-api-design.md, version: v0.1 }
 
@@ -81,6 +83,16 @@ x-changelog:
     date: "2026-11-04"
     author: "-"
     changes: 참조 버전 갱신, docs/9-api-design.md v0.1 추가 (내용 동일)
+    scope: 머리 주석, info, x-document-info
+  - version: v0.3
+    date: "2026-11-04"
+    author: "-"
+    changes: 참조 버전 갱신 (8-plan v0.5, 내용 동일)
+    scope: 머리 주석, info, x-document-info
+  - version: v0.4
+    date: "2026-11-04"
+    author: "-"
+    changes: 참조 버전 갱신 (원칙 v0.5, 내용 동일)
     scope: 머리 주석, info, x-document-info
 
 servers:
