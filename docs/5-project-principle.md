@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.3 |
+| 현재 버전 | v0.4 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/2-PRD.md` v0.8, `docs/3-user-scenario.md` v0.5, `docs/4-wireframe.md` v0.4 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -19,6 +19,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.1 | 2026-11-04 | - | 초안 작성 | PR-01~08, 전체 |
 | v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. `JWT_SECRET` 48자 이상(6.1), 두 쿠키·HS384 고정·리프레시 해시만 저장(6.2), `routes/auth.js`·`repositories/refresh-token-repo.js`·`middlewares/auth.js` 주석(7.2), `api/client.ts` 주석(7.3), 서비스 테스트 대상에 리프레시 회전·재사용 탐지·로그아웃 폐기(5장), 참조 버전 갱신 | 문서 정보, 5장, 6.1, 6.2, 7.2, 7.3 |
 | v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. 3.3·부록 B의 스토어 초기화 조건을 로그아웃·리프레시 실패로 한정(`UNAUTHORIZED` 수신만으로는 아님), 5장 자동 테스트 범위에 서비스 테스트 명시·US-19 조건, 7.1 docs 목록 갱신(AD-C1), 7.2 tests에 `load.js`, 7.3 `todos.ts`에 `get`, 참조 버전 갱신 | 문서 정보, 3.3, 5장, 7.1, 7.2, 7.3, 부록 B |
+| v0.4 | 2026-11-04 | - | 4장·7.1의 `docs/9-api-design.md` '작성 예정' 표기 제거(8-plan T-X02), 참조 버전 갱신 | 문서 정보, 4장, 7.1 |
 
 ---
 
@@ -131,7 +132,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 | TypeScript | `strict: true`. `any` 금지. API 응답 타입은 `types/`에 두고 쿼리 hook이 반환 타입으로 쓴다 |
 | 백엔드 JSDoc | 서비스·저장소의 export 함수에만 `@param`, `@returns` 한 줄씩. 내부 함수는 생략 |
 | ESLint·Prettier | 프론트는 Vite 템플릿 기본 ESLint, 백엔드는 `js.configs.recommended`만. Prettier는 기본 설정(빈 `.prettierrc`). 규칙 추가·예외 금지 |
-| API 경로 | `/api/` 접두어 아래 PRD 6.3 리소스(`auth`, `users/me`, `categories`, `todos`). 상세는 `docs/9-api-design.md`(작성 예정)에서 정한다 |
+| API 경로 | `/api/` 접두어 아래 PRD 6.3 리소스(`auth`, `users/me`, `categories`, `todos`). 상세는 `docs/9-api-design.md`에서 정한다 |
 
 ---
 
@@ -200,7 +201,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 todolist_app/
 ├── backend/        # Express API, 마이그레이션, 시드, 테스트
 ├── frontend/       # Vite + React SPA
-├── docs/           # 설계 문서 (1~8, schema.sql, assets/; 작성 예정 9-api-design.md, perf-result.md)
+├── docs/           # 설계 문서 (1~9, schema.sql, assets/; 작성 예정 perf-result.md)
 ├── prompts/        # 문서 생성 프롬프트
 ├── .gitignore      # node_modules, dist, .env, .env.test
 └── README.md       # 실행 순서 3줄 (DB 생성 → migrate·seed → dev)

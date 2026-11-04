@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 아키텍처 다이어그램 |
-| 현재 버전 | v0.4 |
+| 현재 버전 | v0.5 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/2-PRD.md` v0.8, `docs/3-user-scenario.md` v0.5, `docs/4-wireframe.md` v0.4, `docs/5-project-principle.md` v0.3, `docs/7-erd.md` v0.3 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.4, `docs/7-erd.md` v0.4, `docs/9-api-design.md` v0.1 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어그램)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임, PR은 프로젝트 원칙의 ID를 참조만 하며 재정의하지 않는다. 다이어그램은 모두 mermaid 코드 블록이다. 문서 간 표현이 다른 지점은 PRD를 기준으로 그리고 10장에 나열한다.
 
@@ -20,6 +20,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어�
 | v0.2 | 2026-11-04 | - | AD-05 ERD를 docs/7-erd.md로 분리 | 문서 정보, 4장, AD-05, 8장 |
 | v0.3 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. AD-07·AD-08을 HS384·두 쿠키 발급으로 수정, AD-06에 refresh·logout 비보호 경로, AD-14 로그아웃을 인증 미들웨어 없이 리프레시 폐기 + 두 쿠키 삭제로 수정, AD-16(액세스 만료 → 리프레시 → 재시도) 추가, AD-01·AD-04 라벨, AD-A3 변경됨, AD-C8 해결, 참조 버전 갱신 | 문서 정보, 1.2, AD-01, AD-04, AD-06, AD-07, AD-08, AD-14, AD-16, 8장, AD-A3, AD-C8 |
 | v0.4 | 2026-11-04 | - | 8문서 교차 검토 반영. AD-09 인증 실패 분기를 AD-16 리프레시·재시도 후 실패 시 이동으로 수정, AD-14에 auth-service 참여자 추가(라우트는 DB를 직접 호출하지 않음, 원칙 3장), 1장 문서 수 6개·API 설계 문서 경로, 참조 버전 갱신 | 문서 정보, 1장, AD-09, AD-14 |
+| v0.5 | 2026-11-04 | - | AD-C3·C4·C5 해결(`docs/9-api-design.md` 4장), 1장 '작성 예정' 표기 제거, 참조 문서에 `docs/9-api-design.md` 추가, 참조 버전 갱신 | 문서 정보, 1장, 10장 |
 
 ---
 
@@ -33,7 +34,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어�
 
 - 시퀀스 다이어그램의 participant 약어: U 사용자, FE 프론트엔드(React SPA), MW 인증 미들웨어(`middlewares/auth.js`), RT 라우트(`routes/*.js` + `validate.js`), SV 서비스(`services/*.js`), RP 저장소(`repositories/*.js`), DB PostgreSQL 17, EH 오류 미들웨어(`middlewares/error-handler.js`).
 - 거부 응답은 모두 `AppError` → 오류 미들웨어 → `{ code, message }` + HTTP status(PRD 6.3) 경로를 지난다 (PR-06). 시퀀스에서는 지면을 줄이기 위해 `BE-->>FE: 4xx CODE` 한 줄로 축약한다.
-- API 함수명(`todos.create` 등)은 프로젝트 원칙 7.3 `api/todos.ts`의 함수다. 엔드포인트 경로·메서드 상세는 API 설계 문서(`docs/9-api-design.md`, 작성 예정)에서 정하므로, 원칙 7.2에 적힌 `POST /api/auth/signup|login|logout|refresh`와 PRD 6.3의 `GET /api/health` 외에는 경로를 쓰지 않는다.
+- API 함수명(`todos.create` 등)은 프로젝트 원칙 7.3 `api/todos.ts`의 함수다. 엔드포인트 경로·메서드 상세는 API 설계 문서(`docs/9-api-design.md`)에서 정하므로, 원칙 7.2에 적힌 `POST /api/auth/signup|login|logout|refresh`와 PRD 6.3의 `GET /api/health` 외에는 경로를 쓰지 않는다.
 - 날짜는 전 구간 `YYYY-MM-DD` 문자열이다 (PR-05). today = 클라이언트 로컬 날짜 (D-05).
 
 ---
@@ -727,9 +728,9 @@ flowchart TD
 |----|------|---------|
 | AD-C1 | PRD 6.3·원칙 4장·7.1이 API 설계 문서를 `docs/6-api-design.md`로 지정했으나 이 문서가 6번을 사용. `docs/9-api-design.md`로 재지정 완료 (7번은 ERD, 해결) | PRD 6.3, 원칙 4장, 7.1 |
 | AD-C2 | 도메인 정의서 3.2 ERD는 id를 `string`으로 표기하고 PRD 7장은 `BIGINT IDENTITY`다. 도메인 정의서는 관계 파악용이라 명시했으므로 PRD를 따랐다 | 도메인 3.2, PRD 7장 |
-| AD-C3 | 원칙 7.3 `api/todos.ts` 함수 목록(list, range, create, update, setCompleted, remove)에 단건 조회가 없으나, WF-04·PRD 4.2는 편집 진입 시 조회와 `NOT_FOUND` 분기를 요구한다 | 원칙 7.3, WF-04, PRD 4.2, US-11, US-17 |
-| AD-C4 | 캘린더 요청의 `from`/`to` 누락·형식 오류 응답 코드가 어느 문서에도 없다 (`today`만 `VALIDATION_ERROR`로 정의) | BR-36, PRD 6.3, UC-10 |
-| AD-C5 | 로그인 요청의 이메일·비밀번호 형식 위반(BR-43, BR-44) 시 `VALIDATION_ERROR`를 내는지, 바로 `INVALID_CREDENTIALS`인지 미정. BR-52 순서상 형식이 먼저지만 UC-02·SC-01은 `INVALID_CREDENTIALS`만 적는다 | BR-52, UC-02, SC-01 |
+| AD-C3 | 해결: 편집 진입용 단건 조회 `GET /api/todos/:id` 추가, 원칙 7.3 `api/todos.ts`에 `get(id, today)` (`docs/9-api-design.md` 4장) | 원칙 7.3, WF-04, PRD 4.2, US-11, US-17 |
+| AD-C4 | 해결: `from`/`to`는 둘 다 있거나 둘 다 없어야 하며, 한쪽만 있거나 형식 오류면 `VALIDATION_ERROR` (`docs/9-api-design.md` 4장) | BR-36, PRD 6.3, UC-10 |
+| AD-C5 | 해결: 형식 위반(BR-43, BR-44)은 BR-52 순서대로 `VALIDATION_ERROR`, 형식이 맞으면 `INVALID_CREDENTIALS` (`docs/9-api-design.md` 4장) | BR-52, UC-02, SC-01 |
 | AD-C6 | 도메인 정의서·시나리오·원칙의 참조 버전이 PRD v0.5였음. v0.6으로 갱신 완료 (해결) | 각 문서 "문서 정보" |
 | AD-C7 | 작업 지시의 "완료 토글"은 D-10(명시 지정, 토글 아님)과 표현이 다르다. 다이어그램은 D-10을 따랐다 | D-10, UC-07 |
 | AD-C8 | 로그아웃 API의 인증 미들웨어 적용 여부. 해결(인증 미들웨어 없음, PRD v0.7 6.4). refresh도 같다 | UC-03, PRD 6.4, 원칙 7.2 |

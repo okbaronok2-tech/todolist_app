@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.3 |
+| 현재 버전 | v0.4 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/2-PRD.md` v0.8, `docs/3-user-scenario.md` v0.5, `docs/4-wireframe.md` v0.4, `docs/5-project-principle.md` v0.3, `docs/6-arch-diagram.md` v0.4, `docs/7-erd.md` v0.3, `docs/schema.sql` |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.4, `docs/6-arch-diagram.md` v0.5, `docs/7-erd.md` v0.4, `docs/schema.sql`, `docs/9-api-design.md` v0.1 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -19,6 +19,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 | v0.1 | 2026-11-04 | - | 초안 작성 | 전체 |
 | v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. T-D01 테이블 5개·인덱스 8개, T-X02 refresh 엔드포인트·비보호 경로, T-B01 `JWT_SECRET` 48자, T-B03 HS384·두 쿠키·리프레시 회전·재사용 탐지·로그아웃 폐기, T-F01 refresh 재시도, T-F03 US-16 (a)/(b), T-X04 k6 401 → refresh, 참조 버전 갱신 | 문서 정보, 2장, T-D01, T-X02, T-B01, T-B03, T-F01, T-F03, T-X04 |
 | v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. T-X02 미결 3건(AD-C8은 이미 해결)과 '작성 예정' 표기 제거 조건, T-B06 필터 결과 순서, T-B07 US-17 데이터·로그인 두 쿠키, T-F01 라우트 6개, T-F03 SC-02 오류 표시 위치·US-01 조건, T-F04 US-04 데이터, T-F06 US-08 날짜, T-F07·F08 월 뷰 칸 수 일반화, T-F09 US-15 순서, T-F10 US-18 단계, T-F11 `me`·US-19 조건을 시나리오·와이어프레임에 맞춤, 참조 버전 갱신 | 문서 정보, T-X02, T-B06, T-B07, T-F01, T-F03, T-F04, T-F06, T-F07, T-F08, T-F09, T-F10, T-F11 |
+| v0.4 | 2026-11-04 | - | T-X01·T-X02·T-D01·T-D02 완료 조건 체크, 참조 문서에 `docs/9-api-design.md` 추가, 참조 버전 갱신 | 문서 정보, T-X01, T-X02, T-D01, T-D02 |
 
 ---
 
@@ -100,11 +101,11 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] `backend`, `frontend` 각각에서 `npm install`이 오류 없이 끝난다
-- [ ] 설치된 의존성이 원칙 3.5 허용 목록 밖에 없다 (`dotenv`, ORM, UI 라이브러리 없음)
-- [ ] `.env.example`에 키 4개가 설명과 함께 있고 `.env`·`.env.test`는 추적되지 않는다
-- [ ] 양쪽 `npx eslint .`가 통과한다
-- [ ] `README.md`에 실행 순서 3줄이 있다
+- [x] `backend`, `frontend` 각각에서 `npm install`이 오류 없이 끝난다
+- [x] 설치된 의존성이 원칙 3.5 허용 목록 밖에 없다 (`dotenv`, ORM, UI 라이브러리 없음)
+- [x] `.env.example`에 키 4개가 설명과 함께 있고 `.env`·`.env.test`는 추적되지 않는다
+- [x] 양쪽 `npx eslint .`가 통과한다
+- [x] `README.md`에 실행 순서 3줄이 있다
 
 ### T-X02 API 설계 문서
 
@@ -124,10 +125,10 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] 모든 엔드포인트가 표 한 줄씩 있고 각 줄에 오류 코드 목록이 있다
-- [ ] AD-C3·C4·C5가 결정과 함께 적혀 있고 `docs/6-arch-diagram.md` 10장 해당 행이 "해결"로 바뀌었다
-- [ ] PRD 6.3·원칙 4장·원칙 7.1·아키텍처 1장의 `docs/9-api-design.md` '작성 예정' 표기가 제거됐다
-- [ ] 형식 검증(제목 앞뒤·표 앞뒤 빈 줄, 열 수 동일)을 통과한다
+- [x] 모든 엔드포인트가 표 한 줄씩 있고 각 줄에 오류 코드 목록이 있다
+- [x] AD-C3·C4·C5가 결정과 함께 적혀 있고 `docs/6-arch-diagram.md` 10장 해당 행이 "해결"로 바뀌었다
+- [x] PRD 6.3·원칙 4장·원칙 7.1·아키텍처 1장의 `docs/9-api-design.md` '작성 예정' 표기가 제거됐다
+- [x] 형식 검증(제목 앞뒤·표 앞뒤 빈 줄, 열 수 동일)을 통과한다
 
 ### T-D01 DB 생성·마이그레이션 러너
 
@@ -147,14 +148,14 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] `npm run migrate` 후 `users`, `refresh_tokens`, `categories`, `todos`, `schema_migrations` 5개 테이블이 있다
-- [ ] 인덱스 8개(`users_email_lower_uk`, `refresh_tokens_token_hash_uk`, `refresh_tokens_user_idx`, `categories_user_name_uk`, `categories_user_default_uk`, `todos_user_end_start_created_idx`, `todos_user_start_end_idx`, `todos_user_category_idx`)가 `pg_indexes`에 있다
-- [ ] `npm run migrate`를 다시 실행해도 `001_init.sql`이 재실행되지 않는다
-- [ ] `start_date > end_date`인 INSERT가 `todos_date_range_chk` 위반으로 실패한다
-- [ ] `is_completed = true`, `completed_at = NULL`인 INSERT가 `todos_completed_chk` 위반으로 실패한다
-- [ ] 다른 사용자의 `category_id`로 INSERT하면 `todos_category_fk` 위반으로 실패한다
-- [ ] `pool.query('SELECT DATE \'2026-11-03\' AS d')`의 결과가 JS `Date`가 아닌 문자열 `'2026-11-03'`이다
-- [ ] `todolist_test`에도 같은 마이그레이션이 적용된다
+- [x] `npm run migrate` 후 `users`, `refresh_tokens`, `categories`, `todos`, `schema_migrations` 5개 테이블이 있다
+- [x] 인덱스 8개(`users_email_lower_uk`, `refresh_tokens_token_hash_uk`, `refresh_tokens_user_idx`, `categories_user_name_uk`, `categories_user_default_uk`, `todos_user_end_start_created_idx`, `todos_user_start_end_idx`, `todos_user_category_idx`)가 `pg_indexes`에 있다
+- [x] `npm run migrate`를 다시 실행해도 `001_init.sql`이 재실행되지 않는다
+- [x] `start_date > end_date`인 INSERT가 `todos_date_range_chk` 위반으로 실패한다
+- [x] `is_completed = true`, `completed_at = NULL`인 INSERT가 `todos_completed_chk` 위반으로 실패한다
+- [x] 다른 사용자의 `category_id`로 INSERT하면 `todos_category_fk` 위반으로 실패한다
+- [x] `pool.query('SELECT DATE \'2026-11-03\' AS d')`의 결과가 JS `Date`가 아닌 문자열 `'2026-11-03'`이다
+- [x] `todolist_test`에도 같은 마이그레이션이 적용된다
 
 ### T-D02 시드 SQL
 
@@ -174,13 +175,13 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] `npm run seed` 후 `users` 2행, `categories` 5행, `todos` 8행이다
-- [ ] `users` id 1 = `haneul@example.com`, id 2 = `seojun@example.com`
-- [ ] `categories` id 1·3이 `is_default = true`이고 사용자당 기본 카테고리가 정확히 1개다
-- [ ] `todos` 1~7의 `user_id` = 2, 8의 `user_id` = 1이고 시작일·종료일이 시나리오 표와 같다
-- [ ] 할일 1만 `is_completed = true`이고 `completed_at`이 null이 아니다
-- [ ] `npm run seed`를 두 번 실행해도 행 수와 id가 같다
-- [ ] `node tests/setup.js`가 `todolist_test`에 같은 결과를 만든다
+- [x] `npm run seed` 후 `users` 2행, `categories` 5행, `todos` 8행이다
+- [x] `users` id 1 = `haneul@example.com`, id 2 = `seojun@example.com`
+- [x] `categories` id 1·3이 `is_default = true`이고 사용자당 기본 카테고리가 정확히 1개다
+- [x] `todos` 1~7의 `user_id` = 2, 8의 `user_id` = 1이고 시작일·종료일이 시나리오 표와 같다
+- [x] 할일 1만 `is_completed = true`이고 `completed_at`이 null이 아니다
+- [x] `npm run seed`를 두 번 실행해도 행 수와 id가 같다
+- [x] `node tests/setup.js`가 `todolist_test`에 같은 결과를 만든다
 
 ### T-B01 백엔드 앱 골격·오류 처리·헬스체크
 

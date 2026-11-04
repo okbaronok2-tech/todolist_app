@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.8 |
+| 현재 버전 | v0.9 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.7, `docs/3-user-scenario.md` v0.5, `docs/4-wireframe.md` v0.4, `docs/5-project-principle.md` v0.3 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.4 |
 
 ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 (재정의하지 않는다). 이 문서에서 새로 부여하는 ID는 SC(화면), NFR(비기능 요구), R(리스크), A(가정), PD(결정 대기)이며 도메인 정의서 ID와 충돌하지 않는다. 수치에 "가정"이 붙은 것은 측정값이 아니라 목표 설정을 위한 가정이다.
 
@@ -24,6 +24,7 @@ ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 
 | v0.6 | 2026-11-04 | - | 설계 원칙 문서 반영. API 경로 접두어 `/api`·헬스체크(6.3), 프론트 BR-35 단위 테스트(R-05), API 설계 문서는 `docs/9-api-design.md`(6·7·8번은 아키텍처 다이어그램·ERD·실행 계획) | 문서 정보, 6.3, 10.1 |
 | v0.7 | 2026-11-04 | - | 인증 방식 변경. 액세스 토큰 JWT HS384(15분) + 리프레시 토큰(불투명 난수, DB 해시 저장, 회전·재사용 탐지)으로 교체(NFR-06, 6.4). 클라이언트는 `UNAUTHORIZED` 시 refresh 1회 후 재시도(4.2). 로그아웃은 리프레시 폐기 + 두 쿠키 삭제(4.2). `auth` 리소스에 refresh 추가(6.3). `refresh_tokens` 테이블·인덱스(7장). Day 1 오전 작업(8장). R-06 교체, PD-01 결정 변경(closed). 부하 테스트 k6 401 → refresh 재시도(5.1). 참조 버전 갱신 | 문서 정보, 4.2, 5.1, NFR-06, 6.3, 6.4, 7, 8, 10.1, 10.2, 11 |
 | v0.8 | 2026-11-04 | - | 8문서 교차 검토 반영. 4.2 인증 만료·6.4 클라이언트에 `queryClient.clear()` 명시, 7장 `token_hash` 컬럼 UNIQUE 중복 정의 제거(인덱스 `refresh_tokens_token_hash_uk`로 일원화), 참조 버전 갱신 | 문서 정보, 4.2, 6.4, 7 |
+| v0.9 | 2026-11-04 | - | 6.3 API 설계 문서 `docs/9-api-design.md` '작성 예정' 표기 제거(8-plan T-X02), 참조 버전 갱신 | 문서 정보, 6.3 |
 
 ---
 
@@ -190,7 +191,7 @@ flowchart LR
 
 ### 6.3 API 스타일
 
-- REST + JSON. 리소스는 auth(가입·로그인·로그아웃·리프레시 `POST /api/auth/refresh`), users/me(내 정보), categories, todos. 모든 API 경로는 `/api` 접두어를 가진다 (개발 시 Vite 프록시 대상). 헬스체크 `GET /api/health`는 인증 없이 DB 연결을 확인해 200 또는 503을 반환한다. 엔드포인트 상세는 API 설계 문서(`docs/9-api-design.md`, 작성 예정)에서 정한다.
+- REST + JSON. 리소스는 auth(가입·로그인·로그아웃·리프레시 `POST /api/auth/refresh`), users/me(내 정보), categories, todos. 모든 API 경로는 `/api` 접두어를 가진다 (개발 시 Vite 프록시 대상). 헬스체크 `GET /api/health`는 인증 없이 DB 연결을 확인해 200 또는 503을 반환한다. 엔드포인트 상세는 API 설계 문서(`docs/9-api-design.md`)에서 정한다.
 - 캘린더 조회는 별도 리소스가 아니다. 클라이언트가 BR-35로 `from`/`to`를 산정해 `todos` 목록을 기간 조건으로 조회하고, 서버는 BR-33 겹침 조건만 적용한다. 응답 정렬은 기본 정렬(도메인 정의서 5.4)이다.
 - 모든 todos 조회 요청은 `today`(`YYYY-MM-DD`)를 받는다 (D-05). 누락·형식 오류는 `VALIDATION_ERROR`.
 - 거부 응답 본문은 `{ "code": "<BR-51 코드>", "message": "<사람이 읽는 설명>" }`로 고정한다. HTTP status 매핑: `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400, `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.
