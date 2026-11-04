@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.1 |
+| 현재 버전 | v0.2 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.5, `docs/2-PRD.md` v0.5, `docs/3-user-scenario.md` v0.3, `docs/4-wireframe.md` v0.2 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.6, `docs/2-PRD.md` v0.7, `docs/3-user-scenario.md` v0.4, `docs/4-wireframe.md` v0.3 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -17,6 +17,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | 버전 | 일자 | 작성자 | 변경 내용 | 영향 ID |
 |------|------|--------|-----------|---------|
 | v0.1 | 2026-11-04 | - | 초안 작성 | PR-01~08, 전체 |
+| v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. `JWT_SECRET` 48자 이상(6.1), 두 쿠키·HS384 고정·리프레시 해시만 저장(6.2), `routes/auth.js`·`repositories/refresh-token-repo.js`·`middlewares/auth.js` 주석(7.2), `api/client.ts` 주석(7.3), 서비스 테스트 대상에 리프레시 회전·재사용 탐지·로그아웃 폐기(5장), 참조 버전 갱신 | 문서 정보, 5장, 6.1, 6.2, 7.2, 7.3 |
 
 ---
 
@@ -68,7 +69,7 @@ routes (인증 미들웨어, 입력 형식·날짜 범위 검증, HTTP 변환)
 - 의존은 위에서 아래로 한 방향이다. 저장소가 서비스를, 서비스가 라우트를 가져오지 않는다.
 - 서비스는 `req`, `res`, 쿠키, 헤더를 모른다. 인자는 평범한 값(`userId`, `today`, 입력 객체)이고 반환은 평범한 객체다. 거부는 `AppError`를 던진다.
 - SQL 문자열은 저장소 파일에만 둔다. 서비스와 라우트에 SQL이 있으면 위반이다.
-- 트랜잭션 경계는 서비스다. 저장소 함수는 첫 인자로 `db`(Pool 또는 Client)를 받아 둘 다에서 동작한다. 트랜잭션 대상: BR-11(가입 + 기본 카테고리), BR-15(이동 + 삭제).
+- 트랜잭션 경계는 서비스다. 저장소 함수는 첫 인자로 `db`(Pool 또는 Client)를 받아 둘 다에서 동작한다. 트랜잭션 대상: BR-11(가입 + 기본 카테고리), BR-15(이동 + 삭제), 리프레시 회전(기존 행 폐기 + 새 행 삽입, PRD 6.4).
 - BR-52 검증 순서의 분담: 인증 → 형식·길이 → 날짜 범위는 라우트, 존재·소유 → 보호 대상 → 중복·개수 → 자격 증명은 서비스. 순서를 바꾸지 않는다.
 - 상태 필터(BR-32)의 SQL 조건은 저장소에 두되 `todo-status.js`의 ST 판정과 결과가 같아야 한다 (PRD 6.5). 5장 테스트로 확인한다.
 
@@ -129,7 +130,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 | TypeScript | `strict: true`. `any` 금지. API 응답 타입은 `types/`에 두고 쿼리 hook이 반환 타입으로 쓴다 |
 | 백엔드 JSDoc | 서비스·저장소의 export 함수에만 `@param`, `@returns` 한 줄씩. 내부 함수는 생략 |
 | ESLint·Prettier | 프론트는 Vite 템플릿 기본 ESLint, 백엔드는 `js.configs.recommended`만. Prettier는 기본 설정(빈 `.prettierrc`). 규칙 추가·예외 금지 |
-| API 경로 | `/api/` 접두어 아래 PRD 6.3 리소스(`auth`, `users/me`, `categories`, `todos`). 상세는 `docs/6-api-design.md`(작성 예정)에서 정한다 |
+| API 경로 | `/api/` 접두어 아래 PRD 6.3 리소스(`auth`, `users/me`, `categories`, `todos`). 상세는 `docs/9-api-design.md`(작성 예정)에서 정한다 |
 
 ---
 
@@ -141,7 +142,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 |------|------|------|------|
 | 단위 | ST-01~04 판정 함수. 도메인 정의서 4.3 검증 예 4건을 그대로 옮긴다 | `backend/tests/todo-status.test.js` | `node --test` |
 | 단위 | BR-35 조회 기간 계산. 수용 기준 예(anchorDate 11-03 → 주 11-02~11-08, 월 10-26~12-06) | `frontend/src/lib/calendar-range.test.ts` | `vitest` |
-| 서비스 | 서비스 단위로 검증 가능한 BR 수용 기준: BR-04, BR-06, BR-11, BR-13, BR-14, BR-15(롤백 포함), BR-17, BR-22, BR-46 개수 제한. 실제 테스트 DB에 대고 실행하며 `pg`를 mock하지 않는다 | `backend/tests/*-service.test.js` | `node --test` |
+| 서비스 | 서비스 단위로 검증 가능한 BR 수용 기준: BR-04, BR-06, BR-11, BR-13, BR-14, BR-15(롤백 포함), BR-17, BR-22, BR-46 개수 제한. 인증은 리프레시 회전, 재사용 탐지, 로그아웃 폐기(NFR-06, PRD 6.4). 실제 테스트 DB에 대고 실행하며 `pg`를 mock하지 않는다 | `backend/tests/*-service.test.js` | `node --test` |
 | API 스모크 | 실행 중인 서버에 `fetch`로 US-02, US-12, US-17의 응답 코드·건수를 확인하는 스크립트 1벌 | `backend/tests/smoke.js` | Node 내장 `fetch` |
 | 수동 | 화면 흐름 전부. PRD 9.1 체크리스트를 US-01~19 순서로 수행 | `docs/3-user-scenario.md` | 브라우저 |
 
@@ -160,7 +161,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 | 키 | 용도 | 비고 |
 |----|------|------|
 | `DATABASE_URL` | `pg` Pool 연결 문자열 | 테스트는 `.env.test`에서 별도 DB |
-| `JWT_SECRET` | HS256 서명 키 (NFR-06) | 32자 이상. 기본값 없음, 없으면 기동 실패 |
+| `JWT_SECRET` | 액세스 토큰 HS384 서명 키 (NFR-06) | 48자 이상(384비트 권장). 기본값 없음, 없거나 짧으면 기동 실패 |
 | `PORT` | Express 포트 | 기본 3000 |
 | `NODE_ENV` | `production`이면 쿠키 `Secure` 설정 (NFR-06) | 그 외는 로컬 HTTP 허용 |
 
@@ -171,8 +172,10 @@ pages (SC-01~07, 라우팅·화면 조립)
 ### 6.2 보안
 
 - SQL은 `pg` 파라미터 바인딩(`$1`)만 쓴다. 문자열 연결·템플릿 리터럴로 SQL을 만들지 않는다 (NFR-09).
-- 비밀번호는 `bcrypt` cost 10으로 해시한다 (NFR-07). 응답·로그에 `password`, 해시, `token` 쿠키 값, `Cookie` 헤더를 출력하지 않는다.
-- JWT 쿠키는 이름 `token`, `HttpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age=86400`, 운영만 `Secure`다 (NFR-06). 설정 코드는 `middlewares/auth.js` 한 곳에 둔다.
+- 비밀번호는 `bcrypt` cost 10으로 해시한다 (NFR-07). 응답·로그에 `password`, 해시, `token`·`refresh_token` 쿠키 값, `Cookie` 헤더를 출력하지 않는다.
+- 인증 쿠키는 둘이다 (NFR-06). 액세스 토큰 쿠키는 이름 `token`, `HttpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age=900`. 리프레시 토큰 쿠키는 이름 `refresh_token`, `HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, `Max-Age=1209600`. 둘 다 운영만 `Secure`다. 설정 코드는 `middlewares/auth.js` 한 곳에 둔다.
+- 액세스 토큰은 `jsonwebtoken` 검증 시 `algorithms: ['HS384']`로 고정한다 (NFR-06).
+- 리프레시 토큰 원문은 저장·로그 금지다. `refresh_tokens.token_hash`에 SHA-256 hex 해시만 저장한다 (NFR-06, PRD 7장).
 - 경로·쿼리·본문의 모든 ID는 양의 정수 정규식으로 먼저 검사하고, 아니면 DB 조회 없이 `NOT_FOUND`다 (PRD 6.3).
 - 모든 `todos`·`categories` 쿼리는 `user_id` 조건을 가진다 (NFR-10, PR-07).
 
@@ -213,7 +216,7 @@ backend/
 │   ├── server.js           # 환경변수 검사, app.listen, graceful shutdown
 │   ├── app.js              # express(), 미들웨어·라우트 등록, 정적 파일(dist), 오류 미들웨어
 │   ├── routes/
-│   │   ├── auth.js         # POST signup/login/logout. 쿠키 설정·삭제 (UC-01~03)
+│   │   ├── auth.js         # POST signup/login/logout/refresh. 쿠키 설정·삭제, refresh·logout은 인증 미들웨어 없음 (UC-01~03, NFR-06)
 │   │   ├── users.js        # GET/PATCH users/me (UC-04, P1)
 │   │   ├── categories.js   # CRUD (UC-11)
 │   │   ├── todos.js        # CRUD, 완료 지정, 목록·캘린더 조회 (UC-05~10)
@@ -226,10 +229,11 @@ backend/
 │   │   └── todo-status.js       # ST-01~04 순수 함수, 상태 상수
 │   ├── repositories/
 │   │   ├── user-repo.js
+│   │   ├── refresh-token-repo.js # 삽입·해시 조회·폐기·사용자 전체 폐기·정리(만료·폐기 행 삭제) (NFR-06, PRD 6.4)
 │   │   ├── category-repo.js
 │   │   └── todo-repo.js         # 목록 필터(BR-31, BR-32 SQL), 기간 겹침(BR-33), 기본 정렬
 │   ├── middlewares/
-│   │   ├── auth.js         # JWT 쿠키 검증, req.userId 주입, 쿠키 옵션 (NFR-06, BR-01)
+│   │   ├── auth.js         # 액세스 토큰 검증(HS384 고정), req.userId 주입, 두 쿠키 옵션 (NFR-06, BR-01)
 │   │   └── error-handler.js # AppError → status·본문, 1줄 로그 (PRD 6.3)
 │   ├── errors/
 │   │   ├── app-error.js    # class AppError
@@ -238,7 +242,7 @@ backend/
 │       ├── pool.js         # Pool(max 20), DATE type parser (OID 1082 → 문자열)
 │       ├── migrate.js      # migrations/ 번호순 적용
 │       ├── migrations/
-│       │   └── 001_init.sql # users, categories, todos, CHECK·UNIQUE·인덱스 (PRD 7장)
+│       │   └── 001_init.sql # users, refresh_tokens, categories, todos, CHECK·UNIQUE·인덱스 (PRD 7장)
 │       └── seed.sql        # 시나리오 3장 샘플 데이터
 └── tests/
     ├── setup.js            # 테스트 DB migrate + seed 재적용
@@ -271,8 +275,8 @@ frontend/
     │   ├── common/         # CP-01~06. props만 받는다
     │   └── calendar/       # MonthView, WeekView, DayView (WF-05, 월 → 주 → 일 순 구현)
     ├── api/
-    │   ├── client.ts       # fetch 래퍼: credentials 포함, {code,message} 파싱, UNAUTHORIZED → reset·/login
-    │   ├── auth.ts         # signup, login, logout, me
+    │   ├── client.ts       # fetch 래퍼: credentials 포함, {code,message} 파싱, UNAUTHORIZED → refresh 1회(동시 요청은 1개 공유) → 재시도 → 실패 시 reset·/login
+    │   ├── auth.ts         # signup, login, logout, refresh, me
     │   ├── categories.ts
     │   └── todos.ts        # list(filter, today), range(from, to, today), create, update, setCompleted, remove
     ├── queries/            # TanStack Query hooks. 쿼리 키·invalidate 규칙은 여기만

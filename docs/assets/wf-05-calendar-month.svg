@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="850" viewBox="0 0 1280 850" font-family="'Noto Sans KR', 'Malgun Gothic', sans-serif" font-size="13">
+<rect width="1280" height="850" fill="#fff"/>
+<rect x="0" y="0" width="1280" height="48" fill="#263238"/>
+<text x="20" y="30" fill="#fff" font-size="18" font-weight="bold">TodoList</text>
+<text x="160" y="30" fill="#b0bec5" font-size="14" >할일 목록</text>
+<text x="266" y="30" fill="#fff" font-size="14" font-weight="bold" text-decoration="underline">캘린더</text>
+<text x="344" y="30" fill="#b0bec5" font-size="14" >카테고리 관리</text>
+<text x="478" y="30" fill="#b0bec5" font-size="14" >내 정보</text>
+<text x="570" y="30" fill="#b0bec5" font-size="14" >로그아웃</text>
+<text x="20" y="84" font-size="22" font-weight="bold" fill="#212121">캘린더</text>
+<rect x="20" y="104" width="56" height="30" rx="4" fill="#fff" stroke="#90a4ae"/><text x="48" y="124" text-anchor="middle" fill="#263238" font-size="14">이전</text>
+<rect x="84" y="104" width="56" height="30" rx="4" fill="#fff" stroke="#90a4ae"/><text x="112" y="124" text-anchor="middle" fill="#263238" font-size="14">오늘</text>
+<rect x="148" y="104" width="56" height="30" rx="4" fill="#fff" stroke="#90a4ae"/><text x="176" y="124" text-anchor="middle" fill="#263238" font-size="14">다음</text>
+<text x="230" y="125" font-size="18" font-weight="bold" fill="#212121">2026-11</text>
+<rect x="1092" y="104" width="48" height="30" rx="4" fill="#1565c0" stroke="#90a4ae"/><text x="1116" y="124" text-anchor="middle" fill="#fff" font-size="14">월</text>
+<rect x="1148" y="104" width="48" height="30" rx="4" fill="#fff" stroke="#90a4ae"/><text x="1172" y="124" text-anchor="middle" fill="#263238" font-size="14">주</text>
+<rect x="1204" y="104" width="48" height="30" rx="4" fill="#fff" stroke="#90a4ae"/><text x="1228" y="124" text-anchor="middle" fill="#263238" font-size="14">일</text>
+<rect x="20" y="150" width="177.14285714285714" height="32" fill="#eceff1" stroke="#cfd8dc"/>
+<text x="30" y="171" font-weight="bold" fill="#37474f">월</text>
+<rect x="197.14285714285714" y="150" width="177.14285714285714" height="32" fill="#eceff1" stroke="#cfd8dc"/>
+<text x="207.14285714285714" y="171" font-weight="bold" fill="#37474f">화</text>
+<rect x="374.2857142857143" y="150" width="177.14285714285714" height="32" fill="#eceff1" stroke="#cfd8dc"/>
+<text x="384.2857142857143" y="171" font-weight="bold" fill="#37474f">수</text>
+<rect x="551.4285714285714" y="150" width="177.14285714285714" height="32" fill="#eceff1" stroke="#cfd8dc"/>
+<text x="561.4285714285714" y="171" font-weight="bold" fill="#37474f">목</text>
+<rect x="728.5714285714286" y="150" width="177.14285714285714" height="32" fill="#eceff1" stroke="#cfd8dc"/>
+<text x="738.5714285714286" y="171" font-weight="bold" fill="#37474f">금</text>
+<rect x="905.7142857142857" y="150" width="177.14285714285714" height="32" fill="#eceff1" stroke="#cfd8dc"/>
+<text x="915.7142857142857" y="171" font-weight="bold" fill="#37474f">토</text>
+<rect x="1082.857142857143" y="150" width="177.14285714285714" height="32" fill="#eceff1" stroke="#cfd8dc"/>
+<text x="1092.857142857143" y="171" font-weight="bold" fill="#37474f">일</text>
+<rect x="20" y="182" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="28" y="200" font-size="13" font-weight="normal" fill="#9e9e9e">(10-26)</text>
+<rect x="26" y="208" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="37" y="220" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="53" y="220" fill="#212121" font-size="12">헬스장 등록</text>
+<rect x="197.14285714285714" y="182" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="205.14285714285714" y="200" font-size="13" font-weight="normal" fill="#9e9e9e">(10-27)</text>
+<rect x="203.14285714285714" y="208" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="214.14285714285714" y="220" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="230.14285714285714" y="220" fill="#212121" font-size="12">헬스장 등록</text>
+<rect x="374.2857142857143" y="182" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="382.2857142857143" y="200" font-size="13" font-weight="normal" fill="#9e9e9e">(10-28)</text>
+<rect x="380.2857142857143" y="208" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="391.2857142857143" y="220" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="407.2857142857143" y="220" fill="#212121" font-size="12">헬스장 등록</text>
+<rect x="551.4285714285714" y="182" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="559.4285714285714" y="200" font-size="13" font-weight="normal" fill="#9e9e9e">(10-29)</text>
+<rect x="557.4285714285714" y="208" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="568.4285714285714" y="220" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="584.4285714285714" y="220" fill="#212121" font-size="12">헬스장 등록</text>
+<rect x="728.5714285714286" y="182" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="736.5714285714286" y="200" font-size="13" font-weight="normal" fill="#9e9e9e">(10-30)</text>
+<rect x="734.5714285714286" y="208" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="745.5714285714286" y="220" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="761.5714285714286" y="220" fill="#212121" font-size="12">헬스장 등록</text>
+<rect x="905.7142857142857" y="182" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="913.7142857142857" y="200" font-size="13" font-weight="normal" fill="#9e9e9e">(10-31)</text>
+<rect x="911.7142857142857" y="208" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="922.7142857142857" y="220" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="938.7142857142857" y="220" fill="#212121" font-size="12">헬스장 등록</text>
+<rect x="911.7142857142857" y="226" width="22" height="16" rx="3" fill="#1565c0"/>
+<text x="922.7142857142857" y="238" text-anchor="middle" fill="#fff" font-size="11">진</text>
+<text x="938.7142857142857" y="238" fill="#212121" font-size="12">분기 계획 작성</text>
+<rect x="1082.857142857143" y="182" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="1090.857142857143" y="200" font-size="13" font-weight="normal" fill="#212121">11-01</text>
+<rect x="1088.857142857143" y="208" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="1099.857142857143" y="220" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="1115.857142857143" y="220" fill="#212121" font-size="12">헬스장 등록</text>
+<rect x="1088.857142857143" y="226" width="22" height="16" rx="3" fill="#2e7d32"/>
+<text x="1099.857142857143" y="238" text-anchor="middle" fill="#fff" font-size="11">완</text>
+<text x="1115.857142857143" y="238" fill="#212121" font-size="12">주간 보고서 제출</text>
+<rect x="1088.857142857143" y="244" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="1099.857142857143" y="256" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="1115.857142857143" y="256" fill="#212121" font-size="12">거래처 견적 회신</text>
+<rect x="1088.857142857143" y="262" width="22" height="16" rx="3" fill="#1565c0"/>
+<text x="1099.857142857143" y="274" text-anchor="middle" fill="#fff" font-size="11">진</text>
+<text x="1115.857142857143" y="274" fill="#212121" font-size="12">분기 계획 작성</text>
+<rect x="20" y="290" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="28" y="308" font-size="13" font-weight="normal" fill="#212121">11-02</text>
+<rect x="26" y="316" width="22" height="16" rx="3" fill="#2e7d32"/>
+<text x="37" y="328" text-anchor="middle" fill="#fff" font-size="11">완</text>
+<text x="53" y="328" fill="#212121" font-size="12">주간 보고서 제출</text>
+<rect x="26" y="334" width="22" height="16" rx="3" fill="#c62828"/>
+<text x="37" y="346" text-anchor="middle" fill="#fff" font-size="11">초</text>
+<text x="53" y="346" fill="#212121" font-size="12">거래처 견적 회신</text>
+<rect x="26" y="352" width="22" height="16" rx="3" fill="#1565c0"/>
+<text x="37" y="364" text-anchor="middle" fill="#fff" font-size="11">진</text>
+<text x="53" y="364" fill="#212121" font-size="12">분기 계획 작성</text>
+<rect x="197.14285714285714" y="290" width="177.14285714285714" height="108" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+<text x="205.14285714285714" y="308" font-size="13" font-weight="bold" fill="#1565c0">11-03 오늘</text>
+<rect x="203.14285714285714" y="316" width="22" height="16" rx="3" fill="#1565c0"/>
+<text x="214.14285714285714" y="328" text-anchor="middle" fill="#fff" font-size="11">진</text>
+<text x="230.14285714285714" y="328" fill="#212121" font-size="12">분기 계획 작성</text>
+<rect x="203.14285714285714" y="334" width="22" height="16" rx="3" fill="#1565c0"/>
+<text x="214.14285714285714" y="346" text-anchor="middle" fill="#fff" font-size="11">진</text>
+<text x="230.14285714285714" y="346" fill="#212121" font-size="12">은행 서류 제출</text>
+<rect x="374.2857142857143" y="290" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="382.2857142857143" y="308" font-size="13" font-weight="normal" fill="#212121">11-04</text>
+<rect x="380.2857142857143" y="316" width="22" height="16" rx="3" fill="#616161"/>
+<text x="391.2857142857143" y="328" text-anchor="middle" fill="#fff" font-size="11">전</text>
+<text x="407.2857142857143" y="328" fill="#212121" font-size="12">팀 회의 자료 준비</text>
+<rect x="551.4285714285714" y="290" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="559.4285714285714" y="308" font-size="13" font-weight="normal" fill="#212121">11-05</text>
+<rect x="557.4285714285714" y="316" width="22" height="16" rx="3" fill="#616161"/>
+<text x="568.4285714285714" y="328" text-anchor="middle" fill="#fff" font-size="11">전</text>
+<text x="584.4285714285714" y="328" fill="#212121" font-size="12">팀 회의 자료 준비</text>
+<rect x="728.5714285714286" y="290" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="736.5714285714286" y="308" font-size="13" font-weight="normal" fill="#212121">11-06</text>
+<rect x="905.7142857142857" y="290" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="913.7142857142857" y="308" font-size="13" font-weight="normal" fill="#212121">11-07</text>
+<rect x="1082.857142857143" y="290" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="1090.857142857143" y="308" font-size="13" font-weight="normal" fill="#212121">11-08</text>
+<rect x="1088.857142857143" y="316" width="22" height="16" rx="3" fill="#616161"/>
+<text x="1099.857142857143" y="328" text-anchor="middle" fill="#fff" font-size="11">전</text>
+<text x="1115.857142857143" y="328" fill="#212121" font-size="12">가족 여행 준비</text>
+<rect x="20" y="398" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="28" y="416" font-size="13" font-weight="normal" fill="#212121">11-09</text>
+<rect x="26" y="424" width="22" height="16" rx="3" fill="#616161"/>
+<text x="37" y="436" text-anchor="middle" fill="#fff" font-size="11">전</text>
+<text x="53" y="436" fill="#212121" font-size="12">가족 여행 준비</text>
+<rect x="197.14285714285714" y="398" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="205.14285714285714" y="416" font-size="13" font-weight="normal" fill="#212121">11-10</text>
+<rect x="203.14285714285714" y="424" width="22" height="16" rx="3" fill="#616161"/>
+<text x="214.14285714285714" y="436" text-anchor="middle" fill="#fff" font-size="11">전</text>
+<text x="230.14285714285714" y="436" fill="#212121" font-size="12">가족 여행 준비</text>
+<rect x="374.2857142857143" y="398" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="382.2857142857143" y="416" font-size="13" font-weight="normal" fill="#212121">11-11</text>
+<rect x="551.4285714285714" y="398" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="559.4285714285714" y="416" font-size="13" font-weight="normal" fill="#212121">11-12</text>
+<rect x="728.5714285714286" y="398" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="736.5714285714286" y="416" font-size="13" font-weight="normal" fill="#212121">11-13</text>
+<rect x="905.7142857142857" y="398" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="913.7142857142857" y="416" font-size="13" font-weight="normal" fill="#212121">11-14</text>
+<rect x="1082.857142857143" y="398" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="1090.857142857143" y="416" font-size="13" font-weight="normal" fill="#212121">11-15</text>
+<rect x="20" y="506" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="28" y="524" font-size="13" font-weight="normal" fill="#212121">11-16</text>
+<rect x="197.14285714285714" y="506" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="205.14285714285714" y="524" font-size="13" font-weight="normal" fill="#212121">11-17</text>
+<rect x="374.2857142857143" y="506" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="382.2857142857143" y="524" font-size="13" font-weight="normal" fill="#212121">11-18</text>
+<rect x="551.4285714285714" y="506" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="559.4285714285714" y="524" font-size="13" font-weight="normal" fill="#212121">11-19</text>
+<rect x="728.5714285714286" y="506" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="736.5714285714286" y="524" font-size="13" font-weight="normal" fill="#212121">11-20</text>
+<rect x="905.7142857142857" y="506" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="913.7142857142857" y="524" font-size="13" font-weight="normal" fill="#212121">11-21</text>
+<rect x="1082.857142857143" y="506" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="1090.857142857143" y="524" font-size="13" font-weight="normal" fill="#212121">11-22</text>
+<rect x="20" y="614" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="28" y="632" font-size="13" font-weight="normal" fill="#212121">11-23</text>
+<rect x="197.14285714285714" y="614" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="205.14285714285714" y="632" font-size="13" font-weight="normal" fill="#212121">11-24</text>
+<rect x="374.2857142857143" y="614" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="382.2857142857143" y="632" font-size="13" font-weight="normal" fill="#212121">11-25</text>
+<rect x="551.4285714285714" y="614" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="559.4285714285714" y="632" font-size="13" font-weight="normal" fill="#212121">11-26</text>
+<rect x="728.5714285714286" y="614" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="736.5714285714286" y="632" font-size="13" font-weight="normal" fill="#212121">11-27</text>
+<rect x="905.7142857142857" y="614" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="913.7142857142857" y="632" font-size="13" font-weight="normal" fill="#212121">11-28</text>
+<rect x="1082.857142857143" y="614" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="1090.857142857143" y="632" font-size="13" font-weight="normal" fill="#212121">11-29</text>
+<rect x="20" y="722" width="177.14285714285714" height="108" fill="#fff" stroke="#cfd8dc" stroke-width="1"/>
+<text x="28" y="740" font-size="13" font-weight="normal" fill="#212121">11-30</text>
+<rect x="197.14285714285714" y="722" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="205.14285714285714" y="740" font-size="13" font-weight="normal" fill="#9e9e9e">(12-01)</text>
+<rect x="374.2857142857143" y="722" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="382.2857142857143" y="740" font-size="13" font-weight="normal" fill="#9e9e9e">(12-02)</text>
+<rect x="551.4285714285714" y="722" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="559.4285714285714" y="740" font-size="13" font-weight="normal" fill="#9e9e9e">(12-03)</text>
+<rect x="728.5714285714286" y="722" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="736.5714285714286" y="740" font-size="13" font-weight="normal" fill="#9e9e9e">(12-04)</text>
+<rect x="905.7142857142857" y="722" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="913.7142857142857" y="740" font-size="13" font-weight="normal" fill="#9e9e9e">(12-05)</text>
+<rect x="1082.857142857143" y="722" width="177.14285714285714" height="108" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+<text x="1090.857142857143" y="740" font-size="13" font-weight="normal" fill="#9e9e9e">(12-06)</text>
+<text x="20" y="838" font-size="11" fill="#616161">범례(CP-04): 완=완료(ST-01) 초=기한 초과(ST-02) 전=시작 전(ST-03) 진=진행중(ST-04) · 괄호 날짜=이전/다음 달 · today=2026-11-03, anchorDate=2026-11-03 · 샘플 데이터: 3-user-scenario.md PS-02</text>
+</svg>
