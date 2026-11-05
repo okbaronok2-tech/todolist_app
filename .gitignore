@@ -153,3 +153,6 @@ vite.config.ts.timestamp-*
 
 # Project
 dist/
+
+# Playwright MCP 스냅샷·로그
+.playwright-mcp/

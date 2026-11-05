@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 프론트엔드 연동 가이드 |
-| 현재 버전 | v0.3 |
+| 현재 버전 | v0.4 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.10, `docs/5-project-principle.md` v0.7, `docs/6-arch-diagram.md` v0.7, `docs/8-plan.md` v0.7, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.8 |
+| 참조 문서 | `docs/2-PRD.md` v0.11, `docs/5-project-principle.md` v0.9, `docs/6-arch-diagram.md` v0.8, `docs/8-plan.md` v0.10, `docs/9-api-design.md` v0.5, `backend/swagger.yaml` v0.8 |
 | 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
 
 ## 변경 이력
@@ -18,6 +18,7 @@
 | v0.1 | 2026-11-05 | - | 초안 작성. 백엔드 실행, 개발 연결(Vite 프록시), 쿠키·리프레시 흐름(AD-16), 요청 규약, 오류 모델, 엔드포인트 요약, 보안 주의, 시드 계정, Swagger | 전체 |
 | v0.2 | 2026-11-05 | - | `GET /api/health` 응답 `db` 필드 반영, 참조 버전 갱신 | 문서 정보, 1장, 7장 |
 | v0.3 | 2026-11-05 | - | 연동 방식을 Vite 프록시에서 CORS로 변경(PRD v0.10). 1장 `CORS_ORIGIN`, 2장 전면 수정(`VITE_API_URL`, `credentials: 'include'`, 같은 site 조건), 4장 `client.ts` 예시에 절대 URL·credentials, 7장 Swagger 문장, 참조 버전 갱신 | 문서 정보, 1장, 2장, 4장, 7장 |
+| v0.4 | 2026-11-05 | - | 구현(`frontend/src`)에 맞춤. 4장 `client.ts` 예시(요청 옵션, refresh 결과 3종, 재시도 401 코드 판별), 6장 토스트 → CP-02 `ErrorMessage`, 8장 `User`/`Me` 구분, 참조 버전 갱신 | 문서 정보, 4장, 6장, 8장 |
 
 ---
 
@@ -80,33 +81,40 @@ VITE_API_URL=http://localhost:3000
 
 1. 요청이 `/api/auth/*`가 아니면 `POST /api/auth/refresh`를 1회 호출한다.
 2. 성공(200)이면 원 요청을 1회 재시도한다.
-3. refresh 실패(401) 또는 재시도도 `UNAUTHORIZED`면 `queryClient.clear()`·스토어 `reset()` 후 `/login` 이동.
+3. refresh 실패(401) 또는 재시도도 `UNAUTHORIZED`면 `queryClient.clear()`·스토어 `reset()` 후 `/login` 이동. refresh가 5xx·네트워크 오류면 만료로 보지 않고 원 오류를 그대로 throw한다.
 4. 401이라도 `code`가 `INVALID_CREDENTIALS`면 refresh하지 않고 그대로 throw한다 (로그인·비밀번호 변경 화면이 오류를 표시).
 
 중요: 동시에 401이 여러 건 나왔을 때 각각 refresh를 호출하면 안 된다. 첫 refresh가 토큰을 회전시키면 두 번째 refresh는 이미 폐기된 토큰으로 와서 재사용 탐지로 판정되고, 서버는 그 사용자의 리프레시 토큰 전부를 폐기한다 (PRD 6.4). 사용자는 즉시 로그아웃된다. 진행 중인 refresh Promise를 반드시 하나만 공유한다.
 
 ```ts
-// frontend/src/api/client.ts 핵심. 응답 파싱·ApiError 정의는 생략
-const API = import.meta.env.VITE_API_URL;
-let refreshing: Promise<boolean> | null = null;
+// frontend/src/api/client.ts 핵심. parse(응답 → JSON 또는 ApiError throw)·send(credentials: 'include', JSON 본문)는 생략
+type RefreshResult = 'ok' | 'expired' | 'error';
+let refreshing: Promise<RefreshResult> | null = null;
 
-function refreshOnce(): Promise<boolean> {
+function refreshOnce(): Promise<RefreshResult> {
   refreshing ??= fetch(`${API}/api/auth/refresh`, { method: 'POST', credentials: 'include' })
-    .then((r) => r.ok)
+    .then((r): RefreshResult => (r.ok ? 'ok' : r.status === 401 ? 'expired' : 'error'))
+    .catch((): RefreshResult => 'error')
     .finally(() => { refreshing = null; });
   return refreshing;
 }
 
-export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(API + path, { credentials: 'include', ...init });
+export async function request<T>(path: string, options: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown } = {}): Promise<T> {
+  const res = await send(path, options);
   if (res.status !== 401 || path.startsWith('/api/auth/')) return parse<T>(res);
-  const { code } = await res.clone().json();
-  if (code !== 'UNAUTHORIZED') return parse<T>(res);
-  if (await refreshOnce()) return parse<T>(await fetch(API + path, { credentials: 'include', ...init }));
-  onSessionExpired(); // queryClient.clear() + store.reset() + /login
+  if ((await codeOf(res)) !== 'UNAUTHORIZED') return parse<T>(res); // INVALID_CREDENTIALS 등
+  const refreshed = await refreshOnce();
+  if (refreshed === 'error') return parse<T>(res); // 일시 장애: 만료 처리 없음
+  if (refreshed === 'ok') {
+    const retry = await send(path, options);
+    if (retry.status !== 401 || (await codeOf(retry)) !== 'UNAUTHORIZED') return parse<T>(retry);
+  }
+  onSessionExpired(); // App이 등록: queryClient.clear() + store.reset() + /login
   return parse<T>(res);
 }
 ```
+
+`onSessionExpired`는 `setSessionExpiredHandler(fn)`으로 `App.tsx`가 등록한다. 앱 시작 시 세션 복구(`GET /api/users/me`)가 끝난 뒤에만 등록하므로, 비로그인 상태로 `/signup`에 직접 들어가도 `/login`으로 튕기지 않는다.
 
 ## 5. 요청 규약
 
@@ -148,8 +156,8 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
 |------|------|
 | `VALIDATION_ERROR`, `INVALID_DATE_RANGE`, `DUPLICATE_*`, `CATEGORY_LIMIT_EXCEEDED`, `INVALID_CREDENTIALS` | 현재 화면 유지, 폼 아래 `ErrorMessage`(CP-02) |
 | `UNAUTHORIZED` | 4장 refresh 흐름. 최종 실패만 `/login` |
-| `NOT_FOUND` | 편집 진입(`GET /api/todos/:id`)은 목록으로 이동 + 안내. 나머지는 토스트 후 목록 refetch |
-| `DEFAULT_CATEGORY_PROTECTED`, `INTERNAL_ERROR` | 토스트 |
+| `NOT_FOUND` | 편집 진입(`GET /api/todos/:id`)은 안내 후 목록으로 이동. 나머지는 `ErrorMessage`(CP-02)에 표시 후 관련 목록 refetch(`queries/`의 `onError`) |
+| `DEFAULT_CATEGORY_PROTECTED`, `INTERNAL_ERROR` | `ErrorMessage`(CP-02). 토스트 컴포넌트는 없다 |
 
 `ApiError`는 `types/api.ts`의 `{ code, message }`이며 `code`는 위 9개 유니온 + `INTERNAL_ERROR`.
 
@@ -195,7 +203,7 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
 | `description` | 1000자 이하 |
 | 날짜 | `YYYY-MM-DD`, 실제 존재하는 날짜 |
 
-- 응답에 `password`·해시·토큰 값은 없다. `User`는 `{ id, email, name }`뿐이다.
+- 응답에 `password`·해시·토큰 값은 없다. 인증 응답의 `user`는 `{ id, name }`(`types/api.ts`의 `User`), `/api/users/me`는 `{ id, email, name }`(`Me`)뿐이다.
 - 요청 본문 100kb 초과는 `VALIDATION_ERROR`.
 
 ## 9. 시드 계정과 스모크

@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.7 |
+| 현재 버전 | v0.9 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.10, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.11, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.6 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -23,6 +23,8 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.5 | 2026-11-04 | - | 백엔드 리뷰 반영. 5장 단위 테스트에 입력 검증, 스모크에 T-B01·T-B03 HTTP 조건, 7.2 tests에 `validate.test.js`·`user-service.test.js` | 문서 정보, 5장, 7.2 |
 | v0.6 | 2026-11-05 | - | 5장 백엔드 테스트 명령을 `--test-concurrency=1 "tests/*.test.js"`로(8-plan v0.5), 7.1에 GitHub 이슈 브랜치 규칙(`feature-<이슈번호>`) | 문서 정보, 5장, 7.1 |
 | v0.7 | 2026-11-05 | - | PRD v0.10 CORS 방식 반영. PR-08 적용 예에 `CORS_ORIGIN`·`VITE_API_URL`, 6.1에 `CORS_ORIGIN`·프론트 환경변수, 7.2에 `middlewares/cors.js`, `app.js` 정적 제공 제거, 7.3 `vite.config.ts` 프록시 제거, 참조 버전 갱신 | 문서 정보, PR-08, 6.1, 7.2, 7.3 |
+| v0.8 | 2026-11-05 | - | 코드 상태 반영. 3.5 프론트 개발 의존성 심사 결과(`@vitejs/plugin-react`, `@types/react`, `@types/react-dom`, `jsdom`, `@testing-library/react`), 5장에 `scenarios.test.js`(US HTTP 재현)·프론트 vitest 대상, 7.2 tests에 `scenarios.test.js`, 7.3 트리를 구현 파일(`lib/calendar-lanes.ts`, `lib/status.ts`, `lib/error-text.ts`, `components/calendar/CalendarBar.tsx`, 테스트 파일, `.env.example`, `index.html`)에 맞춤 | 문서 정보, 3.5, 5장, 7.2, 7.3 |
+| v0.9 | 2026-11-05 | - | 코드 리뷰 반영. 3.5 심사 결과에 `@testing-library/dom`·ESLint 템플릿 세트, 7.1 트리(docs 1~11·style-guide, `swagger/`, `CLAUDE.md`, `.claude/`), 7.2(`swagger:json`, `swagger.yaml`, `CLAUDE.md`, `.env.test`, `load.js` 미작성 표기), 7.3(`queries/use-auth.ts`, `auth.ts updateMe`, `.prettierrc`), 참조 버전 갱신 | 문서 정보, 3.5, 7.1, 7.2, 7.3 |
 
 ---
 
@@ -119,6 +121,8 @@ pages (SC-01~07, 라우팅·화면 조립)
 
 초기 허용 목록. 백엔드: `express`, `pg`, `bcrypt`, `jsonwebtoken`, `cookie-parser`. 프론트: `react`, `react-dom`, `react-router`, `zustand`, `@tanstack/react-query`, 개발용 `vite`, `typescript`, `vitest`. 이 밖은 위 기준으로 심사한다.
 
+심사 결과(개발용만, 운영 번들에 포함되지 않음): `@vitejs/plugin-react`(Vite React 템플릿 기본, JSX 변환·Fast Refresh), `@types/react`·`@types/react-dom`(TS 타입), `jsdom`·`@testing-library/react`·`@testing-library/dom`(컴포넌트 테스트 DOM. `dom`은 `react`의 peer. 직접 쓰면 50줄을 넘는다, 기준 1), ESLint 템플릿 세트 `@eslint/js`·`typescript-eslint`·`eslint-plugin-react-hooks`·`eslint-plugin-react-refresh`·`globals`(Vite react-ts 템플릿 기본, 4장 lint).
+
 ---
 
 ## 4. 코드·네이밍 원칙
@@ -148,8 +152,10 @@ pages (SC-01~07, 라우팅·화면 조립)
 | 단위 | ST-01~04 판정 함수. 도메인 정의서 4.3 검증 예 4건을 그대로 옮긴다 | `backend/tests/todo-status.test.js` | `node --test` |
 | 단위 | 입력 검증 함수(BR-21, BR-22, BR-32, BR-41~46, ID 형식). 8-plan T-B02 완료 조건 | `backend/tests/validate.test.js` | `node --test` |
 | 단위 | BR-35 조회 기간 계산. 수용 기준 예(anchorDate 11-03 → 주 11-02~11-08, 월 10-26~12-06) | `frontend/src/lib/calendar-range.test.ts` | `vitest` |
+| 단위 | BR-33 칸 배치·막대 lane(US-13·14 칸 표), `api/client.ts` refresh 1회 공유·`/api/auth/*` 제외·`INVALID_CREDENTIALS` throw(T-F01), CP-01~06 표시·콜백(T-F02), 월·주·일 뷰 렌더(T-F08·09) | `frontend/src/lib/calendar-lanes.test.ts`, `frontend/src/api/client.test.ts`, `frontend/src/components/**/*.test.tsx` | `vitest` + `jsdom` |
 | 서비스 | 서비스 단위로 검증 가능한 BR 수용 기준: BR-04, BR-06, BR-11, BR-13, BR-14, BR-15(롤백 포함), BR-17, BR-22, BR-46 개수 제한. 인증은 리프레시 회전, 재사용 탐지, 로그아웃 폐기(NFR-06, PRD 6.4). 실제 테스트 DB에 대고 실행하며 `pg`를 mock하지 않는다 | `backend/tests/*-service.test.js` | `node --test` |
-| API 스모크 | 실행 중인 서버에 `fetch`로 US-02, US-12, US-17의 응답 코드·건수와 T-B01·T-B03의 HTTP 조건(쿠키 속성, 알고리즘, 회전·재사용, 로그아웃)을 확인하는 스크립트 1벌 | `backend/tests/smoke.js` | Node 내장 `fetch` |
+| API 스모크 | 실행 중인 서버에 `fetch`로 US-02, US-12, US-17의 응답 코드·건수와 T-B01·T-B03의 HTTP 조건(쿠키 속성, 알고리즘, 회전·재사용, 로그아웃, CORS 프리플라이트)을 확인하는 스크립트 1벌 | `backend/tests/smoke.js` | Node 내장 `fetch` |
+| 시나리오 | US-01~US-17, US-19를 임시 포트에 띄운 `app`에 HTTP로 재현. 시나리오마다 테스트 DB 시드 초기화. UI 전용 단계(대화상자, 뒤로 가기, 375px)는 제외 | `backend/tests/scenarios.test.js` | `node --test` |
 | 수동 | 화면 흐름 전부. PRD 9.1 체크리스트를 US-01~19 순서로 수행 (US-19는 F-03 구현 시) | `docs/3-user-scenario.md` | 브라우저 |
 
 - 테스트 이름은 ID로 시작한다. 예: `ST-01 완료는 날짜와 무관`, `BR-15 이동 실패 시 카테고리 유지`.
@@ -206,8 +212,11 @@ pages (SC-01~07, 라우팅·화면 조립)
 todolist_app/
 ├── backend/        # Express API, 마이그레이션, 시드, 테스트
 ├── frontend/       # Vite + React SPA
-├── docs/           # 설계 문서 (1~9, schema.sql, assets/; 작성 예정 perf-result.md)
+├── docs/           # 설계 문서 (1~11, style-guide.md, schema.sql, assets/; 작성 예정 perf-result.md)
+├── swagger/        # swagger.json (backend/swagger.yaml에서 생성)
 ├── prompts/        # 문서 생성 프롬프트
+├── .claude/        # 스킬 (develop-backend, develop-frontend, issue-resolver-backend)
+├── CLAUDE.md       # 최상위 지침, 문서 목록·버전
 ├── .gitignore      # node_modules, dist, .env, .env.test
 └── README.md       # 실행 순서 3줄 (DB 생성 → migrate·seed → dev)
 ```
@@ -218,9 +227,13 @@ GitHub 이슈 작업 브랜치는 `feature-<이슈번호>`, `main`에서 분기,
 
 ```text
 backend/
-├── package.json            # scripts: dev, start, migrate, seed, test, smoke
+├── package.json            # scripts: dev, start, migrate, seed, test, smoke, swagger:json
 ├── .env.example
+├── .env, .env.test         # 커밋하지 않음
+├── swagger.yaml            # OpenAPI 명세 (정본)
+├── CLAUDE.md               # backend 지침
 ├── eslint.config.js
+├── .prettierrc
 ├── src/
 │   ├── server.js           # 환경변수 검사, app.listen, graceful shutdown
 │   ├── app.js              # express(), cors·미들웨어·라우트 등록, 오류 미들웨어 (정적 파일 제공 없음)
@@ -262,7 +275,8 @@ backend/
     ├── category-service.test.js
     ├── todo-service.test.js
     ├── user-service.test.js # BR-03, BR-05 (P1)
-    ├── load.js             # k6 부하 시나리오 (PRD 5.1, NFR-01~03)
+    ├── scenarios.test.js   # US-01~17, 19 HTTP 재현 (app.listen(0), CORS 포함)
+    ├── load.js             # k6 부하 시나리오 (PRD 5.1, NFR-01~03). T-X04, 미작성
     └── smoke.js            # 실행 중 서버에 US-02, US-12, US-17 + T-B01·T-B03 HTTP 조건 확인
 ```
 
@@ -277,30 +291,37 @@ backend/
 ```text
 frontend/
 ├── package.json            # scripts: dev, build, test
-├── .env                    # VITE_API_URL=http://localhost:3000 (API origin, 프록시 없음)
-├── vite.config.ts
+├── .env                    # VITE_API_URL=http://localhost:3000 (API origin, 프록시 없음). 커밋하지 않음
+├── .env.example            # 키만 커밋
+├── index.html
+├── vite.config.ts          # @vitejs/plugin-react, vitest(jsdom, globals)
 ├── tsconfig.json           # strict
 ├── eslint.config.js
+├── .prettierrc
 └── src/
     ├── main.tsx            # QueryClientProvider, Router
     ├── App.tsx             # 라우트 정의, RequireAuth 적용
     ├── pages/              # SC-01~07 1:1. 화면 조립과 이동만
     ├── components/
-    │   ├── common/         # CP-01~06. props만 받는다
-    │   └── calendar/       # MonthView, WeekView, DayView (WF-05, 월 → 주 → 일 순 구현)
+    │   ├── common/         # CP-01~06 (TopNav, ErrorMessage, ConfirmDialog, StatusBadge, TodoRow, EmptyList). props만 받는다. common.test.tsx
+    │   └── calendar/       # CalendarBar(막대), MonthView, WeekView, DayView (WF-05, 스타일 가이드 3.7). calendar.test.tsx
     ├── api/
-    │   ├── client.ts       # fetch 래퍼: credentials 포함, {code,message} 파싱, UNAUTHORIZED → refresh 1회(동시 요청은 1개 공유) → 재시도 → 실패 시 reset·/login
-    │   ├── auth.ts         # signup, login, logout, refresh, me
+    │   ├── client.ts       # fetch 래퍼: credentials 포함, {code,message} 파싱, UNAUTHORIZED → refresh 1회(동시 요청은 1개 공유) → 재시도 → 실패 시 세션 만료 핸들러(App이 등록: reset·clear·/login). client.test.ts
+    │   ├── auth.ts         # signup, login, logout, refresh, me, updateMe
     │   ├── categories.ts
     │   └── todos.ts        # list(filter, today), range(from, to, today), get(id, today), create, update, setCompleted, remove
     ├── queries/            # TanStack Query hooks. 쿼리 키·invalidate 규칙은 여기만
+    │   ├── use-auth.ts     # useLogin, useSignup(성공 시 clear + user), useLogout(settled 시 clear + reset), useMe, useUpdateMe
     │   ├── use-categories.ts
     │   └── use-todos.ts
     ├── stores/
     │   └── app-store.ts    # Zustand 1개: user, filter, calendar(view, anchorDate), reset()
     ├── lib/
-    │   ├── date.ts         # 로컬 today → YYYY-MM-DD, 날짜 더하기·비교 (문자열 기반)
-    │   └── calendar-range.ts # BR-35 from/to 계산, PRD 4.2 이전·다음 이동
+    │   ├── date.ts         # 로컬 today → YYYY-MM-DD, 날짜 더하기·비교·요일 (문자열 기반, Date는 내부 UTC)
+    │   ├── calendar-range.ts # BR-35 from/to 계산, PRD 4.2 이전·다음 이동, 월 뷰 칸 배열. calendar-range.test.ts
+    │   ├── calendar-lanes.ts # BR-33 칸 포함 판정, 막대 lane 배정 (스타일 가이드 3.7). calendar-lanes.test.ts
+    │   ├── status.ts       # CP-04 상태 글자(전체·축약)·CSS 수식어
+    │   └── error-text.ts   # 오류 코드 → 한국어 문구, VALIDATION_ERROR message → 필드 판별
     ├── types/
     │   ├── todo.ts         # Todo, TodoStatus 상수, 필터 타입
     │   ├── category.ts
