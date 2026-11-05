@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { ping } from './db/pool.js';
 import { HTTP } from './errors/codes.js';
 import { errorHandler, notFound } from './middlewares/error-handler.js';
+import { cors } from './middlewares/cors.js';
 import authRouter from './routes/auth.js';
 import usersRouter from './routes/users.js';
 import categoriesRouter from './routes/categories.js';
@@ -11,6 +12,7 @@ import todosRouter from './routes/todos.js';
 
 export const app = express();
 
+app.use(cors); // 프리플라이트는 본문 파싱 전에 끝낸다
 app.use(express.json());
 app.use(cookieParser());
 

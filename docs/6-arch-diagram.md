@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 아키텍처 다이어그램 |
-| 현재 버전 | v0.6 |
+| 현재 버전 | v0.7 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.6, `docs/7-erd.md` v0.5, `docs/9-api-design.md` v0.4 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.10, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.7, `docs/7-erd.md` v0.5, `docs/9-api-design.md` v0.4 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어그램)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임, PR은 프로젝트 원칙의 ID를 참조만 하며 재정의하지 않는다. 다이어그램은 모두 mermaid 코드 블록이다. 문서 간 표현이 다른 지점은 PRD를 기준으로 그리고 10장에 나열한다.
 
@@ -22,6 +22,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어�
 | v0.4 | 2026-11-04 | - | 8문서 교차 검토 반영. AD-09 인증 실패 분기를 AD-16 리프레시·재시도 후 실패 시 이동으로 수정, AD-14에 auth-service 참여자 추가(라우트는 DB를 직접 호출하지 않음, 원칙 3장), 1장 문서 수 6개·API 설계 문서 경로, 참조 버전 갱신 | 문서 정보, 1장, AD-09, AD-14 |
 | v0.5 | 2026-11-04 | - | AD-C3·C4·C5 해결(`docs/9-api-design.md` 4장), 1장 '작성 예정' 표기 제거, 참조 문서에 `docs/9-api-design.md` 추가, 참조 버전 갱신 | 문서 정보, 1장, 10장 |
 | v0.6 | 2026-11-05 | - | 1장 문서 수 6개 → 7개(`docs/9-api-design.md` 포함), 참조 버전 갱신 | 문서 정보, 1장 |
+| v0.7 | 2026-11-05 | - | PRD v0.10 CORS 방식 반영. AD-01 CORS 문장, AD-02 개발·운영을 프록시·정적 제공에서 다른 origin + CORS로 수정, AD-03 `app.js` 라벨·`cors.js` 노드, AD-06 정적 제공 노드를 cors 노드로 교체, 참조 버전 갱신 | 문서 정보, AD-01, AD-02, AD-03, AD-06 |
 
 ---
 
@@ -44,7 +45,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어�
 
 ### AD-01 시스템 컨텍스트
 
-사용자 → 브라우저(React SPA) → Express → PostgreSQL 단일 경로다 (PRD 6.2). 서버 세션은 없고 액세스 토큰(JWT) 쿠키와 리프레시 토큰(DB에 해시 저장) 쿠키로 인증한다 (NFR-06, PRD 6.4). SPA와 API는 같은 origin이라 CORS 설정이 없다.
+사용자 → 브라우저(React SPA) → Express → PostgreSQL 단일 경로다 (PRD 6.2). 서버 세션은 없고 액세스 토큰(JWT) 쿠키와 리프레시 토큰(DB에 해시 저장) 쿠키로 인증한다 (NFR-06, PRD 6.4). SPA와 API는 다른 origin이며 Express가 `CORS_ORIGIN` 허용 목록으로 CORS 헤더를 붙인다 (NFR-06 (6)).
 
 ```mermaid
 flowchart LR
@@ -62,7 +63,7 @@ flowchart LR
 
 ### AD-02 개발 / 운영 배포 차이
 
-개발은 Vite 개발 서버가 `/api`를 Express로 프록시하고, 운영은 Express 하나가 `frontend/dist`와 `/api`를 함께 제공한다 (NFR-06, 원칙 6.1, 7.3). 운영은 HTTPS만 허용한다 (NFR-08). HTTPS 종료 지점은 PD-04(open)다.
+개발은 브라우저가 Vite(`:5173`)에서 SPA를 받고 Express(`:3000`)의 `/api`를 CORS로 직접 호출한다. 운영은 SPA 정적 호스팅과 Express API를 따로 두고 `CORS_ORIGIN`에 SPA origin을 등록한다. 쿠키가 `SameSite=Lax`라 둘은 같은 site여야 한다 (NFR-06 (6), 원칙 6.1, 7.3). 운영은 HTTPS만 허용한다 (NFR-08). HTTPS 종료 지점은 PD-04(open)다.
 
 ```mermaid
 flowchart TB
@@ -72,19 +73,17 @@ flowchart TB
         DE["Express (backend/, PORT 기본 3000)"]
         DP[("PostgreSQL: DATABASE_URL")]
         DB1 -->|"/ (SPA 자산)"| DV
-        DB1 -->|"/api/*"| DV
-        DV -->|"프록시 /api → http://localhost:3000"| DE
+        DB1 -->|"/api/* (CORS, credentials: include)"| DE
         DE --> DP
     end
 
     subgraph PROD["운영 (NODE_ENV=production, HTTPS만, 쿠키 Secure)"]
         PB["브라우저"]
-        PE["Express 1 프로세스 (A-01)"]
-        PS["정적 파일 frontend/dist"]
+        PE["Express 1 프로세스 (A-01, API만)"]
+        PS["SPA 정적 호스팅 (frontend/dist)"]
         PP[("PostgreSQL 17")]
-        PB -->|"/ (SPA 자산)"| PE
-        PB -->|"/api/*"| PE
-        PE --> PS
+        PB -->|"/ (SPA 자산)"| PS
+        PB -->|"/api/* (CORS, CORS_ORIGIN에 SPA origin)"| PE
         PE --> PP
     end
 ```
@@ -150,9 +149,10 @@ flowchart TB
 ```mermaid
 flowchart TB
     SRV["server.js: 환경변수 검사, app.listen, graceful shutdown"]
-    APP["app.js: express(), 미들웨어·라우트 등록, 정적 dist, 오류 미들웨어"]
+    APP["app.js: express(), cors·미들웨어·라우트 등록, 오류 미들웨어"]
 
     subgraph MW["middlewares/"]
+        MC["cors.js: CORS_ORIGIN 허용 목록, Allow-Credentials, OPTIONS 204 (NFR-06 (6))"]
         MA["auth.js: 액세스 토큰 검증 (HS384 고정), req.userId 주입, 두 쿠키 옵션 (NFR-06, BR-01)"]
         ME["error-handler.js: AppError → status·본문, 1줄 JSON 로그"]
     end
@@ -240,8 +240,8 @@ flowchart LR
     RT --> RES["2xx JSON 응답"]
     ERR["오류 미들웨어 error-handler.js: codes.js 매핑 → status + { code, message }, 1줄 로그 (5xx만 stack)"]
     ERR --> RES4["4xx/5xx 응답"]
-    STATIC["운영: 비 /api 경로 → frontend/dist 정적 제공"]
-    CP -.-> STATIC
+    CORS["cors.js: Origin이 CORS_ORIGIN에 있으면 CORS 헤더, OPTIONS는 204로 종료"]
+    CORS --> CP
 ```
 
 HTTP status 매핑 (PRD 6.3):

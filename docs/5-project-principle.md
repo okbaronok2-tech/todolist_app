@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.6 |
+| 현재 버전 | v0.7 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
-| 최종 수정일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5 |
+| 최종 수정일 | 2026-11-05 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.10, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -22,6 +22,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.4 | 2026-11-04 | - | 4장·7.1의 `docs/9-api-design.md` '작성 예정' 표기 제거(8-plan T-X02), 참조 버전 갱신 | 문서 정보, 4장, 7.1 |
 | v0.5 | 2026-11-04 | - | 백엔드 리뷰 반영. 5장 단위 테스트에 입력 검증, 스모크에 T-B01·T-B03 HTTP 조건, 7.2 tests에 `validate.test.js`·`user-service.test.js` | 문서 정보, 5장, 7.2 |
 | v0.6 | 2026-11-05 | - | 5장 백엔드 테스트 명령을 `--test-concurrency=1 "tests/*.test.js"`로(8-plan v0.5), 7.1에 GitHub 이슈 브랜치 규칙(`feature-<이슈번호>`) | 문서 정보, 5장, 7.1 |
+| v0.7 | 2026-11-05 | - | PRD v0.10 CORS 방식 반영. PR-08 적용 예에 `CORS_ORIGIN`·`VITE_API_URL`, 6.1에 `CORS_ORIGIN`·프론트 환경변수, 7.2에 `middlewares/cors.js`, `app.js` 정적 제공 제거, 7.3 `vite.config.ts` 프록시 제거, 참조 버전 갱신 | 문서 정보, PR-08, 6.1, 7.2, 7.3 |
 
 ---
 
@@ -56,7 +57,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | PR-05 | 날짜는 `YYYY-MM-DD` 문자열로 모든 경계(DB ↔ 서버 ↔ 클라이언트)를 지난다. | JS `Date`를 거치면 시간대 밀림이 생긴다. | 적용: `pg` type parser로 OID 1082를 문자열로 받는다. 금지: `toISOString().slice(0, 10)`으로 today 생성(UTC 날짜가 된다). | PRD 7장, D-05, R-04 |
 | PR-06 | 거부 응답은 BR-51 코드로만 표현한다. 본문은 `{ code, message }`, status는 PRD 6.3 매핑 한 곳에서 정한다. | 코드가 늘면 화면 분기가 깨진다. | 적용: `AppError('NOT_FOUND')` 하나로 던지고 오류 미들웨어가 status를 붙인다. 금지: 라우트에서 `res.status(404).json(...)` 직접 작성. | BR-51, BR-52, PRD 6.3 |
 | PR-07 | 소유권 격리. `todos`·`categories`에 닿는 모든 SQL은 `user_id` 조건을 가진다. 타인·미존재·형식 오류 ID는 같은 `NOT_FOUND`다. | 존재 여부도 노출하지 않는다. | 적용: `WHERE id = $1 AND user_id = $2`. 금지: id만으로 조회한 뒤 소유자 비교. | BR-02, BR-16, NFR-10, PRD 6.3 |
-| PR-08 | 환경에 따라 달라지는 값은 환경변수에서만 읽는다. 코드에 상수로 두지 않는다. | 시크릿 유출과 환경별 분기 누락을 막는다. | 적용: `process.env.JWT_SECRET`, `import.meta.env` 미사용(프론트는 같은 origin이라 설정값 없음). 금지: 기본값으로 시크릿 넣기. | NFR-06, NFR-07, 6장 |
+| PR-08 | 환경에 따라 달라지는 값은 환경변수에서만 읽는다. 코드에 상수로 두지 않는다. | 시크릿 유출과 환경별 분기 누락을 막는다. | 적용: `process.env.JWT_SECRET`, `process.env.CORS_ORIGIN`, 프론트는 `import.meta.env.VITE_API_URL`(API origin) 하나. 금지: 기본값으로 시크릿 넣기. | NFR-06, NFR-07, 6장 |
 
 ---
 
@@ -169,10 +170,11 @@ pages (SC-01~07, 라우팅·화면 조립)
 | `JWT_SECRET` | 액세스 토큰 HS384 서명 키 (NFR-06) | 48자 이상(384비트 권장). 기본값 없음, 없거나 짧으면 기동 실패 |
 | `PORT` | Express 포트 | 기본 3000 |
 | `NODE_ENV` | `production`이면 쿠키 `Secure` 설정 (NFR-06) | 그 외는 로컬 HTTP 허용 |
+| `CORS_ORIGIN` | CORS 허용 SPA origin, 쉼표 구분 (NFR-06 (6)) | 기본값 없음, 없으면 기동 실패. 개발 `http://localhost:5173` |
 
 - `.env.example`은 키 이름과 설명만 적어 커밋한다. `.env`, `.env.test`는 `.gitignore`에 넣고 커밋하지 않는다.
 - 로드는 `node --env-file=.env`로 한다. `dotenv`는 설치하지 않는다.
-- 프론트엔드는 환경변수가 없다. API는 같은 origin의 `/api/`다 (NFR-06). 개발은 Vite 프록시, 운영은 Express가 `frontend/dist`를 정적으로 제공한다.
+- 프론트엔드 환경변수는 `VITE_API_URL`(API origin, 개발 `http://localhost:3000`) 하나다. 요청은 `${VITE_API_URL}/api/...`에 `credentials: 'include'`로 보낸다 (NFR-06 (6)). 운영은 SPA 정적 호스팅과 Express API를 따로 두고 백엔드 `CORS_ORIGIN`에 SPA origin을 등록한다.
 
 ### 6.2 보안
 
@@ -221,7 +223,7 @@ backend/
 ├── eslint.config.js
 ├── src/
 │   ├── server.js           # 환경변수 검사, app.listen, graceful shutdown
-│   ├── app.js              # express(), 미들웨어·라우트 등록, 정적 파일(dist), 오류 미들웨어
+│   ├── app.js              # express(), cors·미들웨어·라우트 등록, 오류 미들웨어 (정적 파일 제공 없음)
 │   ├── routes/
 │   │   ├── auth.js         # POST signup/login/logout/refresh. 쿠키 설정·삭제, refresh·logout은 인증 미들웨어 없음 (UC-01~03, NFR-06)
 │   │   ├── users.js        # GET/PATCH users/me (UC-04, P1)
@@ -240,6 +242,7 @@ backend/
 │   │   ├── category-repo.js
 │   │   └── todo-repo.js         # 목록 필터(BR-31, BR-32 SQL), 기간 겹침(BR-33), 기본 정렬
 │   ├── middlewares/
+│   │   ├── cors.js         # CORS_ORIGIN 허용 목록, Allow-Credentials, OPTIONS 204 (NFR-06 (6))
 │   │   ├── auth.js         # 액세스 토큰 검증(HS384 고정), req.userId 주입, 두 쿠키 옵션 (NFR-06, BR-01)
 │   │   └── error-handler.js # AppError → status·본문, 1줄 로그 (PRD 6.3)
 │   ├── errors/
@@ -274,7 +277,8 @@ backend/
 ```text
 frontend/
 ├── package.json            # scripts: dev, build, test
-├── vite.config.ts          # /api → http://localhost:3000 프록시
+├── .env                    # VITE_API_URL=http://localhost:3000 (API origin, 프록시 없음)
+├── vite.config.ts
 ├── tsconfig.json           # strict
 ├── eslint.config.js
 └── src/

@@ -1,15 +1,17 @@
 import { app } from './app.js';
 import { pool } from './db/pool.js';
 
-// 원칙 6.1: JWT_SECRET 48자 이상(NFR-06), DATABASE_URL 필수. 없으면 기동 실패
+// 원칙 6.1: JWT_SECRET 48자 이상(NFR-06), DATABASE_URL·CORS_ORIGIN 필수. 없으면 기동 실패
 const secret = process.env.JWT_SECRET ?? '';
 if (secret.length < 48) {
   console.error('JWT_SECRET is missing or shorter than 48 characters');
   process.exit(1);
 }
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL is missing');
-  process.exit(1);
+for (const key of ['DATABASE_URL', 'CORS_ORIGIN']) {
+  if (!process.env[key]) {
+    console.error(`${key} is missing`);
+    process.exit(1);
+  }
 }
 
 const port = Number(process.env.PORT) || 3000;

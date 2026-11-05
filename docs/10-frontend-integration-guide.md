@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 프론트엔드 연동 가이드 |
-| 현재 버전 | v0.2 |
+| 현재 버전 | v0.3 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.9, `docs/5-project-principle.md` v0.6, `docs/6-arch-diagram.md` v0.6, `docs/8-plan.md` v0.6, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.7 |
+| 참조 문서 | `docs/2-PRD.md` v0.10, `docs/5-project-principle.md` v0.7, `docs/6-arch-diagram.md` v0.7, `docs/8-plan.md` v0.7, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.8 |
 | 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
 
 ## 변경 이력
@@ -17,6 +17,7 @@
 |------|------|--------|-----------|-----------|
 | v0.1 | 2026-11-05 | - | 초안 작성. 백엔드 실행, 개발 연결(Vite 프록시), 쿠키·리프레시 흐름(AD-16), 요청 규약, 오류 모델, 엔드포인트 요약, 보안 주의, 시드 계정, Swagger | 전체 |
 | v0.2 | 2026-11-05 | - | `GET /api/health` 응답 `db` 필드 반영, 참조 버전 갱신 | 문서 정보, 1장, 7장 |
+| v0.3 | 2026-11-05 | - | 연동 방식을 Vite 프록시에서 CORS로 변경(PRD v0.10). 1장 `CORS_ORIGIN`, 2장 전면 수정(`VITE_API_URL`, `credentials: 'include'`, 같은 site 조건), 4장 `client.ts` 예시에 절대 URL·credentials, 7장 Swagger 문장, 참조 버전 갱신 | 문서 정보, 1장, 2장, 4장, 7장 |
 
 ---
 
@@ -33,32 +34,30 @@ npm run seed
 npm run dev            # http://localhost:3000, 파일 변경 시 자동 재시작
 ```
 
-환경변수 4개 (`backend/.env.example`):
+환경변수 5개 (`backend/.env.example`):
 
 | 키 | 값 | 비고 |
 |----|----|------|
 | `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/todolist` | pg Pool 연결 문자열 |
 | `JWT_SECRET` | 48자 이상 임의 문자열 | 기본값 없음. 없거나 짧으면 기동 실패 (NFR-06) |
 | `PORT` | `3000` | 기본 3000 |
-| `NODE_ENV` | `development` | `production`이면 쿠키에 `Secure`, `frontend/dist` 정적 제공 |
+| `NODE_ENV` | `development` | `production`이면 쿠키에 `Secure` |
+| `CORS_ORIGIN` | `http://localhost:5173` | 허용 SPA origin, 쉼표 구분. 없으면 기동 실패 |
 
 기동 확인: `GET /api/health` → 200 `{ "ok": true, "db": "up" }`. DB 연결 실패면 503 `{ "ok": false, "db": "down" }`.
 
 ## 2. 개발 연결 방식
 
-- CORS 설정 없음. SPA와 API는 개발·운영 모두 같은 origin이다 (NFR-06).
-- 개발: Vite `server.proxy`로 `/api`를 백엔드에 넘긴다 (T-F01).
-- 운영: `NODE_ENV=production`에서 Express가 `frontend/dist`를 정적 제공하고 `/api` 외 경로는 `index.html`을 돌려준다 (T-X03).
+- CORS 방식. SPA(Vite `http://localhost:5173`)와 API(Express `http://localhost:3000`)는 다른 origin이고 프록시는 없다 (NFR-06 (6)).
+- 백엔드는 `CORS_ORIGIN` 목록에 있는 Origin에만 `Access-Control-Allow-Origin: <그 origin>`, `Access-Control-Allow-Credentials: true`를 붙이고 `OPTIONS` 프리플라이트에 204를 준다 (`backend/src/middlewares/cors.js`). 목록에 없으면 헤더가 없어 브라우저가 차단한다.
+- 운영: SPA는 정적 호스팅, Express는 API만. `CORS_ORIGIN`에 운영 SPA origin을 넣는다 (T-X03).
 
-```ts
-// frontend/vite.config.ts
-export default defineConfig({
-  plugins: [react()],
-  server: { proxy: { '/api': 'http://localhost:3000' } },
-});
+```bash
+# frontend/.env
+VITE_API_URL=http://localhost:3000
 ```
 
-`fetch`는 상대 경로 `/api/...`만 쓴다. 같은 origin이므로 `credentials` 기본값(`same-origin`)으로 쿠키가 붙는다. `Authorization` 헤더는 없다. 절대 URL(`http://localhost:3000/api/...`)을 쓰면 origin이 달라져 쿠키가 빠지므로 금지.
+`fetch`는 `${import.meta.env.VITE_API_URL}/api/...` 절대 URL에 반드시 `credentials: 'include'`를 붙인다. 빠지면 쿠키가 전송·저장되지 않아 보호 API가 전부 `UNAUTHORIZED`다. `Authorization` 헤더는 없다. 쿠키가 `SameSite=Lax`라 SPA와 API는 같은 site(등록 도메인 동일, 포트·서브도메인만 다름)여야 한다. 다른 site에 두려면 쿠키를 `SameSite=None; Secure`로 바꿔야 한다 (현재 미지원).
 
 ## 3. 인증·쿠키
 
@@ -88,21 +87,22 @@ export default defineConfig({
 
 ```ts
 // frontend/src/api/client.ts 핵심. 응답 파싱·ApiError 정의는 생략
+const API = import.meta.env.VITE_API_URL;
 let refreshing: Promise<boolean> | null = null;
 
 function refreshOnce(): Promise<boolean> {
-  refreshing ??= fetch('/api/auth/refresh', { method: 'POST' })
+  refreshing ??= fetch(`${API}/api/auth/refresh`, { method: 'POST', credentials: 'include' })
     .then((r) => r.ok)
     .finally(() => { refreshing = null; });
   return refreshing;
 }
 
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(path, init);
+  const res = await fetch(API + path, { credentials: 'include', ...init });
   if (res.status !== 401 || path.startsWith('/api/auth/')) return parse<T>(res);
   const { code } = await res.clone().json();
   if (code !== 'UNAUTHORIZED') return parse<T>(res);
-  if (await refreshOnce()) return parse<T>(await fetch(path, init));
+  if (await refreshOnce()) return parse<T>(await fetch(API + path, { credentials: 'include', ...init }));
   onSessionExpired(); // queryClient.clear() + store.reset() + /login
   return parse<T>(res);
 }
@@ -220,4 +220,4 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   - JSON: `http://localhost:3000/api/docs.json`
 - 운영 모드에서는 제공하지 않는다.
 
-Swagger UI의 "Try it out"은 같은 origin이라 쿠키가 그대로 붙는다. 로그인을 먼저 실행하면 이후 보호 API도 호출된다.
+Swagger UI는 API와 같은 origin(`:3000`)에서 제공되므로 "Try it out"에 쿠키가 그대로 붙는다. 로그인을 먼저 실행하면 이후 보호 API도 호출된다.

@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.6 |
+| 현재 버전 | v0.7 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.6, `docs/6-arch-diagram.md` v0.6, `docs/7-erd.md` v0.5, `docs/schema.sql`, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.7 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.10, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.7, `docs/6-arch-diagram.md` v0.7, `docs/7-erd.md` v0.5, `docs/schema.sql`, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.8 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -22,6 +22,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 | v0.4 | 2026-11-04 | - | T-X01·T-X02·T-D01·T-D02 완료 조건 체크, 참조 문서에 `docs/9-api-design.md` 추가, 참조 버전 갱신 | 문서 정보, T-X01, T-X02, T-D01, T-D02 |
 | v0.5 | 2026-11-04 | - | T-B01~T-B08 완료 조건 체크(85개). 테스트 실행은 `node --test "tests/*.test.js" --test-concurrency=1`(Node 24는 디렉터리 인자 미지원, 테스트 DB 공유로 직렬) | 문서 정보, T-B01~T-B08 |
 | v0.6 | 2026-11-05 | - | 참조 문서에 `backend/swagger.yaml` 추가, T-X02 산출물에 `backend/swagger.yaml`, T-B01·T-B07·T-B08 수동 확인 조건 4개 표기, 참조 버전 갱신 | 문서 정보, T-X02, T-B01, T-B07, T-B08 |
+| v0.7 | 2026-11-05 | - | PRD v0.10 CORS 방식 반영. T-F01 프록시 → `VITE_API_URL` + `credentials: 'include'`, T-X03을 정적 제공에서 CORS 배포 확인으로 변경, 참조 버전 갱신 | 문서 정보, 2장, T-F01, T-X03 |
 
 ---
 
@@ -75,7 +76,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 | T-F08 | 캘린더 월 뷰 | 프론트 | Day 2 오후 | T-F06, T-F07 | `pages/CalendarPage.tsx`, `components/calendar/MonthView.tsx` |
 | T-F09 | 캘린더 주·일 뷰·기간 이동 | 프론트 | Day 2 오후 | T-F08 | `components/calendar/WeekView.tsx`, `DayView.tsx` |
 | T-F10 | 반응형 375px | 프론트 | Day 2 오후 | T-F09 | `styles.css`, `TopNav.tsx`, `MonthView.tsx`, `WeekView.tsx` |
-| T-X03 | 운영 빌드·정적 제공 | 공통 | Day 2 오후 | T-F10 | `frontend/dist`, `app.js`(정적 제공) |
+| T-X03 | 운영 빌드·CORS 배포 확인 | 공통 | Day 2 오후 | T-F10 | `frontend/dist`, `CORS_ORIGIN` 운영 값 |
 | T-X04 | 부하 테스트·쿼리 계획 기록 | 공통 | Day 2 오후 | T-B07, T-X03 | `backend/tests/load.js`(k6), `docs/perf-result.md` |
 | T-X05 | 수동 검증 체크리스트 실행 | 공통 | Day 2 오후 | T-F10 | PRD 9.1 체크 결과 |
 | T-B08 | (P1) 내 정보 API | 백엔드 | 여유 시 | T-B03 | `routes/users.js`, `services/user-service.js` |
@@ -406,7 +407,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 수행 작업:
 
-1. Vite + React 19 + TypeScript(`strict: true`) 프로젝트. `vite.config.ts`에 `/api` → `http://localhost:3000` 프록시.
+1. Vite + React 19 + TypeScript(`strict: true`) 프로젝트. 프록시 없음. `frontend/.env`에 `VITE_API_URL=http://localhost:3000`, `api/client.ts`가 `${import.meta.env.VITE_API_URL}/api/...`로 호출한다 (NFR-06 (6)).
 2. `types/api.ts`(`ApiError { code, message }`, BR-51 코드 유니온), `types/todo.ts`(Todo, `TodoStatus` 상수 4개, 필터 타입), `types/category.ts`.
 3. `api/client.ts`: `fetch` 래퍼. `credentials: 'include'`, JSON 본문, 실패 시 `{ code, message }`를 `ApiError`로 throw. `code === 'UNAUTHORIZED'`이고 요청이 `/api/auth/*`가 아니면 `POST /api/auth/refresh`를 1회 호출하고 성공 시 원 요청을 1회 재시도한다. 동시에 여러 요청이 실패하면 진행 중인 리프레시 Promise 1개를 공유한다. 리프레시 실패 또는 재시도도 `UNAUTHORIZED`면 스토어 `reset()` + `queryClient.clear()` + `/login` 이동 (BR-53, PRD 4.2, AD-16).
 4. `stores/app-store.ts`: Zustand 1개(`user`, `filter`, `calendar { view, anchorDate }`, `reset()`). `main.tsx`에 `QueryClientProvider`, Router. `App.tsx`에 라우트 6개(`/me`는 T-F11에서 추가)와 `RequireAuth`(스토어 `user` 없으면 `/login`).
@@ -414,7 +415,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 완료 조건:
 
-- [ ] `npm run dev` 후 브라우저에서 `/api/health`가 프록시를 거쳐 `{ "ok": true }`를 보여준다
+- [ ] `npm run dev` 후 SPA(`http://localhost:5173`)에서 `GET ${VITE_API_URL}/api/health` 호출이 CORS 오류 없이 `{ "ok": true, "db": "up" }`를 받는다 (네트워크 탭에 `Access-Control-Allow-Origin: http://localhost:5173`)
 - [ ] `npx tsc --noEmit`이 오류 없이 끝나고 `any`가 없다 (`grep -rn ': any' src/` 결과 없음)
 - [ ] `api/client.ts`가 401 `UNAUTHORIZED` 응답을 받으면 `POST /api/auth/refresh`를 1회 호출하고 성공 시 원 요청을 재시도한다. 동시에 실패한 요청 여러 개에 대해 refresh 요청은 1회만 나간다 (네트워크 탭으로 확인)
 - [ ] refresh가 실패하거나 재시도 응답도 `UNAUTHORIZED`면 스토어가 초기화되고 `/login`으로 이동한다 (목 서버 응답 또는 서버 중지로 확인). `/api/auth/*` 요청의 `UNAUTHORIZED`에는 refresh를 시도하지 않는다
@@ -640,7 +641,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 - [ ] 1280px에서 데스크톱 레이아웃이 유지된다 (T-F08·F09 완료 조건 재확인)
 - [ ] 기준점이 768px 하나다 (`styles.css`에 다른 `max-width` 미디어 쿼리 없음)
 
-### T-X03 운영 빌드·정적 제공
+### T-X03 운영 빌드·CORS 배포 확인
 
 | 항목 | 내용 |
 |------|------|
@@ -651,16 +652,16 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 수행 작업:
 
-1. `frontend`에서 `npm run build` → `dist/`. `backend/src/app.js`가 `NODE_ENV=production`에서 `../frontend/dist`를 정적 제공하고, `/api` 외 경로는 `index.html`을 반환한다 (SPA 라우팅).
-2. `NODE_ENV=production npm start`로 기동 확인.
+1. `frontend`에서 `VITE_API_URL`을 운영 API origin으로 두고 `npm run build` → `dist/`. `dist/`는 정적 호스팅(모든 경로를 `index.html`로 폴백, SPA 라우팅)에 올린다. Express는 정적 파일을 제공하지 않는다.
+2. 백엔드 `CORS_ORIGIN`에 운영 SPA origin을 넣고 `NODE_ENV=production npm start`로 기동 확인. SPA와 API는 같은 site여야 한다 (쿠키 `SameSite=Lax`, NFR-06 (6)).
 
 완료 조건:
 
 - [ ] `npm run build`가 오류 없이 끝나고 `dist/index.html`이 있다
-- [ ] `NODE_ENV=production npm start` 후 `http://localhost:3000/`에서 로그인 화면이 뜨고 `/calendar` 직접 진입도 SPA가 처리한다
-- [ ] 같은 origin에서 `/api/health`가 200이다 (CORS 설정 없음)
+- [ ] 정적 호스팅(로컬은 `npx serve -s dist`)에서 로그인 화면이 뜨고 `/calendar` 직접 진입도 SPA가 처리한다
+- [ ] SPA origin에서 `/api/health` 호출이 200이고 응답에 `Access-Control-Allow-Origin`이 SPA origin이다. `CORS_ORIGIN`에 없는 origin의 `OPTIONS`에는 CORS 헤더가 없다
 - [ ] 운영 모드 로그인 응답 쿠키에 `Secure`가 있다 (HTTP에서는 브라우저가 저장하지 않으므로 응답 헤더로 확인)
-- [ ] 개발 모드(`npm run dev`)에서는 정적 제공이 꺼져 있고 Vite 프록시로 동작한다
+- [ ] `CORS_ORIGIN` 없이 `npm start`하면 `CORS_ORIGIN is missing`으로 기동 실패한다
 
 ### T-X04 부하 테스트·쿼리 계획 기록
 

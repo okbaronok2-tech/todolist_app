@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 백엔드 보안 검토 |
-| 현재 버전 | v0.1 |
+| 현재 버전 | v0.2 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.9, `docs/5-project-principle.md` v0.6, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.7 |
+| 참조 문서 | `docs/2-PRD.md` v0.10, `docs/5-project-principle.md` v0.7, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.8 |
 | 설계 근거 | PRD 6.4·NFR-06~10, 도메인 정의서 BR-01·02·06·51~53 |
 
 ## 변경 이력
@@ -16,6 +16,7 @@
 | 버전 | 날짜 | 작성자 | 변경 내용 | 영향 범위 |
 |------|------|--------|-----------|-----------|
 | v0.1 | 2026-11-05 | - | 초안 작성. 읽기 전용 수동 검토 + `npm audit` | 전체 |
+| v0.2 | 2026-11-05 | - | CORS 방식 전환(PRD v0.10) 반영. 설계 결정 표의 CORS 행을 `CORS_ORIGIN` 허용 목록으로, `SameSite=Lax` 같은 site 조건 행 추가, A05 근거에 `middlewares/cors.js`, 참조 버전 갱신 | 문서 정보, 1장, 2장 A05 |
 
 ---
 
@@ -30,7 +31,8 @@
 
 | 항목 | 근거 |
 |------|------|
-| CORS 설정 없음 (같은 origin, 개발은 Vite 프록시) | PRD NFR-06 (6), 8-plan T-X03 |
+| CORS 허용 목록은 환경변수 `CORS_ORIGIN`, 요청 Origin 정확 일치만 허용(`*` 없음), `Allow-Credentials: true` (`middlewares/cors.js`) | PRD NFR-06 (6), 8-plan T-X03 |
+| 쿠키 `SameSite=Lax` 유지. SPA와 API는 같은 site여야 하며 다른 site 배포(`SameSite=None; Secure`)는 미지원 | PRD NFR-06 (1)(2)(6) |
 | 서버 세션 없음, 로그아웃 후 액세스 토큰 최대 15분 잔존 | PRD 6.4, R-06, PD-01 |
 | `Secure` 쿠키는 `NODE_ENV=production`에서만 설정 | NFR-06 (3), `middlewares/auth.js` |
 | 로그인 시도 제한·rate limit 없음 | PD-03 (MVP 범위 밖) |
@@ -47,7 +49,7 @@
 | A02 Cryptographic Failures | 주의 | `server.js:5-9` (JWT_SECRET 48자 검사), `middlewares/auth.js` (HS384 고정), `services/auth-service.js` (bcrypt 10, SHA-256, randomBytes 32) / `routes/validate.js:22` (bcrypt 72바이트), `db/pool.js` (DB TLS, 추정) | S-03, S-06 |
 | A03 Injection | 양호 | `repositories/*.js` 전체 `$n` 바인딩, `todo-repo.js` 고정 SQL, `refresh-token-repo.js` 상수 조각만 결합, `db/migrate.js` 고정 디렉터리 파일 | 없음 |
 | A04 Insecure Design | 주의 | `routes/validate.js:6`, `db/pool.js:5` (ID 정밀도) | S-02 |
-| A05 Security Misconfiguration | 주의 | `app.js` (`x-powered-by` 기본 활성, 보안 헤더 없음), `error-handler.js` (500 응답에 내부 정보 없음), `.gitignore:69-71` (`.env`, `.env.*` 제외, `.env.example`만 허용) | S-04 |
+| A05 Security Misconfiguration | 주의 | `app.js` (`x-powered-by` 기본 활성, 보안 헤더 없음), `middlewares/cors.js` (Origin 정확 일치, `*` 없음), `error-handler.js` (500 응답에 내부 정보 없음), `.gitignore:69-71` (`.env`, `.env.*` 제외, `.env.example`만 허용) | S-04 |
 | A06 Vulnerable Components | 양호 | `npm audit --omit=dev` 2026-11-05: 운영 의존성 98개, 취약점 0 (info 0, low 0, moderate 0, high 0, critical 0). express 5.3.0, jsonwebtoken 9.0.3, bcrypt 6.0.0, pg 8.23.1, cookie-parser 1.4.7 | 배포 전 재실행 |
 | A07 Identification and Authentication Failures | 주의 | `services/auth-service.js` (BR-06 더미 해시로 타이밍 동일화, 회전·재사용 탐지 `FOR UPDATE`) / `services/user-service.js` (비밀번호 변경 후 세션 유지) | S-01 |
 | A08 Software and Data Integrity Failures | 양호 | `package-lock.json` 존재, `middlewares/auth.js` `algorithms` 고정으로 `alg` 변조 차단, 역직렬화는 `express.json`뿐 | 배포는 `npm ci` 사용 |

@@ -1,16 +1,16 @@
 # =============================================================================
 # 문서명    : TodoList API 명세 (OpenAPI 3.0.3)
-# 현재 버전 : v0.7
+# 현재 버전 : v0.8
 # 상태      : 초안
 # 작성일    : 2026-11-04
 # 참조 문서 :
 #   - docs/1-domain-definition.md v0.8
-#   - docs/2-PRD.md v0.9 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+#   - docs/2-PRD.md v0.10 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
 #   - docs/3-user-scenario.md v0.6
-#   - docs/5-project-principle.md v0.6
-#   - docs/6-arch-diagram.md v0.6
+#   - docs/5-project-principle.md v0.7
+#   - docs/6-arch-diagram.md v0.7
 #   - docs/7-erd.md v0.5
-#   - docs/8-plan.md v0.6
+#   - docs/8-plan.md v0.7
 #   - docs/schema.sql
 #   - docs/9-api-design.md v0.4 (같은 내용의 표)
 #
@@ -24,6 +24,7 @@
 # | v0.5 | 2026-11-05 | -      | `/api/health` 503 본문 `{ ok: false }` 추가 (backend/src/app.js 기준), 참조 버전 갱신 | 머리 주석, info, x-document-info, /api/health |
 # | v0.6 | 2026-11-05 | -      | `/api/health` 응답에 `db`(`up`/`down`) 추가 | 머리 주석, info, x-document-info, /api/health, HealthResponse |
 # | v0.7 | 2026-11-05 | -      | 코드 반영: 본문 파싱 오류(JSON·100kb·charset) 400 `VALIDATION_ERROR`, 5xx 본문 `INTERNAL_ERROR` 확정, `currentPassword` 문자열 검증, 개발 모드 `/api/docs`·`/api/docs.json` 안내 | 머리 주석, info 공통 규칙, x-document-info, UserUpdateRequest |
+# | v0.8 | 2026-11-05 | -      | CORS 방식 전환(PRD v0.10): 공통 규칙에 CORS(`CORS_ORIGIN`, `Allow-Credentials`, `credentials: 'include'`) 추가, servers 설명 수정, 참조 버전 갱신 | 머리 주석, info 공통 규칙, servers, x-document-info |
 #
 # 아래 x-document-info, x-changelog는 이 주석과 같은 내용을 기계가 읽도록 둔 것이다.
 # =============================================================================
@@ -31,18 +32,18 @@ openapi: 3.0.3
 
 info:
   title: TodoList API
-  version: 0.7.0
+  version: 0.8.0
   description: |
     TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.
 
     ## 참조 문서
     - `docs/1-domain-definition.md` v0.8 (F, UC, BR, ST, D)
-    - `docs/2-PRD.md` v0.9 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+    - `docs/2-PRD.md` v0.10 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
     - `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)
-    - `docs/5-project-principle.md` v0.6 (4장 API 규칙, 6.2 쿠키)
-    - `docs/6-arch-diagram.md` v0.6 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
+    - `docs/5-project-principle.md` v0.7 (4장 API 규칙, 6.2 쿠키)
+    - `docs/6-arch-diagram.md` v0.7 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
     - `docs/7-erd.md` v0.5
-    - `docs/8-plan.md` v0.6 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
+    - `docs/8-plan.md` v0.7 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
     - `docs/schema.sql`
     - `docs/9-api-design.md` v0.4 (같은 내용의 표)
 
@@ -51,6 +52,7 @@ info:
     - 필드명은 camelCase (원칙 4장). id는 정수(DB `BIGINT`)를 JSON 숫자로 보낸다 (PRD 7장).
     - 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열이다 (PRD 7장, PR-05). 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열이다.
     - 인증: 쿠키 `token`(액세스, JWT HS384, 15분)과 `refresh_token`(리프레시, 불투명, 14일, `Path=/api/auth`). 비보호 경로는 `GET /api/health`, `POST /api/auth/signup|login|refresh|logout` (AD-06, BR-01).
+    - CORS: SPA와 API는 다른 origin이다. 서버는 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록의 Origin에만 `Access-Control-Allow-Origin`(요청 Origin 그대로)과 `Access-Control-Allow-Credentials: true`를 붙이고, `OPTIONS` 프리플라이트에 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`)를 준다. 클라이언트는 `credentials: 'include'`가 필요하다. 쿠키가 `SameSite=Lax`라 SPA와 API는 같은 site여야 한다 (NFR-06 (6)).
     - 거부 응답 본문은 `{ "code", "message" }`이며 `code`는 BR-51의 9개 중 하나다. HTTP status 매핑(PRD 6.3):
       `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400,
       `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.
@@ -64,17 +66,17 @@ info:
 
 x-document-info:
   name: TodoList API 명세 (OpenAPI 3.0.3)
-  version: v0.7
+  version: v0.8
   status: 초안
   date: "2026-11-05"
   references:
     - { path: docs/1-domain-definition.md, version: v0.8 }
-    - { path: docs/2-PRD.md, version: v0.9 }
+    - { path: docs/2-PRD.md, version: v0.10 }
     - { path: docs/3-user-scenario.md, version: v0.6 }
-    - { path: docs/5-project-principle.md, version: v0.6 }
-    - { path: docs/6-arch-diagram.md, version: v0.6 }
+    - { path: docs/5-project-principle.md, version: v0.7 }
+    - { path: docs/6-arch-diagram.md, version: v0.7 }
     - { path: docs/7-erd.md, version: v0.5 }
-    - { path: docs/8-plan.md, version: v0.6 }
+    - { path: docs/8-plan.md, version: v0.7 }
     - { path: docs/schema.sql, version: null }
     - { path: docs/9-api-design.md, version: v0.4 }
 
@@ -114,10 +116,15 @@ x-changelog:
     author: "-"
     changes: "코드 반영: 본문 파싱 오류(JSON·100kb·charset) 400 VALIDATION_ERROR, 5xx 본문 INTERNAL_ERROR 확정, currentPassword 문자열 검증, 개발 모드 /api/docs·/api/docs.json 안내"
     scope: 머리 주석, info 공통 규칙, x-document-info, UserUpdateRequest
+  - version: v0.8
+    date: "2026-11-05"
+    author: "-"
+    changes: "CORS 방식 전환(PRD v0.10): 공통 규칙에 CORS(CORS_ORIGIN, Allow-Credentials, credentials: include) 추가, servers 설명 수정, 참조 버전 갱신"
+    scope: 머리 주석, info 공통 규칙, servers, x-document-info
 
 servers:
   - url: http://localhost:3000
-    description: 로컬 개발 (Express `PORT` 기본 3000, 원칙 6.1, T-B01). 운영은 SPA와 같은 origin(HTTPS, NFR-08).
+    description: 로컬 개발 (Express `PORT` 기본 3000, 원칙 6.1, T-B01). SPA(`http://localhost:5173`)와 다른 origin이며 CORS로 호출한다. 운영도 다른 origin(HTTPS, NFR-08), 허용 SPA origin은 `CORS_ORIGIN`.
 
 tags:
   - name: auth

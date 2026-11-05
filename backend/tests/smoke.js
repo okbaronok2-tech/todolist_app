@@ -1,5 +1,5 @@
 // API 스모크 (원칙 5장, R-05). 실행 중 서버 + 시드 적용된 개발 DB 전제. `npm run smoke`
-// US-02 로그인, US-12 필터 4조합, US-17 타인 리소스 + T-B01·T-B03·T-B08의 HTTP 수준 완료 조건(헬스, 404, 본문 오류, 가입·로그인 쿠키 속성, 알고리즘, 만료, 회전·재사용, 로그아웃, 비밀번호 형식, BR-03).
+// US-02 로그인, US-12 필터 4조합, US-17 타인 리소스 + T-B01·T-B03·T-B08의 HTTP 수준 완료 조건(헬스, CORS 프리플라이트, 404, 본문 오류, 가입·로그인 쿠키 속성, 알고리즘, 만료, 회전·재사용, 로그아웃, 비밀번호 형식, BR-03).
 // 가입 검사는 smoke-<시각>@example.com 사용자를 남긴다. `npm run seed`로 초기화.
 // 불일치는 `<항목>: 기대 / 실제`로 출력, 종료 코드 1
 import jwt from 'jsonwebtoken';
@@ -50,6 +50,9 @@ expect('T-B01 health', { status: 200, json: { ok: true, db: 'up' } }, (({ status
 expect('Swagger JSON (개발 모드)', [200, '3.0.3'], (({ status, json }) => [status, json?.openapi])(await call('GET', '/api/docs.json')));
 expect('Swagger UI HTML', 200, (await call('GET', '/api/docs')).status);
 expect('T-B01 미등록 경로 404', [404, 'NOT_FOUND'], (({ status, json }) => [status, json?.code])(await call('GET', '/api/nope')));
+const corsOrigin = (process.env.CORS_ORIGIN ?? '').split(',')[0];
+const pre = await fetch(`${BASE}/api/auth/login`, { method: 'OPTIONS', headers: { origin: corsOrigin, 'access-control-request-method': 'POST' } });
+expect('CORS 프리플라이트 204 + 허용 origin + credentials', [204, corsOrigin, 'true'], [pre.status, pre.headers.get('access-control-allow-origin'), pre.headers.get('access-control-allow-credentials')]);
 expect('T-B01 잘못된 JSON 400', [400, 'VALIDATION_ERROR'], (({ status, json }) => [status, json?.code])(await call('POST', '/api/auth/login', { raw: '{bad' })));
 expect('T-B01 100kb 초과 본문 400', [400, 'VALIDATION_ERROR'], (({ status, json }) => [status, json?.code])(await call('POST', '/api/auth/login', { body: { email: 'a'.repeat(200000) } })));
 
