@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 프론트엔드 연동 가이드 |
-| 현재 버전 | v0.1 |
+| 현재 버전 | v0.2 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.9, `docs/5-project-principle.md` v0.6, `docs/6-arch-diagram.md` v0.6, `docs/8-plan.md` v0.6, `docs/9-api-design.md` v0.2, `backend/swagger.yaml` v0.5 |
+| 참조 문서 | `docs/2-PRD.md` v0.9, `docs/5-project-principle.md` v0.6, `docs/6-arch-diagram.md` v0.6, `docs/8-plan.md` v0.6, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.7 |
 | 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
 
 ## 변경 이력
@@ -16,6 +16,7 @@
 | 버전 | 날짜 | 작성자 | 변경 내용 | 영향 범위 |
 |------|------|--------|-----------|-----------|
 | v0.1 | 2026-11-05 | - | 초안 작성. 백엔드 실행, 개발 연결(Vite 프록시), 쿠키·리프레시 흐름(AD-16), 요청 규약, 오류 모델, 엔드포인트 요약, 보안 주의, 시드 계정, Swagger | 전체 |
+| v0.2 | 2026-11-05 | - | `GET /api/health` 응답 `db` 필드 반영, 참조 버전 갱신 | 문서 정보, 1장, 7장 |
 
 ---
 
@@ -41,7 +42,7 @@ npm run dev            # http://localhost:3000, 파일 변경 시 자동 재시�
 | `PORT` | `3000` | 기본 3000 |
 | `NODE_ENV` | `development` | `production`이면 쿠키에 `Secure`, `frontend/dist` 정적 제공 |
 
-기동 확인: `GET /api/health` → 200 `{ "ok": true }`. DB 연결 실패면 503 `{ "ok": false }`.
+기동 확인: `GET /api/health` → 200 `{ "ok": true, "db": "up" }`. DB 연결 실패면 503 `{ "ok": false, "db": "down" }`.
 
 ## 2. 개발 연결 방식
 
@@ -158,7 +159,7 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
 
 | 메서드 | 경로 | 인증 | 핵심 파라미터 | 성공 응답 |
 |--------|------|------|---------------|-----------|
-| GET | `/api/health` | 없음 | - | 200 `{ ok: true }` / 503 `{ ok: false }` |
+| GET | `/api/health` | 없음 | - | 200 `{ ok: true, db: "up" }` / 503 `{ ok: false, db: "down" }` |
 | POST | `/api/auth/signup` | 없음 | 본문 `email`, `password`, `name` | 201 `{ user: { id, name } }` + 쿠키 2개 |
 | POST | `/api/auth/login` | 없음 | 본문 `email`, `password` | 200 `{ user: { id, name } }` + 쿠키 2개 |
 | POST | `/api/auth/logout` | 없음 | 쿠키 `refresh_token`(선택) | 204 + 쿠키 2개 삭제 |

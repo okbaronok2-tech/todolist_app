@@ -18,9 +18,9 @@ app.use(cookieParser());
 app.get('/api/health', async (req, res) => {
   try {
     await ping();
-    res.json({ ok: true });
+    res.json({ ok: true, db: 'up' });
   } catch {
-    res.status(HTTP.SERVICE_UNAVAILABLE).json({ ok: false });
+    res.status(HTTP.SERVICE_UNAVAILABLE).json({ ok: false, db: 'down' });
   }
 });
 

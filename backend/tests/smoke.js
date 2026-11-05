@@ -46,7 +46,7 @@ async function login(email, password) {
 }
 
 // T-B01
-expect('T-B01 health', { status: 200, json: { ok: true } }, (({ status, json }) => ({ status, json }))(await call('GET', '/api/health')));
+expect('T-B01 health', { status: 200, json: { ok: true, db: 'up' } }, (({ status, json }) => ({ status, json }))(await call('GET', '/api/health')));
 expect('Swagger JSON (개발 모드)', [200, '3.0.3'], (({ status, json }) => [status, json?.openapi])(await call('GET', '/api/docs.json')));
 expect('Swagger UI HTML', 200, (await call('GET', '/api/docs')).status);
 expect('T-B01 미등록 경로 404', [404, 'NOT_FOUND'], (({ status, json }) => [status, json?.code])(await call('GET', '/api/nope')));

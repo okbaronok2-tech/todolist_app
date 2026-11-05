@@ -19,10 +19,10 @@
 | `docs/8-plan.md` | 실행 계획 (WBS, Task T-X/D/B/F) | v0.6 |
 | `docs/schema.sql` | PostgreSQL 17 DDL (`backend/src/db/migrations/001_init.sql`의 원본) | - |
 | `docs/assets/wf-05-calendar-month.svg` | 캘린더 월 뷰 와이어프레임 SVG | - |
-| `backend/swagger.yaml` | OpenAPI 3.0.3 API 명세 | v0.5 |
-| `docs/9-api-design.md` | API 설계 문서 (엔드포인트 표, AD-C3·C4·C5 결정) | v0.2 |
+| `backend/swagger.yaml` | OpenAPI 3.0.3 API 명세 | v0.7 |
+| `docs/9-api-design.md` | API 설계 문서 (엔드포인트 표, AD-C3·C4·C5 결정) | v0.4 |
 | `swagger/swagger.json` | `backend/swagger.yaml`에서 생성한 Swagger JSON (`cd backend && npm run swagger:json`). 개발 서버 `/api/docs`·`/api/docs.json` | - |
-| `docs/10-frontend-integration-guide.md` | 프론트엔드 연동 가이드 (실행, Vite 프록시, 쿠키·refresh, 오류 모델, 엔드포인트 요약) | v0.1 |
+| `docs/10-frontend-integration-guide.md` | 프론트엔드 연동 가이드 (실행, Vite 프록시, 쿠키·refresh, 오류 모델, 엔드포인트 요약) | v0.2 |
 | `docs/11-security-review.md` | 백엔드 보안 검토 (OWASP Top 10, npm audit, 후속 조치) | v0.1 |
 
 `backend/` 안에서 작업할 때는 `backend/CLAUDE.md`의 지침을 추가로 따른다.

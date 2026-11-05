@@ -8,7 +8,7 @@
 | 현재 버전 | v0.1 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.9, `docs/5-project-principle.md` v0.6, `docs/9-api-design.md` v0.2, `backend/swagger.yaml` v0.5 |
+| 참조 문서 | `docs/2-PRD.md` v0.9, `docs/5-project-principle.md` v0.6, `docs/9-api-design.md` v0.4, `backend/swagger.yaml` v0.7 |
 | 설계 근거 | PRD 6.4·NFR-06~10, 도메인 정의서 BR-01·02·06·51~53 |
 
 ## 변경 이력
