@@ -17,7 +17,7 @@
 src/
   server.js        환경변수 검사, listen, SIGTERM/SIGINT 종료
   app.js           express 조립: cors, json, cookie-parser, /api/health, /api/docs(개발만), 라우터, notFound, errorHandler
-  routes/          HTTP 입출력만. validate.js로 입력 검증(BR-52 순서) 후 서비스 호출
+  routes/          HTTP 입출력만. validate.js로 입력 검증(BR-52 순서) 후 서비스 호출. users.js는 비밀번호 변경 시 새 쿠키 설정
   services/        비즈니스 규칙(BR), 트랜잭션 경계(withTransaction), 상태 판정(todo-status.js)
   repositories/    SQL만. 고정 SQL + 파라미터, 유니크 위반은 isUniqueViolation으로 판별
   db/              pool.js(타입 파서, withTransaction), migrate.js, migrations/NNN_*.sql, seed.sql
@@ -31,4 +31,5 @@ tests/             node:test, DB를 쓰는 테스트 파일마다 beforeEach(res
 - 테스트: `npm test` (`.env.test`와 `todolist_test` DB 필요)
 - 스모크: 서버 실행 후 `npm run smoke`
 - 마이그레이션·시드: `npm run migrate`, `npm run seed`
+- 부하 테스트: `npm run load:seed`(사용자 1000명 × 할일 100건 추가) → `k6 run tests/load.js`(k6 별도 설치) → `npm run seed`로 원복. 결과는 `docs/perf-result.md`
 - Swagger JSON 재생성: `npm run swagger:json` (`swagger.yaml` → `../swagger/swagger.json`). 개발 모드 서버가 `/api/docs`(Swagger UI), `/api/docs.json`으로 제공. `swagger.yaml`을 고치면 반드시 재생성

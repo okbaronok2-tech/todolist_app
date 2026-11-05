@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList API 설계 |
-| 현재 버전 | v0.5 |
+| 현재 버전 | v0.6 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.11, `docs/3-user-scenario.md` v0.6, `docs/5-project-principle.md` v0.9, `docs/6-arch-diagram.md` v0.8, `docs/8-plan.md` v0.10, `backend/swagger.yaml` v0.8 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.12, `docs/3-user-scenario.md` v0.6, `docs/5-project-principle.md` v0.10, `docs/6-arch-diagram.md` v0.8, `docs/8-plan.md` v0.11, `backend/swagger.yaml` v0.9 |
 | 정본 | PRD 6.3·6.4·NFR-06. 이 문서는 그 내용을 엔드포인트 표로 고정한다. 기계 판독용 명세는 `backend/swagger.yaml`이며 둘은 같은 내용이어야 한다 |
 
 ## 변경 이력
@@ -20,6 +20,7 @@
 | v0.3 | 2026-11-05 | - | `GET /api/health` 응답에 `db`(`up`/`down`) 추가 | 문서 정보, 3장 |
 | v0.4 | 2026-11-05 | - | 공통 규칙에 본문 파싱 오류 400, 5xx 본문 `INTERNAL_ERROR`, 개발 모드 `/api/docs` 추가 (swagger v0.7과 동일) | 문서 정보, 2장 |
 | v0.5 | 2026-11-05 | - | 공통 규칙에 CORS(`CORS_ORIGIN` 허용 목록, `Allow-Credentials`, 프리플라이트 204, 클라이언트 `credentials: 'include'`) 추가 (swagger v0.8, `backend/src/middlewares/cors.js`와 동일), 참조 버전 갱신 | 문서 정보, 1장 |
+| v0.6 | 2026-11-05 | - | 11-security 조치 반영: ID 15자리 이하, 비밀번호 72바이트, `PATCH /api/users/me` 비밀번호 변경 시 리프레시 전부 폐기 + 새 쿠키 2개 (swagger v0.9와 동일), 참조 버전 갱신 | 문서 정보, 1장, 2장 |
 
 ---
 
@@ -31,7 +32,7 @@
 - 비보호 경로: `GET /api/health`, `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout` (PRD 6.4, AD-06). 나머지는 `token` 없음·무효·만료 시 401 `UNAUTHORIZED` (BR-01, BR-53).
 - CORS (NFR-06 (6), `middlewares/cors.js`): SPA와 API는 다른 origin이다. 요청 `Origin`이 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록에 있을 때만 `Access-Control-Allow-Origin: <그 Origin>`, `Access-Control-Allow-Credentials: true`, `Vary: Origin`을 붙인다. `OPTIONS` 프리플라이트는 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`, `Max-Age: 600`). 목록 밖 Origin에는 헤더가 없다. 클라이언트는 `fetch`에 `credentials: 'include'`가 필요하다. `CORS_ORIGIN`이 없으면 서버가 기동하지 않는다.
 - 거부 응답 본문은 `{ "code", "message" }` (BR-51). HTTP 매핑(PRD 6.3): `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400, `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.
-- 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식(양의 정수가 아니면 DB 조회 없이 `NOT_FOUND`) → 리소스 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 코드로 거부하고 부분 저장하지 않는다.
+- 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식(양의 정수 15자리 이하가 아니면 DB 조회 없이 `NOT_FOUND`) → 리소스 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 코드로 거부하고 부분 저장하지 않는다.
 - 경로·쿼리·본문의 ID가 형식 위반·타인 소유·미존재면 모두 같은 본문의 `NOT_FOUND` (BR-02, BR-16).
 - 할일을 반환하는 요청은 쿼리 `today`(`YYYY-MM-DD`, 필수)를 받고, 응답의 `status`를 ST-01~04로 계산한다 (BR-32, BR-36, AD-A7). `today` 누락·형식 오류는 `VALIDATION_ERROR`.
 - 페이지네이션·요청 횟수 제한 없음 (NFR-05, PD-02, PD-03). 동시 수정은 last-write-wins (BR-54). BR-51 밖의 오류는 500 `{ "code": "INTERNAL_ERROR", "message": "internal server error" }` (AD-A8). 본문이 JSON이 아니거나 100kb 초과·미지원 charset이면 400 `VALIDATION_ERROR`. 개발 모드에서만 `GET /api/docs`(Swagger UI)·`/api/docs.json` 제공, 운영 404.
@@ -47,7 +48,7 @@
 | POST | `/api/auth/logout` | 없음 (미들웨어 없음) | 쿠키 `refresh_token`(선택) | 204 + 두 쿠키 `Max-Age=0`. 행이 있으면 `revoked_at = now()` | 없음 (항상 204) | UC-03, PD-01, R-06, AD-14 |
 | POST | `/api/auth/refresh` | 없음 (미들웨어 없음) | 쿠키 `refresh_token` | 200 `{ user: { id, name } }` + 새 두 쿠키 (회전, 한 트랜잭션) | `UNAUTHORIZED` + 두 쿠키 삭제 (행 없음·만료·재사용 탐지. 재사용 시 사용자 전체 폐기) | NFR-06, PRD 6.4, US-16, AD-16 |
 | GET | `/api/users/me` | 필요 | - | 200 `{ id, email, name }` | `UNAUTHORIZED` | UC-04 (P1), BR-03 |
-| PATCH | `/api/users/me` | 필요 | 본문 `name`(trim 1~50) 또는 `currentPassword` + `newPassword`(8~64). 다른 필드 무시 | 200 `{ id, email, name }` | `UNAUTHORIZED` → `VALIDATION_ERROR` → `INVALID_CREDENTIALS` | UC-04 (P1), BR-03, BR-05, BR-44, BR-45 |
+| PATCH | `/api/users/me` | 필요 | 본문 `name`(trim 1~50) 또는 `currentPassword` + `newPassword`(8~64자, UTF-8 72바이트 이하). 다른 필드 무시. 비밀번호를 바꾸면 리프레시 토큰 전부 폐기 + 응답에 새 `token`·`refresh_token` 쿠키 (PRD 6.4) | 200 `{ id, email, name }` | `UNAUTHORIZED` → `VALIDATION_ERROR` → `INVALID_CREDENTIALS` | UC-04 (P1), BR-03, BR-05, BR-44, BR-45 |
 | GET | `/api/categories` | 필요 | - | 200 `[{ id, name, isDefault }]` | `UNAUTHORIZED` | UC-11, BR-13 |
 | POST | `/api/categories` | 필요 | 본문 `name`(trim 1~30) | 201 `{ id, name, isDefault: false }` | `UNAUTHORIZED` → `VALIDATION_ERROR` → `DUPLICATE_CATEGORY_NAME`(BR-14, '기본' BR-17) → `CATEGORY_LIMIT_EXCEEDED`(20개, BR-46) | UC-11, BR-14, BR-17, BR-46 |
 | PATCH | `/api/categories/:id` | 필요 | 본문 `name`(trim 1~30) | 200 `{ id, name, isDefault }` | `UNAUTHORIZED` → `VALIDATION_ERROR` → `NOT_FOUND` → `DEFAULT_CATEGORY_PROTECTED` → `DUPLICATE_CATEGORY_NAME` | UC-11, BR-02, BR-14, BR-17 |

@@ -16,7 +16,7 @@ export function MePage() {
         {info.isPending ? (
           <p className="loading">불러오는 중...</p>
         ) : info.data ? (
-          <MeForm key={`${info.data.id}-${info.data.name}`} initial={info.data} />
+          <MeForm key={info.data.id} initial={info.data} />
         ) : (
           <ErrorMessage message={errorText(info.error)} />
         )}
@@ -42,7 +42,8 @@ function MeForm({ initial }: { initial: Me }) {
     if (name !== initial.name) input.name = name;
     if (currentPassword || newPassword) Object.assign(input, { currentPassword, newPassword });
     save.mutate(input, {
-      onSuccess: () => {
+      onSuccess: (m) => {
+        setName(m.name); // 서버가 trim한 값
         setCurrentPassword('');
         setNewPassword('');
         setSaved(true);

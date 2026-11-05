@@ -3,7 +3,7 @@ import { AppError } from '../errors/app-error.js';
 import { STATUS } from '../services/todo-status.js';
 
 const DATE_RE = /^(?!0000)\d{4}-\d{2}-\d{2}$/; // 연도 0000은 PostgreSQL DATE 범위 밖
-const ID_RE = /^[1-9]\d{0,17}$/; // 18자리 이하: BIGINT 범위·JS 안전 정수 안
+const ID_RE = /^[1-9]\d{0,14}$/; // 15자리 이하: Number.MAX_SAFE_INTEGER(16자리) 미만 보장 (11-security S-02)
 const EMAIL_RE = /^[^@\s]+@[^@\s]+$/;
 
 const fail = (message) => {
@@ -17,9 +17,10 @@ export function email(value) {
   return value;
 }
 
-// BR-44
+// BR-44. bcrypt는 앞 72바이트만 쓰므로 UTF-8 72바이트 초과도 거부 (11-security S-03)
 export function password(value, field = 'password') {
   if (!isStr(value) || value.length < 8 || value.length > 64) fail(`${field} must be 8 to 64 characters`);
+  if (Buffer.byteLength(value, 'utf8') > 72) fail(`${field} must be 72 bytes or less in UTF-8`);
   return value;
 }
 

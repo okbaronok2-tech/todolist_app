@@ -18,6 +18,10 @@ test('BR-44 비밀번호 7자 거부, 8·64자 통과, 65자 거부', () => {
   assert.equal(code(() => v.password('a'.repeat(8))), 'pass');
   assert.equal(code(() => v.password('a'.repeat(64))), 'pass');
   assert.equal(code(() => v.password('a'.repeat(65))), 'VALIDATION_ERROR');
+  assert.equal(v.password('가'.repeat(24)), '가'.repeat(24)); // 72바이트
+  assert.equal(code(() => v.password('가'.repeat(25))), 'VALIDATION_ERROR'); // 75바이트 (S-03)
+  assert.equal(v.id('999999999999999'), 999999999999999); // 15자리
+  assert.equal(code(() => v.id('1000000000000000')), 'NOT_FOUND'); // 16자리 (S-02)
 });
 
 test('BR-43 @ 없는 이메일·255자 이메일 거부', () => {

@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 프론트엔드 연동 가이드 |
-| 현재 버전 | v0.4 |
+| 현재 버전 | v0.5 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.11, `docs/5-project-principle.md` v0.9, `docs/6-arch-diagram.md` v0.8, `docs/8-plan.md` v0.10, `docs/9-api-design.md` v0.5, `backend/swagger.yaml` v0.8 |
+| 참조 문서 | `docs/2-PRD.md` v0.12, `docs/5-project-principle.md` v0.10, `docs/6-arch-diagram.md` v0.8, `docs/8-plan.md` v0.11, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.9 |
 | 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
 
 ## 변경 이력
@@ -19,6 +19,7 @@
 | v0.2 | 2026-11-05 | - | `GET /api/health` 응답 `db` 필드 반영, 참조 버전 갱신 | 문서 정보, 1장, 7장 |
 | v0.3 | 2026-11-05 | - | 연동 방식을 Vite 프록시에서 CORS로 변경(PRD v0.10). 1장 `CORS_ORIGIN`, 2장 전면 수정(`VITE_API_URL`, `credentials: 'include'`, 같은 site 조건), 4장 `client.ts` 예시에 절대 URL·credentials, 7장 Swagger 문장, 참조 버전 갱신 | 문서 정보, 1장, 2장, 4장, 7장 |
 | v0.4 | 2026-11-05 | - | 구현(`frontend/src`)에 맞춤. 4장 `client.ts` 예시(요청 옵션, refresh 결과 3종, 재시도 401 코드 판별), 6장 토스트 → CP-02 `ErrorMessage`, 8장 `User`/`Me` 구분, 참조 버전 갱신 | 문서 정보, 4장, 6장, 8장 |
+| v0.5 | 2026-11-05 | - | 11-security 조치 반영: 3장 비밀번호 변경 시 새 쿠키(다른 기기 로그아웃), 8장 비밀번호 72바이트·ID 15자리, 참조 버전 갱신 | 문서 정보, 3장, 7장, 8장 |
 
 ---
 
@@ -74,6 +75,7 @@ VITE_API_URL=http://localhost:3000
 - 로그인 상태 판단: 토큰을 보지 말고 `GET /api/users/me`를 호출한다. 200이면 로그인, `UNAUTHORIZED`면 비로그인. 앱 시작 시 1회 호출해 스토어 `user`를 채운다.
 - 로그아웃: `POST /api/auth/logout` → 204. 서버가 두 쿠키를 `Max-Age=0`으로 지운다. 클라이언트는 `queryClient.clear()`·스토어 `reset()` 후 `/login` 이동 (PRD 4.2).
 - 액세스 토큰은 로그아웃 후 최대 15분 유효하다 (R-06). 프론트가 신경 쓸 일은 없다.
+- 비밀번호 변경(`PATCH /api/users/me`) 응답은 새 쿠키 2개를 내려준다(브라우저가 자동 교체). 다른 기기·탭의 리프레시 토큰은 전부 폐기되어 액세스 만료 후 로그아웃된다 (PRD 6.4). 프론트는 별도 처리 없음.
 
 ## 4. 액세스 만료 처리 (AD-16)
 
@@ -121,7 +123,7 @@ export async function request<T>(path: string, options: { method?: 'GET' | 'POST
 - JSON 본문은 `content-type: application/json` 헤더 필수. 없으면 본문이 비어 `VALIDATION_ERROR`.
 - 할일을 반환하는 엔드포인트 6개(`GET /api/todos`, `POST /api/todos`, `GET/PATCH /api/todos/:id`, `PATCH /api/todos/:id/completed`)는 쿼리 `today`(`YYYY-MM-DD`) 필수. 값은 클라이언트 로컬 날짜(`lib/date.ts`). 서버는 이 값으로 `status`를 계산한다 (API-01).
 - 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열. 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열. `Date` 객체를 스토어·쿼리 키에 넣지 않는다 (PR-05).
-- id는 JSON 숫자. 경로·쿼리·본문 모두 양의 정수.
+- id는 JSON 숫자. 경로·쿼리·본문 모두 양의 정수(15자리 이하, 그 밖은 `NOT_FOUND`).
 - `description`은 null 가능. 생략·null이면 null로 저장된다. 수정 시 생략하면 비워진다 (API-02).
 - 생성 시 `isCompleted`·`status`는 무시된다 (BR-24). 완료 처리는 `PATCH /api/todos/:id/completed`만 쓴다.
 - `categoryId` 생략·null → 기본 카테고리 (BR-12). 수정도 같다.
@@ -173,7 +175,7 @@ export async function request<T>(path: string, options: { method?: 'GET' | 'POST
 | POST | `/api/auth/logout` | 없음 | 쿠키 `refresh_token`(선택) | 204 + 쿠키 2개 삭제 |
 | POST | `/api/auth/refresh` | 없음 | 쿠키 `refresh_token` | 200 `{ user: { id, name } }` + 새 쿠키 2개 |
 | GET | `/api/users/me` | 필요 | - | 200 `{ id, email, name }` |
-| PATCH | `/api/users/me` | 필요 | 본문 `name` 또는 `currentPassword` + `newPassword` | 200 `{ id, email, name }` |
+| PATCH | `/api/users/me` | 필요 | 본문 `name` 또는 `currentPassword` + `newPassword` | 200 `{ id, email, name }` (비밀번호 변경 시 + 새 쿠키 2개) |
 | GET | `/api/categories` | 필요 | - | 200 `[{ id, name, isDefault }]` |
 | POST | `/api/categories` | 필요 | 본문 `name` | 201 `{ id, name, isDefault: false }` |
 | PATCH | `/api/categories/:id` | 필요 | 본문 `name` | 200 `{ id, name, isDefault }` |
@@ -196,7 +198,7 @@ export async function request<T>(path: string, options: { method?: 'GET' | 'POST
 | 필드 | 제한 |
 |------|------|
 | `email` | 254자 이하, `local@domain` 형식 |
-| `password`, `newPassword` | 8~64자 |
+| `password`, `newPassword` | 8~64자, UTF-8 72바이트 이하 |
 | `name` (사용자) | trim 후 1~50자 |
 | `name` (카테고리) | trim 후 1~30자 |
 | `title` | trim 후 1~100자 |

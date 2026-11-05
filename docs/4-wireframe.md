@@ -8,7 +8,7 @@
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.11, `docs/3-user-scenario.md` v0.6 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.12, `docs/3-user-scenario.md` v0.6 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 WF(화면별 와이어프레임)와 CP(공통 컴포넌트)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US, PS는 사용자 시나리오의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 

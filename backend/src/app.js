@@ -11,6 +11,7 @@ import categoriesRouter from './routes/categories.js';
 import todosRouter from './routes/todos.js';
 
 export const app = express();
+app.disable('x-powered-by'); // 11-security S-04
 
 app.use(cors); // 프리플라이트는 본문 파싱 전에 끝낸다
 app.use(express.json());

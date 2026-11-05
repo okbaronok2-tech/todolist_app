@@ -2,7 +2,7 @@ import pg from 'pg';
 
 // DATE(OID 1082)는 JS Date로 바꾸지 않고 'YYYY-MM-DD' 문자열 그대로 반환한다 (PRD 7장, PR-05)
 pg.types.setTypeParser(1082, (value) => value);
-// BIGINT(OID 20) id는 JSON 숫자로 보낸다 (PRD 7장). validate.id가 18자리 이하로 제한해 2^53 미만 보장
+// BIGINT(OID 20) id는 JSON 숫자로 보낸다 (PRD 7장). validate.id가 15자리 이하로 제한해 2^53 미만 보장
 pg.types.setTypeParser(20, Number);
 
 // 원칙 6.3: Pool 인스턴스는 이 파일 하나뿐 (NFR-04)

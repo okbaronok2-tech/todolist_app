@@ -85,7 +85,10 @@ input[type='checkbox'] { accent-color: var(--c-primary); width: 18px; height: 18
 .form__actions { grid-column: 1 / -1; display: flex; gap: var(--sp-2); padding-left: calc(96px + var(--sp-3)); }
 .inline-form { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); }
 .inline-form input { max-width: 320px; }
-.auth-page .auth-card { max-width: 480px; margin: var(--sp-7) auto; padding: 0 var(--gutter); }
+.auth-page .auth-card { max-width: 560px; margin: var(--sp-7) auto; padding: 0 var(--gutter); }
+/* WF-02: 데스크톱은 제약 안내가 입력란 옆, 모바일은 아래 줄 */
+.auth-card .field:has(.field__hint) { grid-template-columns: 96px minmax(0, 1fr) auto; }
+.auth-card .field__hint { grid-column: 3; grid-row: 1; white-space: nowrap; }
 .auth-page .page-title { text-align: center; }
 .auth-card__footer { margin-top: var(--sp-4); color: var(--c-text-muted); }
 
@@ -163,7 +166,8 @@ input[type='checkbox'] { accent-color: var(--c-primary); width: 18px; height: 18
   .nav__list li { height: 48px; display: flex; align-items: center; }
   .filters { flex-direction: column; gap: var(--sp-2); }
   .filters__item select { width: 100%; }
-  .field, .field--dates { grid-template-columns: 1fr; }
+  .field, .field--dates, .auth-card .field:has(.field__hint) { grid-template-columns: 1fr; }
+  .auth-card .field__hint { grid-column: 1; grid-row: auto; white-space: normal; }
   .field__hint, .field__error, .field--dates .field__hint, .field--dates .field__error { grid-column: 1; }
   .form__actions { padding-left: 0; }
   .form__actions .btn { flex: 1; }

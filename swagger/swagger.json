@@ -2,22 +2,22 @@
   "openapi": "3.0.3",
   "info": {
     "title": "TodoList API",
-    "version": "0.8.0",
-    "description": "TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.\n\n## 참조 문서\n- `docs/1-domain-definition.md` v0.8 (F, UC, BR, ST, D)\n- `docs/2-PRD.md` v0.11 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)\n- `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)\n- `docs/5-project-principle.md` v0.9 (4장 API 규칙, 6.2 쿠키)\n- `docs/6-arch-diagram.md` v0.8 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)\n- `docs/7-erd.md` v0.5\n- `docs/8-plan.md` v0.10 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)\n- `docs/schema.sql`\n- `docs/9-api-design.md` v0.5 (같은 내용의 표)\n\n## 공통 규칙\n- 모든 경로는 `/api` 접두어를 가진다 (PRD 6.3).\n- 필드명은 camelCase (원칙 4장). id는 정수(DB `BIGINT`)를 JSON 숫자로 보낸다 (PRD 7장).\n- 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열이다 (PRD 7장, PR-05). 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열이다.\n- 인증: 쿠키 `token`(액세스, JWT HS384, 15분)과 `refresh_token`(리프레시, 불투명, 14일, `Path=/api/auth`). 비보호 경로는 `GET /api/health`, `POST /api/auth/signup|login|refresh|logout` (AD-06, BR-01).\n- CORS: SPA와 API는 다른 origin이다. 서버는 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록의 Origin에만 `Access-Control-Allow-Origin`(요청 Origin 그대로)과 `Access-Control-Allow-Credentials: true`를 붙이고, `OPTIONS` 프리플라이트에 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`)를 준다. 클라이언트는 `credentials: 'include'`가 필요하다. 쿠키가 `SameSite=Lax`라 SPA와 API는 같은 site여야 한다 (NFR-06 (6)).\n- 거부 응답 본문은 `{ \"code\", \"message\" }`이며 `code`는 BR-51의 9개 중 하나다. HTTP status 매핑(PRD 6.3):\n  `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400,\n  `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.\n- 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식(양의 정수, DB 조회 없이 `NOT_FOUND`) → 리소스 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 코드로 거부하고 부분 저장하지 않는다.\n- 경로·쿼리·본문의 ID가 양의 정수 형식이 아니거나, 타인 소유이거나, 없으면 모두 같은 본문의 `NOT_FOUND`다 (BR-02, BR-16, PRD 6.3). 스키마에 `integer`로 적었어도 형식 위반은 400이 아니라 404다.\n- 페이지네이션 없음, 전체 반환 (PRD NFR-05, PD-02). 요청 횟수 제한 없음 (PD-03).\n- 동시 수정은 last-write-wins (BR-54).\n- 본문이 JSON이 아니거나 100kb를 넘거나 charset이 지원되지 않으면 400 `VALIDATION_ERROR`(`invalid request body`)다 (`express.json` 기본 제한, `middlewares/error-handler.js`).\n- BR-51 목록 밖의 오류(예: BR-15 트랜잭션 내부 실패)는 500 `{ \"code\": \"INTERNAL_ERROR\", \"message\": \"internal server error\" }`다 (AD-A8). 모든 operation에 공통이라 operation별로 적지 않는다.\n- 개발 모드(`NODE_ENV !== 'production'`)에서만 `GET /api/docs`(Swagger UI)와 `GET /api/docs.json`(이 명세의 JSON, `swagger/swagger.json`)을 제공한다. 운영에서는 404. API 계약이 아니라 paths에 두지 않는다.\n"
+    "version": "0.9.0",
+    "description": "TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.\n\n## 참조 문서\n- `docs/1-domain-definition.md` v0.9 (F, UC, BR, ST, D)\n- `docs/2-PRD.md` v0.12 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)\n- `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)\n- `docs/5-project-principle.md` v0.10 (4장 API 규칙, 6.2 쿠키)\n- `docs/6-arch-diagram.md` v0.8 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)\n- `docs/7-erd.md` v0.5\n- `docs/8-plan.md` v0.11 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)\n- `docs/schema.sql`\n- `docs/9-api-design.md` v0.6 (같은 내용의 표)\n\n## 공통 규칙\n- 모든 경로는 `/api` 접두어를 가진다 (PRD 6.3).\n- 필드명은 camelCase (원칙 4장). id는 정수(DB `BIGINT`)를 JSON 숫자로 보낸다 (PRD 7장).\n- 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열이다 (PRD 7장, PR-05). 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열이다.\n- 인증: 쿠키 `token`(액세스, JWT HS384, 15분)과 `refresh_token`(리프레시, 불투명, 14일, `Path=/api/auth`). 비보호 경로는 `GET /api/health`, `POST /api/auth/signup|login|refresh|logout` (AD-06, BR-01).\n- CORS: SPA와 API는 다른 origin이다. 서버는 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록의 Origin에만 `Access-Control-Allow-Origin`(요청 Origin 그대로)과 `Access-Control-Allow-Credentials: true`를 붙이고, `OPTIONS` 프리플라이트에 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`)를 준다. 클라이언트는 `credentials: 'include'`가 필요하다. 쿠키가 `SameSite=Lax`라 SPA와 API는 같은 site여야 한다 (NFR-06 (6)).\n- 거부 응답 본문은 `{ \"code\", \"message\" }`이며 `code`는 BR-51의 9개 중 하나다. HTTP status 매핑(PRD 6.3):\n  `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400,\n  `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.\n- 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식(양의 정수 15자리 이하, DB 조회 없이 `NOT_FOUND`) → 리소스 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 코드로 거부하고 부분 저장하지 않는다.\n- 경로·쿼리·본문의 ID가 양의 정수 형식이 아니거나, 타인 소유이거나, 없으면 모두 같은 본문의 `NOT_FOUND`다 (BR-02, BR-16, PRD 6.3). 스키마에 `integer`로 적었어도 형식 위반은 400이 아니라 404다.\n- 페이지네이션 없음, 전체 반환 (PRD NFR-05, PD-02). 요청 횟수 제한 없음 (PD-03).\n- 동시 수정은 last-write-wins (BR-54).\n- 본문이 JSON이 아니거나 100kb를 넘거나 charset이 지원되지 않으면 400 `VALIDATION_ERROR`(`invalid request body`)다 (`express.json` 기본 제한, `middlewares/error-handler.js`).\n- BR-51 목록 밖의 오류(예: BR-15 트랜잭션 내부 실패)는 500 `{ \"code\": \"INTERNAL_ERROR\", \"message\": \"internal server error\" }`다 (AD-A8). 모든 operation에 공통이라 operation별로 적지 않는다.\n- 개발 모드(`NODE_ENV !== 'production'`)에서만 `GET /api/docs`(Swagger UI)와 `GET /api/docs.json`(이 명세의 JSON, `swagger/swagger.json`)을 제공한다. 운영에서는 404. API 계약이 아니라 paths에 두지 않는다.\n"
   },
   "x-document-info": {
     "name": "TodoList API 명세 (OpenAPI 3.0.3)",
-    "version": "v0.8",
+    "version": "v0.9",
     "status": "초안",
     "date": "2026-11-05",
     "references": [
       {
         "path": "docs/1-domain-definition.md",
-        "version": "v0.8"
+        "version": "v0.9"
       },
       {
         "path": "docs/2-PRD.md",
-        "version": "v0.11"
+        "version": "v0.12"
       },
       {
         "path": "docs/3-user-scenario.md",
@@ -25,7 +25,7 @@
       },
       {
         "path": "docs/5-project-principle.md",
-        "version": "v0.9"
+        "version": "v0.10"
       },
       {
         "path": "docs/6-arch-diagram.md",
@@ -37,7 +37,7 @@
       },
       {
         "path": "docs/8-plan.md",
-        "version": "v0.10"
+        "version": "v0.11"
       },
       {
         "path": "docs/schema.sql",
@@ -45,7 +45,7 @@
       },
       {
         "path": "docs/9-api-design.md",
-        "version": "v0.5"
+        "version": "v0.6"
       }
     ]
   },
@@ -105,6 +105,13 @@
       "author": "-",
       "changes": "CORS 방식 전환(PRD v0.10): 공통 규칙에 CORS(CORS_ORIGIN, Allow-Credentials, credentials: include) 추가, servers 설명 수정, 참조 버전 갱신",
       "scope": "머리 주석, info 공통 규칙, servers, x-document-info"
+    },
+    {
+      "version": "v0.9",
+      "date": "2026-11-05",
+      "author": "-",
+      "changes": "11-security 조치: ID 15자리 이하, Password 72바이트, PATCH /api/users/me 비밀번호 변경 시 리프레시 전부 폐기 + Set-Cookie 2개 (PRD v0.12 6.4), 참조 버전 갱신",
+      "scope": "머리 주석, info 공통 규칙, x-document-info, /api/users/me, Password"
     }
   ],
   "servers": [
@@ -353,7 +360,7 @@
         ],
         "operationId": "updateMe",
         "summary": "내 정보 수정 (P1)",
-        "description": "수정 대상은 인증된 본인으로 고정된다. 본문의 사용자 ID 등 다른 필드는 무시한다 (BR-03).\n수정 가능 항목은 `name`, 비밀번호(`currentPassword` + `newPassword`)다. 이메일 변경 없음 (D-06).\n현재 비밀번호가 틀리면 `INVALID_CREDENTIALS`이고 기존 값이 유지된다 (BR-05). `updatedAt`이 갱신된다.\n\n- 관련: F-03, UC-04, BR-03, BR-05, BR-44, BR-45, BR-52, US-19, SC-06, T-B08\n- 검증 순서: 인증 → 형식·길이(BR-44, BR-45) → 자격 증명(BR-05)\n",
+        "description": "수정 대상은 인증된 본인으로 고정된다. 본문의 사용자 ID 등 다른 필드는 무시한다 (BR-03).\n수정 가능 항목은 `name`, 비밀번호(`currentPassword` + `newPassword`)다. 이메일 변경 없음 (D-06).\n현재 비밀번호가 틀리면 `INVALID_CREDENTIALS`이고 기존 값이 유지된다 (BR-05). `updatedAt`이 갱신된다.\n비밀번호를 바꾸면 같은 트랜잭션에서 그 사용자의 리프레시 토큰 전부를 폐기하고 응답에 새 `token`·`refresh_token` 쿠키를 설정한다 (PRD 6.4, 11-security S-01). 다른 기기 세션은 액세스 만료 후 로그아웃된다.\n\n- 관련: F-03, UC-04, BR-03, BR-05, BR-44, BR-45, BR-52, US-19, SC-06, T-B08\n- 검증 순서: 인증 → 형식·길이(BR-44, BR-45) → 자격 증명(BR-05)\n",
         "requestBody": {
           "required": true,
           "content": {
@@ -1471,7 +1478,7 @@
         "type": "string",
         "minLength": 8,
         "maxLength": 64,
-        "description": "8자 이상 64자 이하 (BR-44)."
+        "description": "8자 이상 64자 이하, UTF-8 72바이트 이하 (BR-44, bcrypt 입력 한계)."
       },
       "UserName": {
         "type": "string",

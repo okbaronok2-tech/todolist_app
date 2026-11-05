@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.9 |
+| 현재 버전 | v0.10 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.11, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.6 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.12, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.6 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -25,6 +25,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.7 | 2026-11-05 | - | PRD v0.10 CORS 방식 반영. PR-08 적용 예에 `CORS_ORIGIN`·`VITE_API_URL`, 6.1에 `CORS_ORIGIN`·프론트 환경변수, 7.2에 `middlewares/cors.js`, `app.js` 정적 제공 제거, 7.3 `vite.config.ts` 프록시 제거, 참조 버전 갱신 | 문서 정보, PR-08, 6.1, 7.2, 7.3 |
 | v0.8 | 2026-11-05 | - | 코드 상태 반영. 3.5 프론트 개발 의존성 심사 결과(`@vitejs/plugin-react`, `@types/react`, `@types/react-dom`, `jsdom`, `@testing-library/react`), 5장에 `scenarios.test.js`(US HTTP 재현)·프론트 vitest 대상, 7.2 tests에 `scenarios.test.js`, 7.3 트리를 구현 파일(`lib/calendar-lanes.ts`, `lib/status.ts`, `lib/error-text.ts`, `components/calendar/CalendarBar.tsx`, 테스트 파일, `.env.example`, `index.html`)에 맞춤 | 문서 정보, 3.5, 5장, 7.2, 7.3 |
 | v0.9 | 2026-11-05 | - | 코드 리뷰 반영. 3.5 심사 결과에 `@testing-library/dom`·ESLint 템플릿 세트, 7.1 트리(docs 1~11·style-guide, `swagger/`, `CLAUDE.md`, `.claude/`), 7.2(`swagger:json`, `swagger.yaml`, `CLAUDE.md`, `.env.test`, `load.js` 미작성 표기), 7.3(`queries/use-auth.ts`, `auth.ts updateMe`, `.prettierrc`), 참조 버전 갱신 | 문서 정보, 3.5, 7.1, 7.2, 7.3 |
+| v0.10 | 2026-11-05 | - | 7.1 `docs/perf-result.md` 작성 완료 표기, 7.2에 `load-seed.js`·`load.js`(k6, `npm run load:seed`), 참조 버전 갱신 | 문서 정보, 7.1, 7.2 |
 
 ---
 
@@ -212,7 +213,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 todolist_app/
 ├── backend/        # Express API, 마이그레이션, 시드, 테스트
 ├── frontend/       # Vite + React SPA
-├── docs/           # 설계 문서 (1~11, style-guide.md, schema.sql, assets/; 작성 예정 perf-result.md)
+├── docs/           # 설계 문서 (1~11, style-guide.md, perf-result.md, schema.sql, assets/)
 ├── swagger/        # swagger.json (backend/swagger.yaml에서 생성)
 ├── prompts/        # 문서 생성 프롬프트
 ├── .claude/        # 스킬 (develop-backend, develop-frontend, issue-resolver-backend)
@@ -227,7 +228,7 @@ GitHub 이슈 작업 브랜치는 `feature-<이슈번호>`, `main`에서 분기,
 
 ```text
 backend/
-├── package.json            # scripts: dev, start, migrate, seed, test, smoke, swagger:json
+├── package.json            # scripts: dev, start, migrate, seed, test, smoke, swagger:json, load:seed
 ├── .env.example
 ├── .env, .env.test         # 커밋하지 않음
 ├── swagger.yaml            # OpenAPI 명세 (정본)
@@ -276,7 +277,8 @@ backend/
     ├── todo-service.test.js
     ├── user-service.test.js # BR-03, BR-05 (P1)
     ├── scenarios.test.js   # US-01~17, 19 HTTP 재현 (app.listen(0), CORS 포함)
-    ├── load.js             # k6 부하 시나리오 (PRD 5.1, NFR-01~03). T-X04, 미작성
+    ├── load-seed.js        # 부하 데이터: 사용자 1000명 × 할일 100건 (NFR-05). npm run seed로 원복
+    ├── load.js             # k6 부하 시나리오 (PRD 5.1, NFR-01~03). k6 run tests/load.js
     └── smoke.js            # 실행 중 서버에 US-02, US-12, US-17 + T-B01·T-B03 HTTP 조건 확인
 ```
 

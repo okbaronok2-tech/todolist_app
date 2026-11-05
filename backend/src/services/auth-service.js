@@ -19,7 +19,7 @@ const publicUser = (u) => ({ id: u.id, name: u.name });
 const unauthorized = () => new AppError('UNAUTHORIZED', 'please log in again');
 
 // 리프레시 토큰 발급: 원문은 반환만, DB에는 해시 (NFR-06)
-async function issueRefreshToken(userId, db) {
+export async function issueRefreshToken(userId, db) {
   const raw = randomBytes(32).toString('base64url');
   await tokens.insert({ userId, tokenHash: hashToken(raw), expiresAt: new Date(Date.now() + REFRESH_TTL_SEC * 1000) }, db);
   return raw;
@@ -61,6 +61,8 @@ export async function refresh(rawToken) {
     if (!row || row.expiresAt < new Date()) return null;
     if (row.revokedAt) {
       await tokens.revokeAllForUser(row.userId, db);
+      // 토큰 탈취 신호. 일반 401과 구분되는 1줄 로그 (11-security S-05). 토큰 값은 남기지 않는다
+      console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'refresh_reuse', userId: row.userId }));
       return null;
     }
     await tokens.revoke(row.id, db);

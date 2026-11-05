@@ -50,6 +50,7 @@ expect('T-B01 health', { status: 200, json: { ok: true, db: 'up' } }, (({ status
 expect('Swagger JSON (개발 모드)', [200, '3.0.3'], (({ status, json }) => [status, json?.openapi])(await call('GET', '/api/docs.json')));
 expect('Swagger UI HTML', 200, (await call('GET', '/api/docs')).status);
 expect('T-B01 미등록 경로 404', [404, 'NOT_FOUND'], (({ status, json }) => [status, json?.code])(await call('GET', '/api/nope')));
+expect('S-04 X-Powered-By 없음', null, (await fetch(`${BASE}/api/health`)).headers.get('x-powered-by'));
 const corsOrigin = (process.env.CORS_ORIGIN ?? '').split(',')[0];
 const pre = await fetch(`${BASE}/api/auth/login`, { method: 'OPTIONS', headers: { origin: corsOrigin, 'access-control-request-method': 'POST' } });
 expect('CORS 프리플라이트 204 + 허용 origin + credentials', [204, corsOrigin, 'true'], [pre.status, pre.headers.get('access-control-allow-origin'), pre.headers.get('access-control-allow-credentials')]);

@@ -18,6 +18,7 @@ export function errorHandler(err, req, res, next) {
   const code = isApp ? error.code : 'INTERNAL_ERROR';
   const message = isApp ? error.message : 'internal server error';
   const log = { ts: new Date().toISOString(), method: req.method, path: req.originalUrl, status, code, message };
+  if (req.userId) log.userId = req.userId; // 11-security S-05
   if (status >= HTTP.INTERNAL_ERROR) log.stack = err.stack;
   console.log(JSON.stringify(log));
   res.status(status).json({ code, message });

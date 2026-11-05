@@ -1,5 +1,5 @@
 -- TodoList 스키마 (PostgreSQL 17)
--- 출처: docs/7-erd.md v0.5 (ERD-02~06, ERD-08), docs/2-PRD.md v0.11 7장
+-- 출처: docs/7-erd.md v0.5 (ERD-02~06, ERD-08), docs/2-PRD.md v0.12 7장
 -- 실행: psql -d todolist -f docs/schema.sql  (backend/src/db/migrations/001_init.sql의 원본)
 -- 미결 항목 결정(7-erd.md 9장 참조): ERD-C2 ON DELETE, ERD-C5 is_default 기본값, ERD-C6 복합 FK, ERD-C7 타임스탬프 기본값
 

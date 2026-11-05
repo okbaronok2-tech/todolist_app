@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.10 |
+| 현재 버전 | v0.11 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.11, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.6, `docs/5-project-principle.md` v0.9, `docs/6-arch-diagram.md` v0.8, `docs/7-erd.md` v0.5, `docs/schema.sql`, `docs/9-api-design.md` v0.5, `backend/swagger.yaml` v0.8 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.12, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.6, `docs/5-project-principle.md` v0.10, `docs/6-arch-diagram.md` v0.8, `docs/7-erd.md` v0.5, `docs/schema.sql`, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.9 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -26,6 +26,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 | v0.8 | 2026-11-05 | - | T-B07 수행 작업에 `tests/scenarios.test.js`(US-01~17·19 HTTP 재현) 추가. T-F01~T-F11 구현 후 자동 테스트(vitest 34건)·브라우저로 확인한 완료 조건 체크(T-F01·F02·F07·F08·F09 전부, F03·F04·F05·F06·F10·F11 일부). 미체크 항목은 수동 검증 대기, 참조 버전 갱신 | 문서 정보, T-B07, T-F01~T-F11 |
 | v0.9 | 2026-11-05 | - | 브라우저(Playwright, 기기 날짜 2026-11-03 고정) 검증으로 T-F03~T-F06·T-F10·T-F11 잔여 완료 조건 전부 체크, T-X03 운영 빌드·CORS 배포 확인(`NODE_ENV=production`, `CORS_ORIGIN=http://localhost:4173`, `serve -s dist`) 완료, T-X05 수동 검증 체크(T-X04 제외: k6 미설치·`load.js` 미작성), 참조 버전 갱신 | 문서 정보, T-F03~T-F06, T-F10, T-F11, T-X03, T-X05 |
 | v0.10 | 2026-11-05 | - | 코드 리뷰 반영. T-F01 라우트 수·health 확인 방법, T-F02 로그아웃 mutation(`queries/use-auth.ts`), T-F08 월 뷰 표시를 스타일 가이드 3.7 막대로·기준 SVG를 `sg-calendar-month.svg`로, T-F01·F08·F09·F10 산출물에 실제 파일 추가, 참조 버전 갱신 | 문서 정보, 2장, T-F01, T-F02, T-F08, T-F09, T-F10 |
+| v0.11 | 2026-11-05 | - | T-X04 완료: `tests/load-seed.js`(`npm run load:seed`)·`tests/load.js`(k6 v2.3.0, `noCookiesReset`), `docs/perf-result.md` v0.1(로컬 1000 VU 결과, EXPLAIN 2건), 완료 조건 5개 체크. 11-security S-01~S-06 조치 반영(PRD v0.12, 도메인 v0.9), 참조 버전 갱신 | 문서 정보, 2장, T-X04 |
 
 ---
 
@@ -80,7 +81,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 | T-F09 | 캘린더 주·일 뷰·기간 이동 | 프론트 | Day 2 오후 | T-F08 | `components/calendar/WeekView.tsx`, `DayView.tsx`, `calendar.test.tsx` |
 | T-F10 | 반응형 375px | 프론트 | Day 2 오후 | T-F09 | `styles.css`, `TopNav.tsx`, `MonthView.tsx`, `WeekView.tsx` |
 | T-X03 | 운영 빌드·CORS 배포 확인 | 공통 | Day 2 오후 | T-F10 | `frontend/dist`, `CORS_ORIGIN` 운영 값 |
-| T-X04 | 부하 테스트·쿼리 계획 기록 | 공통 | Day 2 오후 | T-B07, T-X03 | `backend/tests/load.js`(k6), `docs/perf-result.md` |
+| T-X04 | 부하 테스트·쿼리 계획 기록 | 공통 | Day 2 오후 | T-B07, T-X03 | `backend/tests/load-seed.js`, `backend/tests/load.js`(k6), `docs/perf-result.md` |
 | T-X05 | 수동 검증 체크리스트 실행 | 공통 | Day 2 오후 | T-F10 | PRD 9.1 체크 결과 |
 | T-B08 | (P1) 내 정보 API | 백엔드 | 여유 시 | T-B03 | `routes/users.js`, `services/user-service.js` |
 | T-F11 | (P1) 내 정보 화면 | 프론트 | 여유 시 | T-B08, T-F03 | `pages/MePage.tsx` |
@@ -678,18 +679,18 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 수행 작업:
 
-1. 부하 데이터 스크립트: 사용자 1000명, 사용자당 할일 100건(약 10만 행)을 별도 DB 또는 시드 뒤에 추가. 비밀번호 해시는 1개를 재사용한다.
+1. 부하 데이터 스크립트 `tests/load-seed.js`(`npm run load:seed`): 사용자 1000명, 사용자당 할일 100건(약 10만 행)을 개발 시드 뒤에 추가. 비밀번호 해시는 시드의 것 1개를 재사용한다. `npm run seed`가 원복한다.
 2. `backend/tests/load.js`(k6): 60초 램프로 1000 VU 로그인(VU당 1회, 이후 액세스 쿠키로 요청), 이후 5분간 조회 80%(목록 50, 캘린더 30) / 쓰기 20%(등록 8, 수정 4, 완료 4, 삭제 4), think time 지수분포 평균 10초, 타임아웃 10초. 액세스 15분 > 측정 5분이라 리프레시는 시나리오에 넣지 않되, 401 수신 시 `POST /api/auth/refresh` 1회 후 원 요청을 재시도한다 (PRD 5.1).
 3. 결과(p95 조회·쓰기·로그인, 오류율, 측정 환경 CPU·메모리·부하 생성기 위치)를 `docs/perf-result.md`에 기록. 부하 생성기와 서버가 같은 PC면 "미검증"으로 표기.
 4. 10만 행 상태에서 목록·캘린더 쿼리 `EXPLAIN (ANALYZE)` 1회씩 기록.
 
 완료 조건:
 
-- [ ] k6 스크립트가 1000 VU로 램프 60초 + 5분 구간을 오류 없이 완주한다
-- [ ] `docs/perf-result.md`에 p95(조회·쓰기·로그인), 5xx·타임아웃 비율, 측정 환경, 부하 생성기 위치가 적혀 있다
-- [ ] NFR-02·03 기준 충족 여부가 각각 `충족` / `미달` / `미검증` 중 하나로 표시되고, 미달이면 원인 추정이 적혀 있다
-- [ ] 목록 쿼리와 캘린더 쿼리의 `EXPLAIN (ANALYZE)` 출력이 기록되어 있다 (seq scan이어도 기록만 한다)
-- [ ] 부하 데이터가 개발 시드(사용자 2명)와 분리되어 있어 `npm run seed`로 원복된다
+- [x] k6 스크립트가 1000 VU로 램프 60초 + 5분 구간을 오류 없이 완주한다 (k6 v2.3.0, `noCookiesReset: true` 필요. 결과 `docs/perf-result.md`)
+- [x] `docs/perf-result.md`에 p95(조회·쓰기·로그인), 5xx·타임아웃 비율, 측정 환경, 부하 생성기 위치가 적혀 있다
+- [x] NFR-02·03 기준 충족 여부가 각각 `충족` / `미달` / `미검증` 중 하나로 표시되고, 미달이면 원인 추정이 적혀 있다 (같은 PC 측정이라 NFR-02는 참고치 표기)
+- [x] 목록 쿼리와 캘린더 쿼리의 `EXPLAIN (ANALYZE)` 출력이 기록되어 있다 (seq scan이어도 기록만 한다)
+- [x] 부하 데이터가 개발 시드(사용자 2명)와 분리되어 있어 `npm run seed`로 원복된다
 
 ### T-X05 수동 검증 체크리스트 실행
 

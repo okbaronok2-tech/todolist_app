@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as v from './validate.js';
 import * as userService from '../services/user-service.js';
-import { requireAuth } from '../middlewares/auth.js';
+import { requireAuth, setAuthCookies } from '../middlewares/auth.js';
 import { AppError } from '../errors/app-error.js';
 
 const router = Router();
@@ -25,7 +25,9 @@ router.patch('/me', async (req, res) => {
     input.newPassword = v.password(body.newPassword, 'newPassword');
   }
   if (input.name === undefined && !hasNew) throw new AppError('VALIDATION_ERROR', 'nothing to update');
-  res.json(await userService.updateMe(req.userId, input));
+  const { user, refreshToken } = await userService.updateMe(req.userId, input);
+  if (refreshToken) setAuthCookies(res, user.id, refreshToken); // 비밀번호 변경: 기존 리프레시 전부 폐기 후 새 쿠키 2개 (S-01)
+  res.json(user);
 });
 
 export default router;

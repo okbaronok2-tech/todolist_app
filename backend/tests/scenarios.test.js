@@ -336,7 +336,12 @@ test('US-19 (P1) 내 정보 수정 (BR-03, BR-05, BR-44, BR-45)', async () => {
   expectError(await call('PATCH', '/api/users/me', { cookie, body: { currentPassword: 'wrongpass1', newPassword: 'seojun5678' } }), 401, 'INVALID_CREDENTIALS');
   expectError(await call('PATCH', '/api/users/me', { cookie, body: { currentPassword: PS02.password, newPassword: 'short12' } }), 400, 'VALIDATION_ERROR');
   expectError(await call('PATCH', '/api/users/me', { cookie, body: { name: '   ' } }), 400, 'VALIDATION_ERROR');
-  assert.equal((await call('PATCH', '/api/users/me', { cookie, body: { currentPassword: PS02.password, newPassword: 'seojun5678' } })).status, 200);
+  const { setCookie: before } = await login(PS02); // 다른 기기 세션
+  const changed = await call('PATCH', '/api/users/me', { cookie, body: { currentPassword: PS02.password, newPassword: 'seojun5678' } });
+  assert.equal(changed.status, 200);
+  assert.deepEqual(cookieNames(changed.setCookie), ['refresh_token', 'token']); // S-01: 새 쿠키 2개
+  assert.equal((await call('POST', '/api/auth/refresh', { cookie: `refresh_token=${cookieValue(changed.setCookie, 'refresh_token')}` })).status, 200); // 새 토큰 유효
+  expectError(await call('POST', '/api/auth/refresh', { cookie: `refresh_token=${cookieValue(before, 'refresh_token')}` }), 401, 'UNAUTHORIZED'); // 다른 기기 세션 폐기
   assert.equal((await call('POST', '/api/auth/logout', { cookie })).status, 204);
   expectError(await call('POST', '/api/auth/login', { body: PS02 }), 401, 'INVALID_CREDENTIALS');
   const fresh = await login({ email: PS02.email, password: 'seojun5678' });
