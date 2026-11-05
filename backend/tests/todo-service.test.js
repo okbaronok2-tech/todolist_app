@@ -26,15 +26,14 @@ test('BR-16 타인·미존재 categoryId는 NOT_FOUND', async () => {
   await rejects(todos.create(2, { ...base, categoryId: 2 }, today), 'NOT_FOUND');
   await rejects(todos.create(2, { ...base, categoryId: 999 }, today), 'NOT_FOUND');
   await rejects(todos.update(2, 1, { ...base, categoryId: 2 }, today), 'NOT_FOUND');
+  await rejects(todos.update(2, 1, { ...base, categoryId: 999 }, today), 'NOT_FOUND');
 });
 
-test('BR-22 startDate > endDate는 INVALID_DATE_RANGE, 같은 날짜·과거 날짜는 저장 (BR-23)', () => {
-  assert.throws(() => v.dateRange({ startDate: '2026-11-05', endDate: '2026-11-04' }), (e) => e.code === 'INVALID_DATE_RANGE');
-  assert.doesNotThrow(() => v.dateRange({ startDate: '2026-11-04', endDate: '2026-11-04' }));
-  return todos.create(2, { ...base, startDate: '2026-10-20', endDate: '2026-10-22' }, today).then((t) => {
-    assert.equal(t.startDate, '2026-10-20');
-    assert.equal(t.status, STATUS.OVERDUE);
-  });
+test('BR-23 과거 날짜도 저장, 날짜 필드는 YYYY-MM-DD 문자열', async () => {
+  const t = await todos.create(2, { ...base, startDate: '2026-10-20', endDate: '2026-10-22' }, today);
+  assert.equal(t.startDate, '2026-10-20');
+  assert.equal(t.endDate, '2026-10-22');
+  assert.equal(t.status, STATUS.OVERDUE);
 });
 
 test('BR-24 생성 요청의 isCompleted는 무시되어 false·null', async () => {

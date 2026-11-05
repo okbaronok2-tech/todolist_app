@@ -9,7 +9,10 @@ export function notFound(req, res, next) {
 // eslint-disable-next-line no-unused-vars
 export function errorHandler(err, req, res, next) {
   let error = err;
-  if (err?.type === 'entity.parse.failed') error = new AppError('VALIDATION_ERROR', 'invalid JSON body');
+  // body-parser 4xx(잘못된 JSON, 100kb 초과, 미지원 charset)는 모두 입력 오류 (BR-51)
+  if (!(err instanceof AppError) && typeof err?.status === 'number' && err.status < HTTP.INTERNAL_ERROR) {
+    error = new AppError('VALIDATION_ERROR', 'invalid request body');
+  }
   const isApp = error instanceof AppError;
   const status = isApp ? error.status : HTTP.INTERNAL_ERROR;
   const code = isApp ? error.code : 'INTERNAL_ERROR';

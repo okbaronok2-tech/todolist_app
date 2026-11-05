@@ -12,7 +12,8 @@
     "migrate": "node --env-file=.env src/db/migrate.js",
     "seed": "node --env-file=.env src/db/migrate.js seed",
     "test": "node --env-file=.env.test --test --test-concurrency=1 \"tests/*.test.js\"",
-    "smoke": "node --env-file=.env tests/smoke.js"
+    "smoke": "node --env-file=.env tests/smoke.js",
+    "swagger:json": "npx -y @apidevtools/swagger-cli@4 bundle -o ../swagger/swagger.json swagger.yaml"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

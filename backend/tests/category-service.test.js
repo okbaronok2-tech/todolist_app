@@ -47,16 +47,18 @@ test('BR-15 삭제 시 소속 할일은 기본 카테고리로 이동, 할일 �
   const before = (await q('SELECT count(*)::int AS c FROM todos')).rows[0].c;
   await categories.remove(2, 4); // 업무: 할일 1, 2, 3, 5
   const { rows } = await q('SELECT id, category_id FROM todos WHERE id IN (1, 2, 3, 5) ORDER BY id');
+  assert.equal(rows.length, 4);
   assert.ok(rows.every((r) => r.category_id === 3));
   assert.equal((await q('SELECT count(*)::int AS c FROM todos')).rows[0].c, before);
   assert.equal((await q('SELECT count(*)::int AS c FROM categories WHERE id = 4')).rows[0].c, 0);
 });
 
 test('BR-15 이동 UPDATE 실패 시 롤백, 카테고리 유지', async () => {
-  await q("CREATE FUNCTION fail_update() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'forced'; END $$ LANGUAGE plpgsql");
+  await q("CREATE OR REPLACE FUNCTION fail_update() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'forced'; END $$ LANGUAGE plpgsql");
+  await q('DROP TRIGGER IF EXISTS fail_move ON todos');
   await q('CREATE TRIGGER fail_move BEFORE UPDATE ON todos FOR EACH ROW EXECUTE FUNCTION fail_update()');
   try {
-    await assert.rejects(categories.remove(2, 4));
+    await assert.rejects(categories.remove(2, 4), /forced/);
     assert.equal((await q('SELECT count(*)::int AS c FROM categories WHERE id = 4')).rows[0].c, 1);
     assert.equal((await q('SELECT count(*)::int AS c FROM todos WHERE category_id = 4')).rows[0].c, 4);
   } finally {

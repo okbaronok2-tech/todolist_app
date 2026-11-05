@@ -1,9 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { AppError } from '../errors/app-error.js';
 
-// NFR-06 토큰 수명. 쿠키 Max-Age와 같다. auth-service가 refresh 행 expires_at에도 쓴다
-export const ACCESS_TTL_SEC = 900;
-export const REFRESH_TTL_SEC = 1209600; // 14일
+import { ACCESS_TTL_SEC, REFRESH_TTL_SEC } from '../services/auth-service.js';
 
 // NFR-06 두 쿠키 옵션. 운영만 Secure. 설정은 이 파일 한 곳 (원칙 6.2)
 const base = () => ({ httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });

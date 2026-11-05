@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.5 |
+| 현재 버전 | v0.6 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.5, `docs/6-arch-diagram.md` v0.5, `docs/7-erd.md` v0.4, `docs/schema.sql`, `docs/9-api-design.md` v0.1 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.5, `docs/5-project-principle.md` v0.6, `docs/6-arch-diagram.md` v0.6, `docs/7-erd.md` v0.5, `docs/schema.sql`, `docs/9-api-design.md` v0.2, `backend/swagger.yaml` v0.5 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -21,6 +21,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 | v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. T-X02 미결 3건(AD-C8은 이미 해결)과 '작성 예정' 표기 제거 조건, T-B06 필터 결과 순서, T-B07 US-17 데이터·로그인 두 쿠키, T-F01 라우트 6개, T-F03 SC-02 오류 표시 위치·US-01 조건, T-F04 US-04 데이터, T-F06 US-08 날짜, T-F07·F08 월 뷰 칸 수 일반화, T-F09 US-15 순서, T-F10 US-18 단계, T-F11 `me`·US-19 조건을 시나리오·와이어프레임에 맞춤, 참조 버전 갱신 | 문서 정보, T-X02, T-B06, T-B07, T-F01, T-F03, T-F04, T-F06, T-F07, T-F08, T-F09, T-F10, T-F11 |
 | v0.4 | 2026-11-04 | - | T-X01·T-X02·T-D01·T-D02 완료 조건 체크, 참조 문서에 `docs/9-api-design.md` 추가, 참조 버전 갱신 | 문서 정보, T-X01, T-X02, T-D01, T-D02 |
 | v0.5 | 2026-11-04 | - | T-B01~T-B08 완료 조건 체크(85개). 테스트 실행은 `node --test "tests/*.test.js" --test-concurrency=1`(Node 24는 디렉터리 인자 미지원, 테스트 DB 공유로 직렬) | 문서 정보, T-B01~T-B08 |
+| v0.6 | 2026-11-05 | - | 참조 문서에 `backend/swagger.yaml` 추가, T-X02 산출물에 `backend/swagger.yaml`, T-B01·T-B07·T-B08 수동 확인 조건 4개 표기, 참조 버전 갱신 | 문서 정보, T-X02, T-B01, T-B07, T-B08 |
 
 ---
 
@@ -54,7 +55,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 | ID | Task | 영역 | 구간 | 선행 | 주요 산출물 |
 |----|------|------|------|------|-------------|
 | T-X01 | 저장소 골격·공통 설정 | 공통 | Day 1 오전 | - | `backend/package.json`, `frontend/package.json`, `.gitignore`, `README.md` |
-| T-X02 | API 설계 문서 | 공통 | Day 1 오전 | T-X01 | `docs/9-api-design.md` |
+| T-X02 | API 설계 문서 | 공통 | Day 1 오전 | T-X01 | `docs/9-api-design.md`, `backend/swagger.yaml` |
 | T-D01 | DB 생성·마이그레이션 러너 | DB | Day 1 오전 | T-X01 | `db/pool.js`, `db/migrate.js`, `db/migrations/001_init.sql` |
 | T-D02 | 시드 SQL | DB | Day 1 오전 | T-D01 | `db/seed.sql`, `tests/setup.js` |
 | T-B01 | 백엔드 앱 골격·오류 처리·헬스체크 | 백엔드 | Day 1 오전 | T-D01 | `server.js`, `app.js`, `errors/`, `middlewares/error-handler.js` |
@@ -204,12 +205,12 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 - [x] `JWT_SECRET` 없이 `npm run dev`를 실행하면 종료 코드가 0이 아니고 원인이 출력된다
 - [x] `GET /api/health`가 200 `{ "ok": true }`를 반환한다
-- [x] DB를 중지한 상태에서 `GET /api/health`가 503을 반환한다
+- [x] DB를 중지한 상태에서 `GET /api/health`가 503을 반환한다 (수동 확인)
 - [x] `GET /api/nope`가 404 `{ "code": "NOT_FOUND", "message": ... }`를 반환한다
 - [x] 라우트에서 `throw new AppError('VALIDATION_ERROR', 'x')`를 던지면 400 `{ "code": "VALIDATION_ERROR", "message": "x" }`가 온다
 - [x] 4xx 로그 1줄에 `ts, method, path, status, code, message`가 있고 stack이 없다
 - [x] `errors/codes.js` 밖에 HTTP status 숫자 리터럴이 없다 (`grep -rn 'status(4\|status(5' src/` 결과 없음)
-- [x] `Ctrl+C`로 종료 시 pool 종료 로그 후 프로세스가 끝난다
+- [x] `Ctrl+C`로 종료 시 pool 종료 로그 후 프로세스가 끝난다 (수동 확인)
 
 ### T-B02 입력 검증 모듈
 
@@ -275,7 +276,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 - [x] 로그아웃 후 그 리프레시 토큰으로 `POST /api/auth/refresh`하면 401 `UNAUTHORIZED`다 (DB 폐기)
 - [x] 만료된 액세스 토큰(`exp` 과거)으로 보호 API를 요청하면 401 `UNAUTHORIZED`다 (BR-53). `refresh_token` 쿠키를 함께 보내도 미들웨어는 보지 않는다
 - [x] `NODE_ENV=production`일 때만 두 쿠키에 `Secure`가 붙는다
-- [x] 응답·로그 어디에도 `password`, 해시, 액세스·리프레시 토큰 값이 출력되지 않는다
+- [x] 응답·로그 어디에도 `password`, 해시, 액세스·리프레시 토큰 값이 출력되지 않는다 (수동 확인)
 - [x] `npm test`에서 `auth-service.test.js`가 통과한다 (회전·재사용 탐지·폐기 케이스 포함)
 
 ### T-B04 카테고리 API
@@ -392,7 +393,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 - [x] US-02: 틀린 비밀번호 401 `INVALID_CREDENTIALS`, 올바른 로그인 200 + `token`·`refresh_token` 쿠키
 - [x] US-12: 필터 없음 7건, `categoryId=4` 4건, `status=OVERDUE` 2건, 둘 다 1건
 - [x] US-17: 사용자 1 쿠키로 할일 1 `GET`·`PATCH`·`DELETE`, `categoryId=3`으로 할일 등록, `categoryId=3` 필터 모두 404 `NOT_FOUND`이고 사용자 2 데이터가 그대로다
-- [x] 기대값 하나를 일부러 바꾸면 종료 코드 1과 불일치 줄이 출력된다
+- [x] 기대값 하나를 일부러 바꾸면 종료 코드 1과 불일치 줄이 출력된다 (수동 확인)
 
 ### T-F01 프론트 골격·API 클라이언트·스토어·타입
 

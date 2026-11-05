@@ -25,7 +25,7 @@ export async function withTransaction(fn) {
     await client.query('COMMIT');
     return result;
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => {}); // 연결이 끊겨도 원래 오류를 던진다
     throw err;
   } finally {
     client.release();

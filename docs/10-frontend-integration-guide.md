@@ -1,0 +1,222 @@
+# TodoList 프론트엔드 연동 가이드 (초안)
+
+## 문서 정보
+
+| 항목 | 내용 |
+|------|------|
+| 문서명 | TodoList 프론트엔드 연동 가이드 |
+| 현재 버전 | v0.1 |
+| 상태 | 초안 |
+| 작성일 | 2026-11-05 |
+| 참조 문서 | `docs/2-PRD.md` v0.9, `docs/5-project-principle.md` v0.6, `docs/6-arch-diagram.md` v0.6, `docs/8-plan.md` v0.6, `docs/9-api-design.md` v0.2, `backend/swagger.yaml` v0.5 |
+| 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
+
+## 변경 이력
+
+| 버전 | 날짜 | 작성자 | 변경 내용 | 영향 범위 |
+|------|------|--------|-----------|-----------|
+| v0.1 | 2026-11-05 | - | 초안 작성. 백엔드 실행, 개발 연결(Vite 프록시), 쿠키·리프레시 흐름(AD-16), 요청 규약, 오류 모델, 엔드포인트 요약, 보안 주의, 시드 계정, Swagger | 전체 |
+
+---
+
+## 1. 백엔드 실행
+
+Node 22 이상, PostgreSQL 17, `todolist` DB가 있어야 한다.
+
+```bash
+cd backend
+cp .env.example .env   # JWT_SECRET 채우기
+npm install
+npm run migrate
+npm run seed
+npm run dev            # http://localhost:3000, 파일 변경 시 자동 재시작
+```
+
+환경변수 4개 (`backend/.env.example`):
+
+| 키 | 값 | 비고 |
+|----|----|------|
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/todolist` | pg Pool 연결 문자열 |
+| `JWT_SECRET` | 48자 이상 임의 문자열 | 기본값 없음. 없거나 짧으면 기동 실패 (NFR-06) |
+| `PORT` | `3000` | 기본 3000 |
+| `NODE_ENV` | `development` | `production`이면 쿠키에 `Secure`, `frontend/dist` 정적 제공 |
+
+기동 확인: `GET /api/health` → 200 `{ "ok": true }`. DB 연결 실패면 503 `{ "ok": false }`.
+
+## 2. 개발 연결 방식
+
+- CORS 설정 없음. SPA와 API는 개발·운영 모두 같은 origin이다 (NFR-06).
+- 개발: Vite `server.proxy`로 `/api`를 백엔드에 넘긴다 (T-F01).
+- 운영: `NODE_ENV=production`에서 Express가 `frontend/dist`를 정적 제공하고 `/api` 외 경로는 `index.html`을 돌려준다 (T-X03).
+
+```ts
+// frontend/vite.config.ts
+export default defineConfig({
+  plugins: [react()],
+  server: { proxy: { '/api': 'http://localhost:3000' } },
+});
+```
+
+`fetch`는 상대 경로 `/api/...`만 쓴다. 같은 origin이므로 `credentials` 기본값(`same-origin`)으로 쿠키가 붙는다. `Authorization` 헤더는 없다. 절대 URL(`http://localhost:3000/api/...`)을 쓰면 origin이 달라져 쿠키가 빠지므로 금지.
+
+## 3. 인증·쿠키
+
+가입·로그인·리프레시 성공 응답이 쿠키 2개를 `Set-Cookie`로 내려준다 (`backend/src/middlewares/auth.js`).
+
+| 쿠키 | 내용 | 속성 |
+|------|------|------|
+| `token` | 액세스 JWT (HS384, 15분) | `HttpOnly; SameSite=Lax; Path=/; Max-Age=900` |
+| `refresh_token` | 불투명 난수 (14일) | `HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600` |
+
+- `Secure`는 `NODE_ENV=production`에서만 붙는다. 로컬 HTTP에서 그대로 동작한다.
+- 둘 다 `HttpOnly`라 JS에서 읽을 수 없고 읽을 필요도 없다. 브라우저가 자동으로 보낸다.
+- 로그인 상태 판단: 토큰을 보지 말고 `GET /api/users/me`를 호출한다. 200이면 로그인, `UNAUTHORIZED`면 비로그인. 앱 시작 시 1회 호출해 스토어 `user`를 채운다.
+- 로그아웃: `POST /api/auth/logout` → 204. 서버가 두 쿠키를 `Max-Age=0`으로 지운다. 클라이언트는 `queryClient.clear()`·스토어 `reset()` 후 `/login` 이동 (PRD 4.2).
+- 액세스 토큰은 로그아웃 후 최대 15분 유효하다 (R-06). 프론트가 신경 쓸 일은 없다.
+
+## 4. 액세스 만료 처리 (AD-16)
+
+보호 API가 401 `UNAUTHORIZED`를 주면 `api/client.ts`가 다음 순서로 처리한다.
+
+1. 요청이 `/api/auth/*`가 아니면 `POST /api/auth/refresh`를 1회 호출한다.
+2. 성공(200)이면 원 요청을 1회 재시도한다.
+3. refresh 실패(401) 또는 재시도도 `UNAUTHORIZED`면 `queryClient.clear()`·스토어 `reset()` 후 `/login` 이동.
+4. 401이라도 `code`가 `INVALID_CREDENTIALS`면 refresh하지 않고 그대로 throw한다 (로그인·비밀번호 변경 화면이 오류를 표시).
+
+중요: 동시에 401이 여러 건 나왔을 때 각각 refresh를 호출하면 안 된다. 첫 refresh가 토큰을 회전시키면 두 번째 refresh는 이미 폐기된 토큰으로 와서 재사용 탐지로 판정되고, 서버는 그 사용자의 리프레시 토큰 전부를 폐기한다 (PRD 6.4). 사용자는 즉시 로그아웃된다. 진행 중인 refresh Promise를 반드시 하나만 공유한다.
+
+```ts
+// frontend/src/api/client.ts 핵심. 응답 파싱·ApiError 정의는 생략
+let refreshing: Promise<boolean> | null = null;
+
+function refreshOnce(): Promise<boolean> {
+  refreshing ??= fetch('/api/auth/refresh', { method: 'POST' })
+    .then((r) => r.ok)
+    .finally(() => { refreshing = null; });
+  return refreshing;
+}
+
+export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(path, init);
+  if (res.status !== 401 || path.startsWith('/api/auth/')) return parse<T>(res);
+  const { code } = await res.clone().json();
+  if (code !== 'UNAUTHORIZED') return parse<T>(res);
+  if (await refreshOnce()) return parse<T>(await fetch(path, init));
+  onSessionExpired(); // queryClient.clear() + store.reset() + /login
+  return parse<T>(res);
+}
+```
+
+## 5. 요청 규약
+
+- JSON 본문은 `content-type: application/json` 헤더 필수. 없으면 본문이 비어 `VALIDATION_ERROR`.
+- 할일을 반환하는 엔드포인트 6개(`GET /api/todos`, `POST /api/todos`, `GET/PATCH /api/todos/:id`, `PATCH /api/todos/:id/completed`)는 쿼리 `today`(`YYYY-MM-DD`) 필수. 값은 클라이언트 로컬 날짜(`lib/date.ts`). 서버는 이 값으로 `status`를 계산한다 (API-01).
+- 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열. 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열. `Date` 객체를 스토어·쿼리 키에 넣지 않는다 (PR-05).
+- id는 JSON 숫자. 경로·쿼리·본문 모두 양의 정수.
+- `description`은 null 가능. 생략·null이면 null로 저장된다. 수정 시 생략하면 비워진다 (API-02).
+- 생성 시 `isCompleted`·`status`는 무시된다 (BR-24). 완료 처리는 `PATCH /api/todos/:id/completed`만 쓴다.
+- `categoryId` 생략·null → 기본 카테고리 (BR-12). 수정도 같다.
+- `PATCH /api/todos/:id`는 부분 수정이 아니다. `title`·`startDate`·`endDate`를 항상 보낸다.
+- `title`·`name`은 서버가 trim한다. 응답에는 trim된 값이 온다.
+- 캘린더는 `GET /api/todos?today=&from=&to=`. `from`/`to`는 둘 다 보내거나 둘 다 생략. 캘린더 요청에 `categoryId`·`status`를 보내지 않는다 (BR-36).
+- 목록 정렬은 서버가 한다 (`endDate`, `startDate`, `createdAt` 오름차순). 프론트에서 재정렬하지 않는다. 페이지네이션 없음.
+
+## 6. 오류 모델
+
+거부 응답 본문은 항상 `{ "code": string, "message": string }` (BR-51). `message`는 영어 디버그용이며 화면에는 코드별 한국어 문구를 쓴다.
+
+| 코드 | HTTP | 발생 상황 |
+|------|------|-----------|
+| `UNAUTHORIZED` | 401 | 액세스 토큰 없음·무효·만료, refresh 실패 |
+| `INVALID_CREDENTIALS` | 401 | 로그인 실패, 비밀번호 변경 시 현재 비밀번호 불일치 |
+| `NOT_FOUND` | 404 | 리소스 미존재, 타인 소유, ID 형식 위반, 없는 경로 |
+| `VALIDATION_ERROR` | 400 | 입력 형식·길이, `today` 누락, 잘못된 JSON |
+| `INVALID_DATE_RANGE` | 400 | `startDate > endDate` |
+| `DUPLICATE_EMAIL` | 409 | 가입 이메일 중복 |
+| `DUPLICATE_CATEGORY_NAME` | 409 | 같은 이름 카테고리 존재 (`기본` 포함) |
+| `CATEGORY_LIMIT_EXCEEDED` | 409 | 카테고리 20개 초과 |
+| `DEFAULT_CATEGORY_PROTECTED` | 403 | 기본 카테고리 수정·삭제 |
+
+- 타인 리소스와 미존재 리소스는 같은 `NOT_FOUND`다. 프론트는 구분할 수 없고 구분하지 않는다 (BR-02).
+- 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식 → 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 1개만 온다. 폼 오류 여러 개를 한 번에 받을 수 없다.
+- 그 밖의 오류는 500 `{ "code": "INTERNAL_ERROR", ... }`, DB 다운은 헬스 503.
+
+프론트 처리 지침:
+
+| 코드 | 처리 |
+|------|------|
+| `VALIDATION_ERROR`, `INVALID_DATE_RANGE`, `DUPLICATE_*`, `CATEGORY_LIMIT_EXCEEDED`, `INVALID_CREDENTIALS` | 현재 화면 유지, 폼 아래 `ErrorMessage`(CP-02) |
+| `UNAUTHORIZED` | 4장 refresh 흐름. 최종 실패만 `/login` |
+| `NOT_FOUND` | 편집 진입(`GET /api/todos/:id`)은 목록으로 이동 + 안내. 나머지는 토스트 후 목록 refetch |
+| `DEFAULT_CATEGORY_PROTECTED`, `INTERNAL_ERROR` | 토스트 |
+
+`ApiError`는 `types/api.ts`의 `{ code, message }`이며 `code`는 위 9개 유니온 + `INTERNAL_ERROR`.
+
+## 7. 엔드포인트 요약
+
+17개. 인증 "필요"는 `token` 쿠키 검증. 상세 요청·응답·오류 순서는 `docs/9-api-design.md` 2장, 스키마는 `backend/swagger.yaml`.
+
+| 메서드 | 경로 | 인증 | 핵심 파라미터 | 성공 응답 |
+|--------|------|------|---------------|-----------|
+| GET | `/api/health` | 없음 | - | 200 `{ ok: true }` / 503 `{ ok: false }` |
+| POST | `/api/auth/signup` | 없음 | 본문 `email`, `password`, `name` | 201 `{ user: { id, name } }` + 쿠키 2개 |
+| POST | `/api/auth/login` | 없음 | 본문 `email`, `password` | 200 `{ user: { id, name } }` + 쿠키 2개 |
+| POST | `/api/auth/logout` | 없음 | 쿠키 `refresh_token`(선택) | 204 + 쿠키 2개 삭제 |
+| POST | `/api/auth/refresh` | 없음 | 쿠키 `refresh_token` | 200 `{ user: { id, name } }` + 새 쿠키 2개 |
+| GET | `/api/users/me` | 필요 | - | 200 `{ id, email, name }` |
+| PATCH | `/api/users/me` | 필요 | 본문 `name` 또는 `currentPassword` + `newPassword` | 200 `{ id, email, name }` |
+| GET | `/api/categories` | 필요 | - | 200 `[{ id, name, isDefault }]` |
+| POST | `/api/categories` | 필요 | 본문 `name` | 201 `{ id, name, isDefault: false }` |
+| PATCH | `/api/categories/:id` | 필요 | 본문 `name` | 200 `{ id, name, isDefault }` |
+| DELETE | `/api/categories/:id` | 필요 | - | 204 (소속 할일은 기본 카테고리로 이동) |
+| GET | `/api/todos` | 필요 | 쿼리 `today`(필수), `categoryId`, `status`, `from` + `to` | 200 `[Todo]` |
+| POST | `/api/todos` | 필요 | 쿼리 `today`. 본문 `title`, `description`, `startDate`, `endDate`, `categoryId` | 201 `Todo` |
+| GET | `/api/todos/:id` | 필요 | 쿼리 `today` | 200 `Todo` |
+| PATCH | `/api/todos/:id` | 필요 | 쿼리 `today`. 본문은 POST와 같음 | 200 `Todo` |
+| DELETE | `/api/todos/:id` | 필요 | - | 204 |
+| PATCH | `/api/todos/:id/completed` | 필요 | 쿼리 `today`. 본문 `isCompleted`(boolean) | 200 `Todo` |
+
+`Todo` 필드: `id`, `categoryId`, `title`, `description`(null 가능), `startDate`, `endDate`, `isCompleted`, `completedAt`(null 가능), `status`, `createdAt`, `updatedAt`. `status`는 `NOT_STARTED` / `IN_PROGRESS` / `COMPLETED` / `OVERDUE`.
+
+## 8. 보안 주의
+
+- 토큰을 `localStorage`·`sessionStorage`·Zustand에 저장하지 않는다. 저장할 토큰 자체가 없다 (`HttpOnly`).
+- CSRF: 쿠키 `SameSite=Lax` + JSON 본문(`application/json`)으로 완화한다. CSRF 토큰 없음. 폼 `application/x-www-form-urlencoded` 전송을 쓰지 않는다.
+- 입력 길이 제한은 서버가 검증한다 (`backend/src/routes/validate.js`). 프론트는 같은 값으로 `maxLength`·안내를 둔다. 서버 검증을 생략하지 않는다 (NFR-09).
+
+| 필드 | 제한 |
+|------|------|
+| `email` | 254자 이하, `local@domain` 형식 |
+| `password`, `newPassword` | 8~64자 |
+| `name` (사용자) | trim 후 1~50자 |
+| `name` (카테고리) | trim 후 1~30자 |
+| `title` | trim 후 1~100자 |
+| `description` | 1000자 이하 |
+| 날짜 | `YYYY-MM-DD`, 실제 존재하는 날짜 |
+
+- 응답에 `password`·해시·토큰 값은 없다. `User`는 `{ id, email, name }`뿐이다.
+- 요청 본문 100kb 초과는 `VALIDATION_ERROR`.
+
+## 9. 시드 계정과 스모크
+
+`npm run seed`가 `backend/src/db/seed.sql`을 적용한다 (시나리오 3장 샘플 데이터). 다시 실행하면 전부 초기화된다.
+
+| 계정 | 이메일 | 비밀번호 | 이름 | 데이터 |
+|------|--------|----------|------|--------|
+| PS-01 | `haneul@example.com` | `haneul1234` | 김하늘 | 카테고리 `기본`, `과제`. 할일 1건 (`알고리즘 과제`, 11/02~11/06) |
+| PS-02 | `seojun@example.com` | `seojun1234` | 이서준 | 카테고리 `기본`, `업무`, `개인`. 할일 7건 (10/26~11/10, 완료 1건) |
+
+시나리오 기준일은 `2026-11-03`이다. `today=2026-11-03`으로 조회하면 PS-02 데이터에 4가지 `status`가 모두 나온다.
+
+`npm run smoke` (`backend/tests/smoke.js`): 서버 실행 + 시드 적용 상태에서 로그인·필터·타인 리소스·쿠키 속성·만료·회전·재사용·로그아웃을 HTTP로 검사한다. 백엔드를 바꾼 뒤 프론트 연동 전에 한 번 돌린다. 가입 검사가 `smoke-<시각>@example.com` 사용자를 남기므로 깨끗한 데이터가 필요하면 `npm run seed`를 다시 한다.
+
+## 10. Swagger
+
+- 원본: `backend/swagger.yaml` (OpenAPI 3.0.3). 수동 작성, `docs/9-api-design.md`와 같은 내용.
+- JSON: 저장소 루트 `swagger/swagger.json`. `cd backend && npm run swagger:json`으로 `swagger.yaml`에서 생성한다. `swagger.yaml`을 고치면 다시 생성한다. 타입 생성 도구 입력용.
+- 개발 모드(`npm run dev`) 서버가 Swagger UI를 띄운다.
+  - UI: `http://localhost:3000/api/docs`
+  - JSON: `http://localhost:3000/api/docs.json`
+- 운영 모드에서는 제공하지 않는다.
+
+Swagger UI의 "Try it out"은 같은 origin이라 쿠키가 그대로 붙는다. 로그인을 먼저 실행하면 이후 보호 API도 호출된다.

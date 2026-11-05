@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { withTransaction } from '../db/pool.js';
 import { AppError } from '../errors/app-error.js';
 import * as users from '../repositories/user-repo.js';
 
@@ -24,8 +25,12 @@ export async function updateMe(userId, { name, currentPassword, newPassword }) {
     if (!(await bcrypt.compare(currentPassword, user.password))) {
       throw new AppError('INVALID_CREDENTIALS', 'current password is incorrect');
     }
-    await users.updatePassword(userId, await bcrypt.hash(newPassword, BCRYPT_COST));
   }
-  if (name !== undefined) await users.updateName(userId, name);
+  const passwordHash = newPassword === undefined ? null : await bcrypt.hash(newPassword, BCRYPT_COST);
+  // BR-52 부분 저장 없음: 이름·비밀번호 UPDATE를 한 트랜잭션으로
+  await withTransaction(async (db) => {
+    if (passwordHash) await users.updatePassword(userId, passwordHash, db);
+    if (name !== undefined) await users.updateName(userId, name, db);
+  });
   return getMe(userId);
 }

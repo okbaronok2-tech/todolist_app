@@ -33,10 +33,11 @@ test('BR-04 대소문자만 다른 이메일 가입은 DUPLICATE_EMAIL, 행 수 
 });
 
 test('가입 트랜잭션: 기본 카테고리 생성 실패 시 사용자 행도 없음', async () => {
-  await q("CREATE FUNCTION fail_insert() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'forced'; END $$ LANGUAGE plpgsql");
+  await q("CREATE OR REPLACE FUNCTION fail_insert() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'forced'; END $$ LANGUAGE plpgsql");
+  await q('DROP TRIGGER IF EXISTS fail_cat ON categories');
   await q('CREATE TRIGGER fail_cat BEFORE INSERT ON categories FOR EACH ROW EXECUTE FUNCTION fail_insert()');
   try {
-    await assert.rejects(auth.signup({ email: 'tx@example.com', password: 'password1', name: '트랜잭션' }));
+    await assert.rejects(auth.signup({ email: 'tx@example.com', password: 'password1', name: '트랜잭션' }), /forced/);
     assert.equal(await count('users', "WHERE email = 'tx@example.com'"), 0);
   } finally {
     await q('DROP TRIGGER fail_cat ON categories');
@@ -108,14 +109,14 @@ test('UC-03 로그아웃은 행을 폐기하고 그 토큰으로 refresh 불가.
   await auth.logout('unknown');
 });
 
-test('PRD 6.4 같은 리프레시 토큰 동시 요청 3건: 성공은 최대 1건, 나머지 UNAUTHORIZED, 전부 폐기', async () => {
+test('PRD 6.4 같은 리프레시 토큰 동시 요청 3건: 성공은 정확히 1건, 나머지 UNAUTHORIZED, 전부 폐기', async () => {
   const { refreshToken } = await auth.login({ email: 'seojun@example.com', password: 'seojun1234' });
   const results = await Promise.allSettled([1, 2, 3].map(() => auth.refresh(refreshToken)));
   const ok = results.filter((r) => r.status === 'fulfilled');
-  assert.ok(ok.length <= 1, `fulfilled=${ok.length}`);
+  assert.equal(ok.length, 1);
   assert.ok(results.filter((r) => r.status === 'rejected').every((r) => r.reason.code === 'UNAUTHORIZED'));
   // 첫 성공 뒤 두 번째가 재사용으로 판정돼 사용자 전체 폐기 → 성공한 새 토큰도 무효
   const rows = (await tokenRows(2)).rows;
   assert.ok(rows.every((r) => r.revoked_at !== null));
-  if (ok.length === 1) await rejects(auth.refresh(ok[0].value.refreshToken), 'UNAUTHORIZED');
+  await rejects(auth.refresh(ok[0].value.refreshToken), 'UNAUTHORIZED');
 });

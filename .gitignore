@@ -153,5 +153,3 @@ vite.config.ts.timestamp-*
 
 # Project
 dist/
-.env
-.env.test

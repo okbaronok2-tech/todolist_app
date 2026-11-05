@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList API 설계 |
-| 현재 버전 | v0.1 |
+| 현재 버전 | v0.2 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/5-project-principle.md` v0.5, `docs/6-arch-diagram.md` v0.5, `docs/8-plan.md` v0.5, `backend/swagger.yaml` v0.4 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/5-project-principle.md` v0.6, `docs/6-arch-diagram.md` v0.6, `docs/8-plan.md` v0.6, `backend/swagger.yaml` v0.5 |
 | 정본 | PRD 6.3·6.4·NFR-06. 이 문서는 그 내용을 엔드포인트 표로 고정한다. 기계 판독용 명세는 `backend/swagger.yaml`이며 둘은 같은 내용이어야 한다 |
 
 ## 변경 이력
@@ -16,6 +16,7 @@
 | 버전 | 날짜 | 작성자 | 변경 내용 | 영향 범위 |
 |------|------|--------|-----------|-----------|
 | v0.1 | 2026-11-04 | - | 초안 작성 (8-plan T-X02). AD-C3·C4·C5 결정 기록 | 전체 |
+| v0.2 | 2026-11-05 | - | `GET /api/health` 503 본문 확정(`{ "ok": false }`, `backend/src/app.js` 기준), 참조 버전 갱신 | 문서 정보, 3장 |
 
 ---
 
@@ -53,7 +54,7 @@
 | PATCH | `/api/todos/:id` | 필요 | 쿼리 `today`. 본문은 POST와 같음(편집 필드 전체, `title`·`startDate`·`endDate` 필수). `isCompleted`·`status` 무시 | 200 `Todo` (완료 여부 불변) | `UNAUTHORIZED` → `VALIDATION_ERROR` → `INVALID_DATE_RANGE` → `NOT_FOUND`(id, `categoryId`) | UC-06, BR-12, BR-16, BR-21~23, BR-26, BR-54, AD-09 |
 | DELETE | `/api/todos/:id` | 필요 | - | 204 (영구 삭제) | `UNAUTHORIZED` → `NOT_FOUND` | UC-08, BR-27, AD-13 |
 | PATCH | `/api/todos/:id/completed` | 필요 | 쿼리 `today`. 본문 `isCompleted`(boolean 필수, 명시 지정·멱등) | 200 `Todo` (`true`면 `completedAt = now()`, `false`면 null) | `UNAUTHORIZED` → `VALIDATION_ERROR` → `NOT_FOUND` | UC-07, BR-25, BR-28, D-10, AD-10 |
-| GET | `/api/health` | 없음 | - | 200 `{ "ok": true }` (`SELECT 1`) | 503 (본문 미정) | PRD 6.3, 원칙 6.3 |
+| GET | `/api/health` | 없음 | - | 200 `{ "ok": true }` (`SELECT 1`) | 503 `{ "ok": false }` | PRD 6.3, 원칙 6.3 |
 
 ## 3. 응답 객체
 

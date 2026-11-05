@@ -20,7 +20,8 @@ router.patch('/me', async (req, res) => {
   const hasNew = body.newPassword !== undefined;
   if (hasCurrent !== hasNew) throw new AppError('VALIDATION_ERROR', 'currentPassword and newPassword must be given together');
   if (hasNew) {
-    input.currentPassword = typeof body.currentPassword === 'string' ? body.currentPassword : '';
+    if (typeof body.currentPassword !== 'string') throw new AppError('VALIDATION_ERROR', 'currentPassword must be a string');
+    input.currentPassword = body.currentPassword;
     input.newPassword = v.password(body.newPassword, 'newPassword');
   }
   if (input.name === undefined && !hasNew) throw new AppError('VALIDATION_ERROR', 'nothing to update');

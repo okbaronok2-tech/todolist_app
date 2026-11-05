@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList ERD |
-| 현재 버전 | v0.4 |
+| 현재 버전 | v0.5 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/6-arch-diagram.md` v0.5 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.8, `docs/2-PRD.md` v0.9, `docs/6-arch-diagram.md` v0.6 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 ERD-xx(다이어그램·표)와 ERD-Cx(확인 필요)뿐이다. BR, ST, D, F, UC는 도메인 정의서, NFR, PD는 PRD, AD는 아키텍처 다이어그램의 ID를 참조만 하며 재정의하지 않는다. 문서 간 표현이 다른 지점은 PRD 7장을 기준으로 하고 9장에 나열한다. 최종 DDL은 구현 시 확정한다 (PRD 7장).
 
@@ -20,6 +20,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 ERD-xx(다이어그램·�
 | v0.2 | 2026-11-04 | - | PRD v0.7 인증 방식 변경 반영. ERD-02에 `refresh_tokens` 엔티티·관계 추가, ERD-08 컬럼 명세 추가, ERD-06에 FK·인덱스·유일 인덱스 행 추가, ERD-C9 추가, 참조 버전 갱신. ERD-01은 변경 없음 | 문서 정보, ERD-02, ERD-06, ERD-08, 8장, ERD-C9 |
 | v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. `schema.sql` 결정을 본문에 반영: ERD-02 코멘트(ON DELETE, 복합 FK, `DEFAULT false`), ERD-03~05 기본값 `now()`·`false`와 FK ON DELETE·복합 FK, ERD-06에 제약·인덱스 이름, FK 동작 확정, `categories UNIQUE (id, user_id)` 행 추가, ERD-C2·C5·C6·C7 해결 표기, 참조 버전 갱신 | 문서 정보, ERD-02, ERD-03, ERD-04, ERD-05, ERD-06, 9장 |
 | v0.4 | 2026-11-04 | - | 참조 버전 갱신 | 문서 정보 |
+| v0.5 | 2026-11-05 | - | ERD-02 users·categories·todos의 `created_at`·`updated_at` 코멘트에 `DEFAULT now()` 추가(`schema.sql`·ERD-C7과 일치), 참조 버전 갱신 | 문서 정보, ERD-02 |
 
 ---
 
@@ -102,8 +103,8 @@ erDiagram
         varchar email "UNIQUE lower(email) BR-04, BR-43"
         varchar password "bcrypt cost 10 해시 BR-05, BR-44, NFR-07"
         varchar name "BR-45"
-        timestamptz created_at "NOT NULL"
-        timestamptz updated_at "NOT NULL"
+        timestamptz created_at "NOT NULL DEFAULT now()"
+        timestamptz updated_at "NOT NULL DEFAULT now()"
     }
 
     refresh_tokens {
@@ -120,8 +121,8 @@ erDiagram
         bigint user_id FK "users.id ON DELETE CASCADE BR-16"
         varchar name "UNIQUE (user_id, lower(btrim(name))) BR-14, BR-17, BR-46"
         boolean is_default "DEFAULT false, UNIQUE (user_id) WHERE is_default BR-13"
-        timestamptz created_at "NOT NULL"
-        timestamptz updated_at "NOT NULL"
+        timestamptz created_at "NOT NULL DEFAULT now()"
+        timestamptz updated_at "NOT NULL DEFAULT now()"
     }
 
     todos {
@@ -134,8 +135,8 @@ erDiagram
         date end_date "CHECK start_date <= end_date BR-22"
         boolean is_completed "기본 false BR-24"
         timestamptz completed_at "NULL 허용, CHECK is_completed = (completed_at IS NOT NULL) BR-28"
-        timestamptz created_at "NOT NULL"
-        timestamptz updated_at "NOT NULL"
+        timestamptz created_at "NOT NULL DEFAULT now()"
+        timestamptz updated_at "NOT NULL DEFAULT now()"
     }
 ```
 

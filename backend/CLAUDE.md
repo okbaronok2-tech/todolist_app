@@ -16,14 +16,14 @@
 ```
 src/
   server.js        환경변수 검사, listen, SIGTERM/SIGINT 종료
-  app.js           express 조립: json, cookie-parser, /api/health, 라우터, notFound, errorHandler
+  app.js           express 조립: json, cookie-parser, /api/health, /api/docs(개발만), 라우터, notFound, errorHandler
   routes/          HTTP 입출력만. validate.js로 입력 검증(BR-52 순서) 후 서비스 호출
   services/        비즈니스 규칙(BR), 트랜잭션 경계(withTransaction), 상태 판정(todo-status.js)
   repositories/    SQL만. 고정 SQL + 파라미터, 유니크 위반은 isUniqueViolation으로 판별
   db/              pool.js(타입 파서, withTransaction), migrate.js, migrations/NNN_*.sql, seed.sql
   errors/          codes.js(CODES, HTTP), app-error.js
   middlewares/     auth.js(JWT HS384 쿠키, refresh 회전), error-handler.js
-tests/             node:test, 파일마다 beforeEach(resetDb). 롤백 검증은 DB 트리거로, pg 모킹 금지
+tests/             node:test, DB를 쓰는 테스트 파일마다 beforeEach(resetDb). 롤백 검증은 DB 트리거로, pg 모킹 금지
 ```
 
 ## 명령
@@ -31,3 +31,4 @@ tests/             node:test, 파일마다 beforeEach(resetDb). 롤백 검증은
 - 테스트: `npm test` (`.env.test`와 `todolist_test` DB 필요)
 - 스모크: 서버 실행 후 `npm run smoke`
 - 마이그레이션·시드: `npm run migrate`, `npm run seed`
+- Swagger JSON 재생성: `npm run swagger:json` (`swagger.yaml` → `../swagger/swagger.json`). 개발 모드 서버가 `/api/docs`(Swagger UI), `/api/docs.json`으로 제공. `swagger.yaml`을 고치면 반드시 재생성

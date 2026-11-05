@@ -4,7 +4,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.5 |
+| 현재 버전 | v0.6 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-04 |
@@ -21,6 +21,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. 3.3·부록 B의 스토어 초기화 조건을 로그아웃·리프레시 실패로 한정(`UNAUTHORIZED` 수신만으로는 아님), 5장 자동 테스트 범위에 서비스 테스트 명시·US-19 조건, 7.1 docs 목록 갱신(AD-C1), 7.2 tests에 `load.js`, 7.3 `todos.ts`에 `get`, 참조 버전 갱신 | 문서 정보, 3.3, 5장, 7.1, 7.2, 7.3, 부록 B |
 | v0.4 | 2026-11-04 | - | 4장·7.1의 `docs/9-api-design.md` '작성 예정' 표기 제거(8-plan T-X02), 참조 버전 갱신 | 문서 정보, 4장, 7.1 |
 | v0.5 | 2026-11-04 | - | 백엔드 리뷰 반영. 5장 단위 테스트에 입력 검증, 스모크에 T-B01·T-B03 HTTP 조건, 7.2 tests에 `validate.test.js`·`user-service.test.js` | 문서 정보, 5장, 7.2 |
+| v0.6 | 2026-11-05 | - | 5장 백엔드 테스트 명령을 `--test-concurrency=1 "tests/*.test.js"`로(8-plan v0.5), 7.1에 GitHub 이슈 브랜치 규칙(`feature-<이슈번호>`) | 문서 정보, 5장, 7.1 |
 
 ---
 
@@ -151,7 +152,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 | 수동 | 화면 흐름 전부. PRD 9.1 체크리스트를 US-01~19 순서로 수행 (US-19는 F-03 구현 시) | `docs/3-user-scenario.md` | 브라우저 |
 
 - 테스트 이름은 ID로 시작한다. 예: `ST-01 완료는 날짜와 무관`, `BR-15 이동 실패 시 카테고리 유지`.
-- 실행 명령은 각 패키지에서 `npm test` 하나다. 백엔드는 `node --env-file=.env.test --test tests/`, 프론트는 `vitest run`. 스모크는 `npm run smoke`로 분리한다 (서버가 떠 있어야 한다).
+- 실행 명령은 각 패키지에서 `npm test` 하나다. 백엔드는 `node --env-file=.env.test --test --test-concurrency=1 "tests/*.test.js"`, 프론트는 `vitest run`. 스모크는 `npm run smoke`로 분리한다 (서버가 떠 있어야 한다).
 - 테스트 DB는 개발 DB와 분리한다. `.env.test`의 `DATABASE_URL`은 `todolist_test`를 가리키고, 테스트 시작 시 마이그레이션과 시드를 다시 적용한다.
 - 시드는 시나리오 3장의 샘플 데이터(사용자 2, 카테고리 5, 할일 8)를 그대로 넣는 SQL 1개다. id가 시드 순서대로 1부터 붙도록 테이블을 `TRUNCATE ... RESTART IDENTITY` 후 넣는다. 비밀번호 해시는 cost 10으로 미리 계산해 SQL에 넣는다.
 - E2E 자동화는 하지 않는다 (PRD 2.2).
@@ -208,6 +209,8 @@ todolist_app/
 ├── .gitignore      # node_modules, dist, .env, .env.test
 └── README.md       # 실행 순서 3줄 (DB 생성 → migrate·seed → dev)
 ```
+
+GitHub 이슈 작업 브랜치는 `feature-<이슈번호>`, `main`에서 분기, PR로 병합.
 
 ### 7.2 백엔드 트리
 

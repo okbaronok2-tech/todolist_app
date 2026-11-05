@@ -2,17 +2,19 @@ import { createHash, randomBytes } from 'node:crypto';
 import bcrypt from 'bcrypt';
 import { isUniqueViolation, withTransaction } from '../db/pool.js';
 import { AppError } from '../errors/app-error.js';
-import { REFRESH_TTL_SEC } from '../middlewares/auth.js';
 import * as users from '../repositories/user-repo.js';
 import * as tokens from '../repositories/refresh-token-repo.js';
 import * as categories from '../repositories/category-repo.js';
 
 const BCRYPT_COST = 10; // NFR-07
+// NFR-06 토큰 수명. 쿠키 Max-Age(middlewares/auth.js)와 refresh 행 expires_at에 같이 쓴다
+export const ACCESS_TTL_SEC = 900;
+export const REFRESH_TTL_SEC = 1209600; // 14일
 const DEFAULT_CATEGORY_NAME = '기본'; // BR-11
 // BR-06: 이메일이 없어도 bcrypt 1회를 수행해 응답 시간으로 존재 여부를 추정하지 못하게 한다
 const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', BCRYPT_COST);
 
-export const hashToken = (raw) => createHash('sha256').update(raw).digest('hex');
+const hashToken = (raw) => createHash('sha256').update(raw).digest('hex');
 const publicUser = (u) => ({ id: u.id, name: u.name });
 const unauthorized = () => new AppError('UNAUTHORIZED', 'please log in again');
 

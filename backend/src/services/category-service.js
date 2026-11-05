@@ -47,11 +47,12 @@ export async function rename(userId, id, name) {
 
 // BR-13, BR-15: 이동 + 삭제 한 트랜잭션
 export async function remove(userId, id) {
-  const category = await repo.findOne(userId, id);
-  if (!category) throw notFound();
-  if (category.isDefault) throw new AppError('DEFAULT_CATEGORY_PROTECTED', 'default category cannot be deleted');
-  const fallback = await repo.findDefault(userId);
   await withTransaction(async (db) => {
+    await users.lock(userId, db); // 같은 사용자의 할일 생성·카테고리 생성과 직렬화
+    const category = await repo.findOne(userId, id, db);
+    if (!category) throw notFound();
+    if (category.isDefault) throw new AppError('DEFAULT_CATEGORY_PROTECTED', 'default category cannot be deleted');
+    const fallback = await repo.findDefault(userId, db);
     await repo.moveTodos(userId, id, fallback.id, db);
     await repo.remove(userId, id, db);
   });
