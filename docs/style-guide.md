@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 스타일 가이드 |
-| 현재 버전 | v0.2 |
+| 현재 버전 | v0.3 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.12 (4.3 반응형, 2.2 비범위, R-01), `docs/4-wireframe.md` v0.6 (CP-01~06, WF-01~07, 5장), `docs/5-project-principle.md` v0.10 (3.5 의존성, 7.3 `styles.css`), `docs/assets/wf-05-calendar-month.svg` |
+| 참조 문서 | `docs/2-PRD.md` v0.13 (4.3 반응형, 2.2 비범위, R-01), `docs/4-wireframe.md` v0.7 (CP-01~06, WF-01~07, 5장), `docs/5-project-principle.md` v0.11 (3.5 의존성, 7.3 `styles.css`), `docs/assets/wf-05-calendar-month.svg` |
 | 참고 자료 | 네이버 캘린더 PC 웹 월간·주간·일간 뷰 화면(2026-11-05 캡처). 격자·막대·도구줄 배치만 참고한다. 색상·로고·문구 등 브랜드 자산은 쓰지 않는다 |
 | 정본 관계 | 와이어프레임 1.2가 제외한 색·폰트·여백·접근성을 이 문서가 정한다. 배치·요소·동작은 와이어프레임과 PRD가 정본이며 충돌하면 그쪽을 따른다. 예외: WF-05 캘린더의 할일 표시 방식(막대)은 이 문서 3.7이 보강하며 와이어프레임 WF-05에 그 사실을 적었다 |
 
@@ -18,13 +18,14 @@
 |------|------|--------|-----------|-----------|
 | v0.1 | 2026-11-05 | - | 초안 작성. 토큰, 타이포, 컴포넌트(CP-01~06, 버튼, 입력), 캘린더 막대 표시, 반응형, 접근성, `styles.css` 골격 | 전체 |
 | v0.2 | 2026-11-05 | - | 정본 관계에 WF-05 막대 표시 보강 명시, 5장 제목에 PRD 2.2 비범위 안의 최소 기준임을 명시, 참조 버전 갱신 | 문서 정보, 5장 |
+| v0.3 | 2026-11-05 | - | 다크 모드 추가: 2.4 다크 토큰 표·동작(저장 키 `theme`, OS 설정 기본, `html[data-theme]`), 2.1에 `--c-btn-text`·`--c-fill-text`, 3.3 CP-01 테마 버튼, 6장 골격·클래스 표 갱신, 1장 '다크 모드 없음' 삭제, 참조 버전 갱신 | 문서 정보, 1, 2.1, 2.4, 3.3, 6 |
 
 ---
 
 ## 1. 원칙
 
 - 구현 위치는 `frontend/src/styles.css` 전역 CSS 1개다 (원칙 7.3). 값은 `:root` CSS 변수로 두고 컴포넌트는 변수만 쓴다.
-- UI 라이브러리, CSS 프레임워크, 아이콘 폰트, 웹폰트 다운로드 없음 (PRD R-01, 원칙 3.5). 다크 모드 없음 (PRD 2.2).
+- UI 라이브러리, CSS 프레임워크, 아이콘 폰트, 웹폰트 다운로드 없음 (PRD R-01, 원칙 3.5). 다크 모드는 색 토큰 재정의로만 지원한다 (2.4). 배치·크기는 두 모드가 같다.
 - 상태는 색만으로 구분하지 않는다. CP-04 배지 글자가 항상 함께 있다. 색은 보조 신호다.
 - 장식보다 격자. 네이버 캘린더처럼 흰 바탕, 1px 회색 선, 숫자는 왼쪽 위, 강조는 오늘 칸과 막대뿐이다.
 
@@ -74,6 +75,8 @@
 | `--c-success-bg` | `#e8f5e9` | 완료 배지 배경 |
 | `--c-neutral` | `#616161` | 시작 전 |
 | `--c-neutral-bg` | `#eceff1` | 시작 전 배지 배경, 비활성 버튼 배경 |
+| `--c-btn-text` | `#263238` | 보조 버튼 글자 |
+| `--c-fill-text` | `#ffffff` | 주 버튼·채움 삭제 버튼 글자 |
 
 상태 색 매핑 (CP-04, ST-01~04). 글자색/배경색 대비는 모두 4.5:1 이상이다. 값을 바꾸면 다시 확인한다.
 
@@ -111,6 +114,40 @@
 
 ---
 
+### 2.4 다크 모드
+
+`html[data-theme="dark"]`일 때 아래 색 토큰만 재정의한다. 타이포·간격·크기·레이아웃은 2.2~2.3 그대로다. 상단 메뉴 브랜드·활성 항목의 흰 글자(`#fff`)는 배경이 두 모드 모두 어두우므로 그대로 둔다. `color-scheme: dark`로 브라우저 기본 날짜 선택기·체크박스도 어두워진다.
+
+| 토큰 | 다크 값 | 비고 |
+|------|---------|------|
+| `--c-bg` | `#121212` | |
+| `--c-surface` | `#1e1e1e` | |
+| `--c-border` | `#37474f` | |
+| `--c-border-strong` | `#607d8b` | |
+| `--c-text` | `#e0e0e0` | |
+| `--c-text-muted` | `#9e9e9e` | |
+| `--c-text-disabled` | `#616161` | |
+| `--c-nav-bg` | `#0d1317` | 페이지 배경보다 더 어둡게 |
+| `--c-nav-text` | `#90a4ae` | |
+| `--c-primary` | `#64b5f6` | 어두운 배경 위 밝은 파랑 |
+| `--c-primary-bg` | `#0d2a4a` | |
+| `--c-danger` | `#ef9a9a` | |
+| `--c-danger-bg` | `#3e1a1a` | |
+| `--c-success` | `#81c784` | |
+| `--c-success-bg` | `#1b3a1e` | |
+| `--c-neutral` | `#bdbdbd` | |
+| `--c-neutral-bg` | `#2c2c2c` | |
+| `--c-btn-text` | `#e0e0e0` | 보조 버튼 글자가 `--c-nav-bg`를 쓰면 안 보이므로 분리 |
+| `--c-fill-text` | `#0d1317` | 밝은 `--c-primary`·`--c-danger` 위에는 어두운 글자 |
+
+배지·막대 글자/배경 대비는 다크 값도 4.5:1 이상이다 (`--c-text-disabled`는 비활성 요소라 예외, 라이트와 같음).
+
+동작 (`frontend/src/lib/theme.ts`):
+
+- 저장 키는 `localStorage.theme` (`light` | `dark`). 없으면 `prefers-color-scheme`을 따른다.
+- `main.tsx`가 첫 렌더 전에 `html[data-theme]`을 붙인다. 로그인·회원가입 화면에도 적용된다.
+- CP-01 상단 메뉴의 `[다크 모드]`/`[라이트 모드]` 버튼(`aria-pressed`)으로 전환하고 저장한다. 저장한 뒤에는 OS 설정 변경을 따라가지 않는다.
+
 ## 3. 컴포넌트
 
 ### 3.1 버튼
@@ -133,7 +170,7 @@
 
 ### 3.3 CP-01 상단 메뉴
 
-높이 48px, 배경 `--c-nav-bg`. 브랜드 `TodoList`는 흰색 `--fs-lg` bold. 항목은 `--c-nav-text` `--fs-md`, 현재 화면 항목은 흰색 bold + 밑줄. 항목 간격 `--sp-6`. 모바일은 오른쪽 `[메뉴]` 보조 버튼(흰 테두리), 열면 아래로 항목이 한 줄씩 48px 높이로 펼쳐진다.
+높이 48px, 배경 `--c-nav-bg`. 브랜드 `TodoList`는 흰색 `--fs-lg` bold. 항목은 `--c-nav-text` `--fs-md`, 현재 화면 항목은 흰색 bold + 밑줄. 항목 간격 `--sp-6`. 모바일은 오른쪽 `[메뉴]` 보조 버튼(흰 테두리), 열면 아래로 항목이 한 줄씩 48px 높이로 펼쳐진다. 로그아웃 앞에 테마 전환 버튼 `[다크 모드]`(다크일 때 `[라이트 모드]`)를 두며 모양은 다른 항목과 같다 (2.4).
 
 ### 3.4 CP-02 오류 메시지 영역
 
@@ -214,17 +251,19 @@
   --c-danger: #c62828; --c-danger-bg: #ffebee;
   --c-success: #2e7d32; --c-success-bg: #e8f5e9;
   --c-neutral: #616161; --c-neutral-bg: #eceff1;
+  --c-btn-text: #263238; --c-fill-text: #ffffff;
   --font: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
   --fs-xs: 12px; --fs-sm: 13px; --fs-md: 14px; --fs-lg: 18px; --fs-xl: 22px;
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
   --radius: 4px; --control-h: 32px; --page-w: 1280px;
 }
 @media (max-width: 767px) { :root { --control-h: 40px; } }
+:root[data-theme='dark'] { color-scheme: dark; /* 2.4 표의 색 토큰 재정의 */ }
 ```
 
 | 클래스 | 대상 |
 |--------|------|
-| `.nav`, `.nav__item`, `.nav__item--active`, `.nav__toggle` | CP-01 |
+| `.nav`, `.nav__item`, `.nav__item--active`, `.nav__toggle`, `.nav__theme` | CP-01 |
 | `.alert` | CP-02 |
 | `.dialog`, `.dialog__backdrop` | CP-03 |
 | `.badge`, `.badge--not-started`, `.badge--in-progress`, `.badge--completed`, `.badge--overdue`, `.badge--short` | CP-04 (`--short`는 캘린더 축약) |

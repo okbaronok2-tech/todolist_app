@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { User } from '../types/api';
 import type { CalendarView, TodoFilter } from '../types/todo';
 import { todayLocal } from '../lib/date';
+import { log } from '../lib/log';
 
 interface CalendarState {
   view: CalendarView;
@@ -28,7 +29,16 @@ const initial = () => ({
 export const useAppStore = create<AppState>((set) => ({
   ...initial(),
   setUser: (user) => set({ user }),
-  setFilter: (filter) => set((s) => ({ filter: { ...s.filter, ...filter } })),
-  setCalendar: (calendar) => set((s) => ({ calendar: { ...s.calendar, ...calendar } })),
-  reset: () => set(initial()),
+  setFilter: (filter) => {
+    log('store', 'filter', filter);
+    set((s) => ({ filter: { ...s.filter, ...filter } }));
+  },
+  setCalendar: (calendar) => {
+    log('store', 'calendar', calendar);
+    set((s) => ({ calendar: { ...s.calendar, ...calendar } }));
+  },
+  reset: () => {
+    log('store', 'reset');
+    set(initial());
+  },
 }));

@@ -68,6 +68,17 @@ describe('TopNav (CP-01)', () => {
     expect(screen.queryByText('내 정보')).toBeNull();
     expect(screen.getAllByRole('link')).toHaveLength(3);
   });
+  it('테마 버튼: 누르면 html[data-theme]과 localStorage.theme이 바뀐다', () => {
+    localStorage.removeItem('theme');
+    delete document.documentElement.dataset.theme;
+    wrap(<TopNav />);
+    fireEvent.click(screen.getByText('다크 모드'));
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(localStorage.getItem('theme')).toBe('dark');
+    fireEvent.click(screen.getByText('라이트 모드'));
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(localStorage.getItem('theme')).toBe('light');
+  });
 });
 
 describe('TodoRow (CP-05)', () => {

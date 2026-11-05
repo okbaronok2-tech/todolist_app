@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { useLogout } from '../../queries/use-auth';
+import { getTheme, saveTheme, type Theme } from '../../lib/theme';
+import { log } from '../../lib/log';
 
 const ITEMS = [
   { to: '/todos', label: '할일 목록' },
@@ -12,11 +14,18 @@ const ITEMS = [
 
 export function TopNav({ showMe = true }: { showMe?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<Theme>(getTheme);
   const navigate = useNavigate();
   const logout = useLogout();
 
   // 서버가 리프레시 폐기 + 두 쿠키 삭제 (UC-03). 응답 후 캐시·스토어 초기화는 useLogout, 이동은 여기
   const onLogout = () => logout.mutate(undefined, { onSettled: () => navigate('/login', { replace: true }) });
+  const onTheme = () => {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    log('theme', next);
+    saveTheme(next);
+    setTheme(next);
+  };
 
   return (
     <nav className={`nav${open ? ' nav--open' : ''}`}>
@@ -32,6 +41,11 @@ export function TopNav({ showMe = true }: { showMe?: boolean }) {
             </NavLink>
           </li>
         ))}
+        <li>
+          <button type="button" className="nav__item nav__theme" aria-pressed={theme === 'dark'} onClick={onTheme}>
+            {theme === 'dark' ? '라이트 모드' : '다크 모드'}
+          </button>
+        </li>
         <li>
           <button type="button" className="nav__item nav__logout" onClick={onLogout} disabled={logout.isPending}>
             로그아웃

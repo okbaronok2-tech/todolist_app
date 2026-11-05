@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.10 |
+| 현재 버전 | v0.11 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.12, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.6 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.13, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.7 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -26,6 +26,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.8 | 2026-11-05 | - | 코드 상태 반영. 3.5 프론트 개발 의존성 심사 결과(`@vitejs/plugin-react`, `@types/react`, `@types/react-dom`, `jsdom`, `@testing-library/react`), 5장에 `scenarios.test.js`(US HTTP 재현)·프론트 vitest 대상, 7.2 tests에 `scenarios.test.js`, 7.3 트리를 구현 파일(`lib/calendar-lanes.ts`, `lib/status.ts`, `lib/error-text.ts`, `components/calendar/CalendarBar.tsx`, 테스트 파일, `.env.example`, `index.html`)에 맞춤 | 문서 정보, 3.5, 5장, 7.2, 7.3 |
 | v0.9 | 2026-11-05 | - | 코드 리뷰 반영. 3.5 심사 결과에 `@testing-library/dom`·ESLint 템플릿 세트, 7.1 트리(docs 1~11·style-guide, `swagger/`, `CLAUDE.md`, `.claude/`), 7.2(`swagger:json`, `swagger.yaml`, `CLAUDE.md`, `.env.test`, `load.js` 미작성 표기), 7.3(`queries/use-auth.ts`, `auth.ts updateMe`, `.prettierrc`), 참조 버전 갱신 | 문서 정보, 3.5, 7.1, 7.2, 7.3 |
 | v0.10 | 2026-11-05 | - | 7.1 `docs/perf-result.md` 작성 완료 표기, 7.2에 `load-seed.js`·`load.js`(k6, `npm run load:seed`), 참조 버전 갱신 | 문서 정보, 7.1, 7.2 |
+| v0.11 | 2026-11-05 | - | 7.3 트리에 `lib/theme.ts`(다크 모드, 스타일 가이드 2.4)·`lib/log.ts`(개발 모드 콘솔 로그) 추가. 3.3에 개발 모드 로그 규칙(`import.meta.env.DEV`에서만, 비밀번호·토큰·본문 제외) 추가. 참조 버전 갱신 | 문서 정보, 3.3, 7.3 |
 
 ---
 
@@ -93,6 +94,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 - 페이지와 컴포넌트는 `fetch`를 직접 호출하지 않는다. 서버 데이터는 `queries/`의 hook으로만 읽고 쓴다.
 - 공통 컴포넌트(CP)는 서버 데이터와 스토어를 모른다. props만 받는다. 예외: CP-01 상단 메뉴는 로그아웃 mutation을 쓴다 (UC-03).
 - 상태 계산·날짜 범위 계산(BR-35)은 `lib/`의 순수 함수다. React와 스토어를 가져오지 않는다.
+- 콘솔 로그는 `lib/log.ts`의 `log(tag, ...)`·`warn`만 쓴다. `import.meta.env.DEV`이고 vitest가 아닐 때만 출력하므로 운영 빌드에는 남지 않는다. 지점: API 요청(메서드·경로·상태·소요 ms), 재시도, refresh 결과, 세션 복구·만료, 로그인·가입·로그아웃, 라우트 이동, 스토어 filter·calendar·reset, 테마 전환. 비밀번호·토큰·요청 본문은 넘기지 않는다 (6.2).
 
 ### 3.3 Zustand와 TanStack Query 역할 분담
 
@@ -323,7 +325,9 @@ frontend/
     │   ├── calendar-range.ts # BR-35 from/to 계산, PRD 4.2 이전·다음 이동, 월 뷰 칸 배열. calendar-range.test.ts
     │   ├── calendar-lanes.ts # BR-33 칸 포함 판정, 막대 lane 배정 (스타일 가이드 3.7). calendar-lanes.test.ts
     │   ├── status.ts       # CP-04 상태 글자(전체·축약)·CSS 수식어
-    │   └── error-text.ts   # 오류 코드 → 한국어 문구, VALIDATION_ERROR message → 필드 판별
+    │   ├── error-text.ts   # 오류 코드 → 한국어 문구, VALIDATION_ERROR message → 필드 판별
+    │   ├── theme.ts        # 다크 모드: localStorage.theme → html[data-theme] (스타일 가이드 2.4)
+    │   └── log.ts          # 개발 모드 콘솔 로그 log(tag, ...)·warn. DEV가 아니거나 vitest면 no-op
     ├── types/
     │   ├── todo.ts         # Todo, TodoStatus 상수, 필터 타입
     │   ├── category.ts

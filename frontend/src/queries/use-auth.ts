@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api/auth';
 import { useAppStore } from '../stores/app-store';
+import { log } from '../lib/log';
 
 export const ME_KEY = ['me'] as const;
 
@@ -10,6 +11,7 @@ function useStartSession() {
   const qc = useQueryClient();
   const setUser = useAppStore((s) => s.setUser);
   return (user: { id: number; name: string }) => {
+    log('auth', 'session start', user.id);
     qc.clear();
     setUser(user);
   };
@@ -31,7 +33,8 @@ export function useLogout() {
   const reset = useAppStore((s) => s.reset);
   return useMutation({
     mutationFn: api.logout,
-    onSettled: () => {
+    onSettled: (_data, error) => {
+      log('auth', 'logout', error ? `server error: ${error.message}` : 'ok');
       qc.clear();
       reset();
     },

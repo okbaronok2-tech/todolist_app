@@ -1,6 +1,7 @@
 // fetch 래퍼 (T-F01, AD-16). credentials 포함, {code,message} → ApiError,
 // UNAUTHORIZED → refresh 1회(동시 요청은 Promise 1개 공유) → 재시도 → 실패 시 세션 만료 핸들러
 import { ApiError, type ErrorCode } from '../types/api';
+import { log, warn } from '../lib/log';
 
 const API = import.meta.env.VITE_API_URL as string;
 
@@ -22,6 +23,7 @@ function refreshOnce(): Promise<RefreshResult> {
     .finally(() => {
       refreshing = null;
     });
+  void refreshing.then((r) => log('auth', 'refresh', r));
   return refreshing;
 }
 
@@ -56,16 +58,20 @@ function send(path: string, { method = 'GET', body }: RequestOptions): Promise<R
 }
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const t0 = performance.now();
   const res = await send(path, options);
+  log('api', options.method ?? 'GET', path, res.status, `${Math.round(performance.now() - t0)}ms`);
   if (res.status !== 401 || path.startsWith('/api/auth/')) return parse<T>(res);
   if ((await codeOf(res)) !== 'UNAUTHORIZED') return parse<T>(res);
   const refreshed = await refreshOnce();
   if (refreshed === 'error') return parse<T>(res); // 일시 장애: 만료 처리 없이 원 오류
   if (refreshed === 'ok') {
     const retry = await send(path, options);
+    log('api', 'retry', options.method ?? 'GET', path, retry.status);
     // 재시도도 UNAUTHORIZED일 때만 만료. INVALID_CREDENTIALS 등은 그대로 화면에 (PRD 4.2)
     if (retry.status !== 401 || (await codeOf(retry)) !== 'UNAUTHORIZED') return parse<T>(retry);
   }
+  warn('session', 'expired', path);
   onSessionExpired();
   return parse<T>(res);
 }

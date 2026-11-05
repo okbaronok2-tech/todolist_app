@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.11 |
+| 현재 버전 | v0.12 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.12, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.6, `docs/5-project-principle.md` v0.10, `docs/6-arch-diagram.md` v0.8, `docs/7-erd.md` v0.5, `docs/schema.sql`, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.9 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.13, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.7, `docs/5-project-principle.md` v0.11, `docs/6-arch-diagram.md` v0.8, `docs/7-erd.md` v0.5, `docs/schema.sql`, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.9 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -27,6 +27,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 | v0.9 | 2026-11-05 | - | 브라우저(Playwright, 기기 날짜 2026-11-03 고정) 검증으로 T-F03~T-F06·T-F10·T-F11 잔여 완료 조건 전부 체크, T-X03 운영 빌드·CORS 배포 확인(`NODE_ENV=production`, `CORS_ORIGIN=http://localhost:4173`, `serve -s dist`) 완료, T-X05 수동 검증 체크(T-X04 제외: k6 미설치·`load.js` 미작성), 참조 버전 갱신 | 문서 정보, T-F03~T-F06, T-F10, T-F11, T-X03, T-X05 |
 | v0.10 | 2026-11-05 | - | 코드 리뷰 반영. T-F01 라우트 수·health 확인 방법, T-F02 로그아웃 mutation(`queries/use-auth.ts`), T-F08 월 뷰 표시를 스타일 가이드 3.7 막대로·기준 SVG를 `sg-calendar-month.svg`로, T-F01·F08·F09·F10 산출물에 실제 파일 추가, 참조 버전 갱신 | 문서 정보, 2장, T-F01, T-F02, T-F08, T-F09, T-F10 |
 | v0.11 | 2026-11-05 | - | T-X04 완료: `tests/load-seed.js`(`npm run load:seed`)·`tests/load.js`(k6 v2.3.0, `noCookiesReset`), `docs/perf-result.md` v0.1(로컬 1000 VU 결과, EXPLAIN 2건), 완료 조건 5개 체크. 11-security S-01~S-06 조치 반영(PRD v0.12, 도메인 v0.9), 참조 버전 갱신 | 문서 정보, 2장, T-X04 |
+| v0.12 | 2026-11-05 | - | T-F02에 다크 모드(`lib/theme.ts`, CP-01 테마 버튼, `styles.css` 다크 토큰) 수행 작업·완료 조건 추가(vitest 37건). 참조 버전 갱신 | 문서 정보, T-F02 |
 
 ---
 
@@ -71,7 +72,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 | T-B06 | 할일 목록 필터·캘린더 기간 조회 | 백엔드 | Day 1 오후 | T-B05 | `repositories/todo-repo.js`(조회 함수), `routes/todos.js`(GET) |
 | T-B07 | API 스모크 스크립트 | 백엔드 | Day 1 오후 | T-B06 | `tests/smoke.js` |
 | T-F01 | 프론트 골격·API 클라이언트·스토어·타입 | 프론트 | Day 2 오전 | T-X02, T-B01 | `vite.config.ts`, `main.tsx`, `App.tsx`, `api/client.ts`(+`client.test.ts`), `queries/use-auth.ts`, `stores/app-store.ts`, `types/`, `lib/error-text.ts`, `lib/status.ts`, `styles.css` |
-| T-F02 | 공통 컴포넌트 CP-01~06 | 프론트 | Day 2 오전 | T-F01 | `components/common/*.tsx` |
+| T-F02 | 공통 컴포넌트 CP-01~06 | 프론트 | Day 2 오전 | T-F01 | `components/common/*.tsx`, `lib/theme.ts` |
 | T-F03 | 인증 화면·라우트 보호·로그아웃 | 프론트 | Day 2 오전 | T-F02, T-B03 | `pages/LoginPage.tsx`, `pages/SignupPage.tsx`, `api/auth.ts` |
 | T-F04 | 카테고리 관리 화면 | 프론트 | Day 2 오전 | T-F03, T-B04 | `pages/CategoriesPage.tsx`, `api/categories.ts`, `queries/use-categories.ts` |
 | T-F05 | 할일 목록 화면 | 프론트 | Day 2 오전 | T-F04, T-B06 | `pages/TodoListPage.tsx`, `api/todos.ts`, `queries/use-todos.ts` |
@@ -443,6 +444,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 1. `TopNav.tsx`(CP-01): 할일 목록·캘린더·카테고리 관리·내 정보(F-03 미구현 시 숨김)·로그아웃. 현재 메뉴 강조. 모바일 `[메뉴]` 토글은 `useState`. 로그아웃 mutation(`queries/use-auth.ts`의 `useLogout`)만 예외로 여기서 호출한다.
 2. `ErrorMessage.tsx`(CP-02, `message` prop), `ConfirmDialog.tsx`(CP-03), `StatusBadge.tsx`(CP-04, `status`·`compact`), `TodoRow.tsx`(CP-05, 완료·편집·삭제 콜백), `EmptyList.tsx`(CP-06, `filtered`).
 3. 모두 props만 받는다. 스토어·쿼리 hook 사용 금지(CP-01 로그아웃 제외).
+4. 다크 모드(스타일 가이드 2.4): `lib/theme.ts`(`getTheme`·`applyTheme`·`saveTheme`, 저장 키 `theme`, 없으면 OS 설정), `main.tsx`가 첫 렌더 전에 적용, `TopNav`의 `[다크 모드]`/`[라이트 모드]` 버튼으로 전환, `styles.css`의 `:root[data-theme='dark']` 토큰 재정의.
 
 완료 조건:
 
@@ -452,6 +454,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 - [x] `EmptyList`가 `filtered` 여부로 문구 2종을 보여준다
 - [x] `ErrorMessage`가 `message`가 비면 렌더하지 않는다
 - [x] `components/common/`에서 `useAppStore`·`useQuery` 사용이 `TopNav`의 로그아웃뿐이다
+- [x] `TopNav` 테마 버튼을 누르면 `html[data-theme]`과 `localStorage.theme`이 바뀌고 새로고침 뒤에도 유지된다 (vitest `common.test.tsx`, 브라우저)
 - [x] `npx tsc --noEmit` 통과
 
 ### T-F03 인증 화면·라우트 보호·로그아웃

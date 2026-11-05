@@ -8,7 +8,7 @@
 | 현재 버전 | v0.5 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.12, `docs/6-arch-diagram.md` v0.8 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.13, `docs/6-arch-diagram.md` v0.8 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 ERD-xx(다이어그램·표)와 ERD-Cx(확인 필요)뿐이다. BR, ST, D, F, UC는 도메인 정의서, NFR, PD는 PRD, AD는 아키텍처 다이어그램의 ID를 참조만 하며 재정의하지 않는다. 문서 간 표현이 다른 지점은 PRD 7장을 기준으로 하고 9장에 나열한다. 최종 DDL은 구현 시 확정한다 (PRD 7장).
 
