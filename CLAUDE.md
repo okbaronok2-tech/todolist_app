@@ -22,4 +22,6 @@
 | `backend/swagger.yaml` | OpenAPI 3.0.3 API 명세 | v0.4 |
 | `docs/9-api-design.md` | API 설계 문서 (엔드포인트 표, AD-C3·C4·C5 결정) | v0.1 |
 
+`backend/` 안에서 작업할 때는 `backend/CLAUDE.md`의 지침을 추가로 따른다.
+
 문서를 고치면 그 문서의 `현재 버전`·변경 이력과 다른 문서의 `참조 문서` 버전을 함께 갱신한다. `backend/swagger.yaml`은 머리 주석과 `x-document-info`·`x-changelog`를 갱신한다.
