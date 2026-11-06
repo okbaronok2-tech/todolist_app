@@ -5,7 +5,7 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList ERD |
-| 현재 버전 | v0.5 |
+| 현재 버전 | v0.6 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
 | 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.14, `docs/6-arch-diagram.md` v0.9 |
@@ -21,6 +21,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 ERD-xx(다이어그램·�
 | v0.3 | 2026-11-04 | - | 8문서 교차 검토 반영. `schema.sql` 결정을 본문에 반영: ERD-02 코멘트(ON DELETE, 복합 FK, `DEFAULT false`), ERD-03~05 기본값 `now()`·`false`와 FK ON DELETE·복합 FK, ERD-06에 제약·인덱스 이름, FK 동작 확정, `categories UNIQUE (id, user_id)` 행 추가, ERD-C2·C5·C6·C7 해결 표기, 참조 버전 갱신 | 문서 정보, ERD-02, ERD-03, ERD-04, ERD-05, ERD-06, 9장 |
 | v0.4 | 2026-11-04 | - | 참조 버전 갱신 | 문서 정보 |
 | v0.5 | 2026-11-05 | - | ERD-02 users·categories·todos의 `created_at`·`updated_at` 코멘트에 `DEFAULT now()` 추가(`schema.sql`·ERD-C7과 일치), 참조 버전 갱신 | 문서 정보, ERD-02 |
+| v0.6 | 2026-11-06 | - | ERD-C8 해결: ERD-02 `categories.name` 코멘트에서 BR-17 제거(유일 인덱스 목적은 BR-14, PRD 7장·ERD-06과 일치. BR-17 '기본' 이름 금지는 서비스 검증). `schema.sql`·`001_init.sql`·실제 DB와 전수 대조 완료(차이 0건). 참조 버전 갱신 | 문서 정보, ERD-02, ERD-C8 |
 
 ---
 
@@ -119,7 +120,7 @@ erDiagram
     categories {
         bigint id PK "GENERATED ALWAYS AS IDENTITY"
         bigint user_id FK "users.id ON DELETE CASCADE BR-16"
-        varchar name "UNIQUE (user_id, lower(btrim(name))) BR-14, BR-17, BR-46"
+        varchar name "UNIQUE (user_id, lower(btrim(name))) BR-14, BR-46"
         boolean is_default "DEFAULT false, UNIQUE (user_id) WHERE is_default BR-13"
         timestamptz created_at "NOT NULL DEFAULT now()"
         timestamptz updated_at "NOT NULL DEFAULT now()"
@@ -302,5 +303,5 @@ END
 | ERD-C5 | `categories.is_default`의 기본값이 PRD 7장에 없다. 도메인 3.1은 필수 O로만 적는다 (BR-11은 가입 시 `isDefault = true`로 생성). `schema.sql` 결정: `DEFAULT false`. 해결, ERD-02·04에 반영 | 도메인 3.1, BR-11, PRD 7장 |
 | ERD-C6 | `todos.category_id`가 같은 `user_id` 소유여야 한다(BR-16)는 DB 제약(복합 FK 등)이 PRD 7장에 없다. 아키텍처 다이어그램은 서비스 검증으로 그렸다. `schema.sql` 결정: `categories UNIQUE (id, user_id)` + `todos FOREIGN KEY (category_id, user_id)` 복합 FK로 DB에서도 보장. 해결, ERD-02·05·06에 반영 | BR-16, PRD 7장, AD-09 |
 | ERD-C7 | `created_at`, `updated_at`의 기본값(`now()` 등)과 `updated_at` 갱신 방식(트리거 또는 애플리케이션)이 PRD 7장에 없다. NULL 열은 도메인 3.1의 필수 O에서 옮겼다. `schema.sql` 결정: 둘 다 `DEFAULT now()`, `updated_at` 갱신은 애플리케이션 UPDATE 문에서. 해결, ERD-03~05에 반영 | 도메인 3.1, PRD 7장 |
-| ERD-C8 | 이전 AD-05는 `categories` 이름 유일 인덱스 목적에 BR-17도 적었으나 PRD 7장은 BR-14만 적는다. ERD-06은 PRD를 따랐다. ERD-02의 `name` 코멘트에는 BR-17이 남아 있다 (BR-17은 '기본' 이름 금지 규칙) | PRD 7장, BR-14, BR-17 |
+| ERD-C8 | 이전 AD-05는 `categories` 이름 유일 인덱스 목적에 BR-17도 적었으나 PRD 7장은 BR-14만 적는다. ERD-02·ERD-06 모두 BR-14로 통일했다. BR-17('기본' 이름 금지)은 DB 제약이 아니라 서비스 검증이다 (`category-service.js`). 해결 | PRD 7장, BR-14, BR-17 |
 | ERD-C9 | `refresh_tokens`는 도메인 정의서 3장에 없는 기술 엔티티다. PRD NFR-06 근거로 물리 모델(ERD-02, ERD-08)에만 둔다. 개념 ERD(ERD-01)와 7.1 이름 대응에는 넣지 않는다 | PRD NFR-06, 6.4, 7장 |

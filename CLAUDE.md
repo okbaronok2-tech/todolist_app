@@ -15,7 +15,7 @@
 | `docs/4-wireframe.md` | 와이어프레임 (WF, CP) | v0.8 |
 | `docs/5-project-principle.md` | 프로젝트 구조 설계 원칙 (PR, 디렉터리 트리) | v0.12 |
 | `docs/6-arch-diagram.md` | 아키텍처 다이어그램 (AD, mermaid) | v0.9 |
-| `docs/7-erd.md` | ERD (mermaid) | v0.5 |
+| `docs/7-erd.md` | ERD (mermaid) | v0.6 |
 | `docs/8-plan.md` | 실행 계획 (WBS, Task T-X/D/B/F) | v0.13 |
 | `docs/schema.sql` | PostgreSQL 17 DDL (`backend/src/db/migrations/001_init.sql`의 원본) | - |
 | `docs/assets/wf-05-calendar-month.svg` | 캘린더 월 뷰 와이어프레임 SVG | - |
