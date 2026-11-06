@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.14 |
+| 현재 버전 | v0.15 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.16, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.17, `docs/3-user-scenario.md` v0.7, `docs/4-wireframe.md` v0.9 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -30,6 +30,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.12 | 2026-11-06 | - | 7.1 트리를 실제에 맞춤: `README.md` 5단계, `test/e2e/`(Playwright MCP 통합 테스트 스크립트·리포트·스크린샷) 추가. 참조 버전 갱신 | 문서 정보, 7.1 |
 | v0.13 | 2026-11-06 | - | 7.2 `app.js`에 default export 추가 기록(Vercel 서버리스가 default export 핸들러를 요구. `server.js`·테스트는 named export 유지). 참조 버전 갱신 | 문서 정보, 7.2 |
 | v0.14 | 2026-11-06 | - | 6.2 쿠키 `SameSite` 개발 `Lax` / 운영 `None`+`Secure` (PRD v0.15 NFR-06). 참조 버전 갱신 | 문서 정보, 6.2 |
+| v0.15 | 2026-11-06 | - | 코드·실서비스 대조 정정: 저장소 함수 `db` 인자 위치(마지막), JSDoc 미적용 현황, `JWT_SECRET`·`CORS_ORIGIN` 기동 검사는 로컬 `server.js` 한정, 오류 로그 `userId`, health 응답 `{ ok, db }`, 비범위 PD-04 resolved, 7.1 트리(`.mcp.json`, `test/e2e` 파일, `.claude/agents`), 7.3 `vercel.json`. 참조 버전 갱신 7.3 `main.tsx`·`App.tsx` 설명 보강(테마 적용, 세션 복구·만료 핸들러, 기본 리다이렉트). | 문서 정보, 1장, 3장, 5장, 6장, 7.1, 7.3, 7.3 main·App |
 
 ---
 
@@ -43,7 +44,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 
 - 대상: `backend/`, `frontend/`의 모든 소스, 테스트, 설정, 마이그레이션, 시드.
 - 기술 스택과 계층은 PRD 6.1~6.2를 그대로 따른다. 이 문서는 그 안에서의 배치와 규칙만 정한다.
-- 비범위: 배포 환경(PD-04), 접근성(PRD 2.2), 부하 테스트 절차(PRD 5.1).
+- 비범위: 배포 환경 상세(PRD PD-04 resolved: Vercel, `docs/10-frontend-integration-guide.md` 11장), 접근성(PRD 2.2), 부하 테스트 절차(PRD 5.1).
 
 ### 1.3 우선순위
 
@@ -81,7 +82,7 @@ routes (인증 미들웨어, 입력 형식·날짜 범위 검증, HTTP 변환)
 - 의존은 위에서 아래로 한 방향이다. 저장소가 서비스를, 서비스가 라우트를 가져오지 않는다.
 - 서비스는 `req`, `res`, 쿠키, 헤더를 모른다. 인자는 평범한 값(`userId`, `today`, 입력 객체)이고 반환은 평범한 객체다. 거부는 `AppError`를 던진다.
 - SQL 문자열은 저장소 파일에만 둔다. 서비스와 라우트에 SQL이 있으면 위반이다.
-- 트랜잭션 경계는 서비스다. 저장소 함수는 첫 인자로 `db`(Pool 또는 Client)를 받아 둘 다에서 동작한다. 트랜잭션 대상: BR-11(가입 + 기본 카테고리), BR-15(이동 + 삭제), 리프레시 회전(기존 행 폐기 + 새 행 삽입, PRD 6.4).
+- 트랜잭션 경계는 서비스다. 저장소 함수는 마지막 인자 `db = pool`(Pool 또는 Client)을 받아 둘 다에서 동작한다. 트랜잭션 대상: BR-11(가입 + 기본 카테고리), BR-15(이동 + 삭제), 리프레시 회전(기존 행 폐기 + 새 행 삽입, PRD 6.4).
 - BR-52 검증 순서의 분담: 인증 → 형식·길이 → 날짜 범위는 라우트, 존재·소유 → 보호 대상 → 중복·개수 → 자격 증명은 서비스. 순서를 바꾸지 않는다.
 - 상태 필터(BR-32)의 SQL 조건은 저장소에 두되 `todo-status.js`의 ST 판정과 결과가 같아야 한다 (PRD 6.5). 5장 테스트로 확인한다.
 
@@ -143,7 +144,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 | 함수 크기 | 한 함수는 한 BR 묶음 또는 한 화면 조각을 담당한다. 화면을 넘기지 않는 길이(약 40줄)를 넘으면 나눈다 |
 | 주석 | "왜"만 적는다. BR·ST ID 인용이 곧 주석이다. 무엇을 하는지는 코드가 보여준다 |
 | TypeScript | `strict: true`. `any` 금지. API 응답 타입은 `types/`에 두고 쿼리 hook이 반환 타입으로 쓴다 |
-| 백엔드 JSDoc | 서비스·저장소의 export 함수에만 `@param`, `@returns` 한 줄씩. 내부 함수는 생략 |
+| 백엔드 JSDoc | 현재 구현은 JSDoc 없이 한 줄 주석만 쓴다. 도입한다면 서비스·저장소의 export 함수에만 `@param`, `@returns` 한 줄씩 |
 | ESLint·Prettier | 프론트는 Vite 템플릿 기본 ESLint, 백엔드는 `js.configs.recommended`만. Prettier는 기본 설정(빈 `.prettierrc`). 규칙 추가·예외 금지 |
 | API 경로 | `/api/` 접두어 아래 PRD 6.3 리소스(`auth`, `users/me`, `categories`, `todos`). 상세는 `docs/9-api-design.md`에서 정한다 |
 
@@ -179,10 +180,10 @@ pages (SC-01~07, 라우팅·화면 조립)
 | 키 | 용도 | 비고 |
 |----|------|------|
 | `DATABASE_URL` | `pg` Pool 연결 문자열 | 테스트는 `.env.test`에서 별도 DB |
-| `JWT_SECRET` | 액세스 토큰 HS384 서명 키 (NFR-06) | 48자 이상(384비트 권장). 기본값 없음, 없거나 짧으면 기동 실패 |
+| `JWT_SECRET` | 액세스 토큰 HS384 서명 키 (NFR-06) | 48자 이상(384비트 권장). 기본값 없음, 없거나 짧으면 로컬 `server.js`는 기동 실패. 운영(Vercel)은 기동 검사가 실행되지 않는다 |
 | `PORT` | Express 포트 | 기본 3000 |
 | `NODE_ENV` | `production`이면 쿠키 `Secure` 설정 (NFR-06) | 그 외는 로컬 HTTP 허용 |
-| `CORS_ORIGIN` | CORS 허용 SPA origin, 쉼표 구분 (NFR-06 (6)) | 기본값 없음, 없으면 기동 실패. 개발 `http://localhost:5173` |
+| `CORS_ORIGIN` | CORS 허용 SPA origin, 쉼표 구분 (NFR-06 (6)) | 기본값 없음. 없으면 로컬 `server.js`는 기동 실패(운영 Vercel은 검사 없음, 빈 목록이면 어떤 Origin에도 CORS 헤더가 없다). 개발 `http://localhost:5173`, 운영 `https://todolist-kje-fe.vercel.app` |
 
 - `.env.example`은 키 이름과 설명만 적어 커밋한다. `.env`, `.env.test`는 `.gitignore`에 넣고 커밋하지 않는다.
 - 로드는 `node --env-file=.env`로 한다. `dotenv`는 설치하지 않는다.
@@ -200,8 +201,8 @@ pages (SC-01~07, 라우팅·화면 조립)
 
 ### 6.3 운영
 
-- 오류 로깅은 오류 미들웨어에서 1줄 JSON으로 한다: `{ ts, method, path, status, code, message }`. 5xx만 stack을 덧붙인다. 4xx는 stack 없음.
-- 헬스체크는 `GET /api/health` 1개. `SELECT 1` 성공 시 `{ "ok": true }`, 실패 시 503.
+- 오류 로깅은 오류 미들웨어에서 1줄 JSON으로 한다: `{ ts, method, path, status, code, message }`(인증된 요청은 `userId` 추가). 5xx만 stack을 덧붙인다. 4xx는 stack 없음.
+- 헬스체크는 `GET /api/health` 1개. `SELECT 1` 성공 시 `{ "ok": true, "db": "up" }`, 실패 시 503 `{ "ok": false, "db": "down" }`.
 - 마이그레이션은 `src/db/migrations/NNN_name.sql` 번호순 파일과 `src/db/migrate.js`(적용된 파일명을 `schema_migrations` 테이블에 기록, 미적용분만 순서대로 실행)로 한다. 별도 도구를 쓰지 않는다. 되돌리기는 다음 번호의 SQL로 한다.
 - `pg` Pool은 `max: 20`으로 `src/db/pool.js` 1개 인스턴스만 만든다 (NFR-04).
 - graceful shutdown: `SIGTERM`·`SIGINT`에서 `server.close()` 후 `pool.end()`를 호출한다.
@@ -220,9 +221,10 @@ todolist_app/
 ├── frontend/       # Vite + React SPA
 ├── docs/           # 설계 문서 (1~11, style-guide.md, perf-result.md, schema.sql, assets/)
 ├── swagger/        # swagger.json (backend/swagger.yaml에서 생성)
-├── test/e2e/       # Playwright MCP 통합 테스트: scenarios/*.js + lib.js → build.mjs → dist/, report.md, screenshots/
+├── test/e2e/       # Playwright MCP 통합 테스트: scenarios/*.js + lib.js → build.mjs → dist/(git 제외), report.md, results.json, README.md, screenshots/
 ├── prompts/        # 문서 생성 프롬프트
-├── .claude/        # 스킬 (develop-backend, develop-frontend, issue-resolver-backend)
+├── .claude/        # skills (develop-backend, develop-frontend, issue-resolver-backend), agents (서브에이전트 정의 8개)
+├── .mcp.json       # MCP 서버 설정
 ├── CLAUDE.md       # 최상위 지침, 문서 목록·버전
 ├── .gitignore      # node_modules, dist, .env, .env.test
 └── README.md       # 실행 순서 5단계 (DB 생성 → 백엔드 env → 프론트 env → migrate·seed → dev)
@@ -302,13 +304,14 @@ frontend/
 ├── .env                    # VITE_API_URL=http://localhost:3000 (API origin, 프록시 없음). 커밋하지 않음
 ├── .env.example            # 키만 커밋
 ├── index.html
+├── vercel.json             # Vercel SPA 리라이트 (전 경로 → /index.html)
 ├── vite.config.ts          # @vitejs/plugin-react, vitest(jsdom, globals)
 ├── tsconfig.json           # strict
 ├── eslint.config.js
 ├── .prettierrc
 └── src/
-    ├── main.tsx            # QueryClientProvider, Router
-    ├── App.tsx             # 라우트 정의, RequireAuth 적용
+    ├── main.tsx            # 첫 렌더 전 applyTheme(getTheme()), QueryClientProvider(retry·refetchOnWindowFocus 끔), Router
+    ├── App.tsx             # 라우트 정의, RequireAuth, 앱 시작 시 me() 세션 복구, 세션 만료 핸들러 등록, 알 수 없는 경로는 /todos로
     ├── pages/              # SC-01~07 1:1. 화면 조립과 이동만
     ├── components/
     │   ├── common/         # CP-01~06 (TopNav, ErrorMessage, ConfirmDialog, StatusBadge, TodoRow, EmptyList). props만 받는다. common.test.tsx

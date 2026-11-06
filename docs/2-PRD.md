@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.16 |
+| 현재 버전 | v0.17 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.14 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/3-user-scenario.md` v0.7, `docs/4-wireframe.md` v0.9, `docs/5-project-principle.md` v0.15 |
 
 ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 (재정의하지 않는다). 이 문서에서 새로 부여하는 ID는 SC(화면), NFR(비기능 요구), R(리스크), A(가정), PD(결정 대기)이며 도메인 정의서 ID와 충돌하지 않는다. 수치에 "가정"이 붙은 것은 측정값이 아니라 목표 설정을 위한 가정이다.
 
@@ -32,6 +32,7 @@ ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 
 | v0.14 | 2026-11-06 | - | 9.2 성능 체크박스 5개 체크(T-X04 완료, `docs/perf-result.md` v0.1). 참조 버전 갱신 | 문서 정보, 9.2 |
 | v0.15 | 2026-11-06 | - | NFR-06 쿠키 `SameSite`를 개발 `Lax` / 운영 `None`+`Secure`로 변경(Vercel 배포: SPA·API가 다른 site). CSRF 완화는 CORS 허용 목록 + JSON 본문(6.4). 참조 버전 갱신 | 문서 정보, NFR-06 |
 | v0.16 | 2026-11-06 | - | PD-04 배포 환경 결정: Vercel(프론트 `todolist-kje-fe` 정적 Vite 빌드, 백엔드 `todolist-kje-be` Express 서버리스 함수, HTTPS는 Vercel 종단, DB는 외부 PostgreSQL). 부하 수치는 여전히 로컬 참고치(서버리스 재측정 필요). 참조 버전 갱신 | 문서 정보, 10.2 PD-04 |
+| v0.17 | 2026-11-06 | - | 실서비스(Vercel) 기준 정정: NFR-04 서버리스는 인스턴스마다 Pool, NFR-06 (5) `JWT_SECRET` 기동 검사는 로컬 `server.js` 한정, R-06 쿠키 `SameSite` 개발 `Lax`/운영 `None`, A-01 운영은 서버리스. 참조 버전 갱신 4.2 오류 표시를 코드별 한국어 문구(VALIDATION_ERROR만 서버 message 병기)로, NOT_FOUND 편집 진입 1.2초 지연 정정. | 문서 정보, NFR-04, NFR-06, R-06, A-01, 4.2 |
 
 ---
 
@@ -121,14 +122,14 @@ F-11을 P0에 둔 이유: F-02(카테고리별 등록)와 F-05(카테고리 필�
 - 가입(SC-02, UC-01): 가입 API가 로그인과 같은 인증 쿠키를 설정하고, 성공하면 SC-03에 이동한다. `DUPLICATE_EMAIL`, `VALIDATION_ERROR` 시 가입 화면에 머물며 오류를 표시한다.
 - 로그인(SC-01, UC-02): 성공하면 SC-03에 이동한다. `INVALID_CREDENTIALS` 시 이메일/비밀번호 중 무엇이 틀렸는지 구분하지 않는 단일 메시지를 표시한다 (BR-06).
 - 로그아웃(공통 메뉴, UC-03): 로그아웃 API를 호출하면 서버가 리프레시 토큰 행을 폐기(`revoked_at`)하고 `token`·`refresh_token` 두 쿠키 삭제 응답(`Max-Age=0`)을 보낸다 (6.4). 응답 후 TanStack Query 캐시(`queryClient.clear()`)와 Zustand 스토어를 초기화하고 SC-01로 이동한다. 뒤로 가기로 SC-03에 접근해도 목록 데이터가 표시되지 않는다.
-- 할일 등록·수정(SC-04, UC-05, UC-06): 저장 성공 시 SC-03으로 돌아가 변경이 반영된다. `INVALID_DATE_RANGE`, `VALIDATION_ERROR`는 서버 응답 기준으로 표시하며, 클라이언트에서도 시작일 > 종료일을 사전 안내한다 (서버 검증이 최종 기준). 사전 안내는 저장 요청을 막지 않는다. 서버 거부 응답의 `message`는 공통 오류 영역에 표시하고, 제목·날짜처럼 클라이언트가 어느 필드인지 판별할 수 있는 경우에는 해당 입력란 아래에도 표시한다.
+- 할일 등록·수정(SC-04, UC-05, UC-06): 저장 성공 시 SC-03으로 돌아가 변경이 반영된다. `INVALID_DATE_RANGE`, `VALIDATION_ERROR`는 서버 응답 기준으로 표시하며, 클라이언트에서도 시작일 > 종료일을 사전 안내한다 (서버 검증이 최종 기준). 사전 안내는 저장 요청을 막지 않는다. 서버 거부 응답은 코드별 한국어 문구로 공통 오류 영역에 표시하고(`VALIDATION_ERROR`만 서버 `message`를 괄호로 덧붙인다), 제목·날짜처럼 클라이언트가 어느 필드인지 판별할 수 있는 경우에는 해당 입력란 아래에도 표시한다.
 - 날짜 선택(F-04): 브라우저 기본 날짜 선택기(`input type="date"`)를 사용한다 (가정, 별도 캘린더 컴포넌트 불필요). 과거 날짜도 선택 가능하다 (BR-23).
 - 완료 처리(SC-03, UC-07): 요청은 `isCompleted` 값을 명시 지정한다(멱등, D-10). 낙관적 업데이트 없이 서버 응답 후 상태 배지를 갱신한다. 완료 취소 시 ST-02~04로 다시 판정된 상태가 표시된다.
 - 삭제(SC-03, UC-08): 확인 대화상자에서 확정해야 삭제하며, 삭제 후 목록에서 사라진다 (BR-27).
 - 목록 필터(SC-03, UC-09): 필터 UI는 단일 선택 2개다 (BR-31). 모든 목록·캘린더 요청에 클라이언트 로컬 날짜 `YYYY-MM-DD`를 `today`로 포함한다 (D-05).
 - 캘린더(SC-05, UC-10): 클라이언트가 BR-35로 조회 기간 `from`/`to`를 산정해 요청한다 (6.3). 날짜 칸 배치는 BR-33, 표시는 BR-36을 따른다. 기본 진입 뷰는 월, anchorDate는 오늘이다 (가정). 캘린더에서 직접 생성·완료 처리는 하지 않는다 (D-12).
 - 인증 만료: 응답 `code`가 `UNAUTHORIZED`이고 요청이 `/api/auth/*`가 아니면 클라이언트(`api/client.ts`)가 `POST /api/auth/refresh`를 1회 호출하고, 성공하면 원 요청을 1회 재시도한다. 동시에 여러 요청이 실패하면 진행 중인 리프레시 1개를 공유한다. 리프레시 실패 또는 재시도 응답도 `UNAUTHORIZED`일 때만 TanStack Query 캐시(`queryClient.clear()`)와 스토어 초기화 후 SC-01로 이동한다 (BR-53, 6.4). 사용자는 액세스 토큰 만료를 느끼지 못한다. HTTP 401이라도 `INVALID_CREDENTIALS`(SC-01 로그인, SC-06 비밀번호 변경)는 현재 화면을 유지하고 오류를 표시한다.
-- 리소스 없음: 편집 화면(SC-04) 진입 시 `NOT_FOUND`를 받으면 오류 메시지를 표시하고 SC-03으로 이동한다. 목록(SC-03)의 수정·완료·삭제 요청, 카테고리 관리(SC-07)의 이름 변경·삭제 요청이 `NOT_FOUND`면 오류를 표시하고 해당 목록을 다시 조회한다.
+- 리소스 없음: 편집 화면(SC-04) 진입 시 `NOT_FOUND`를 받으면 오류 메시지를 표시하고 1.2초 뒤 SC-03으로 이동한다. 목록(SC-03)의 수정·완료·삭제 요청, 카테고리 관리(SC-07)의 이름 변경·삭제 요청이 `NOT_FOUND`면 오류를 표시하고 해당 목록을 다시 조회한다.
 - 캘린더 이동(SC-05): [이전]/[다음]은 anchorDate를 월 뷰에서는 이전/다음 달 1일로, 주 뷰에서는 ±7일, 일 뷰에서는 ±1일로 옮긴다. [오늘]은 anchorDate를 today로 되돌린다.
 - 카테고리 관리(SC-07, UC-11): 기본 카테고리의 삭제·이름 변경 버튼은 비활성이다 (BR-13, BR-17). 삭제 확인 대화상자에 소속 할일이 기본 카테고리로 이동함을 안내한다 (BR-15).
 
@@ -151,7 +152,7 @@ F-11을 P0에 둔 이유: F-02(카테고리별 등록)와 F-05(카테고리 필�
 | NFR-01 | 동시 접속 수 | 부하 도구의 가상 사용자(VU) 1000명이 각자 로그인해 받은 쿠키로 요청을 반복한다 (JWT는 서버 세션이 없으므로 VU 수로 정의). 요청 간격(think time)은 평균 10초 지수분포 (가정) → 지속 약 100 req/s (가정). |
 | NFR-02 | 응답 시간 | NFR-01 부하의 정상 구간(램프 60초 제외, 5분)에서 조회 API(목록, 캘린더) p95 ≤ 500ms, 쓰기 API(등록·수정·삭제·완료) p95 ≤ 800ms, 로그인은 램프 구간에서 p95 ≤ 1500ms (모두 가정). |
 | NFR-03 | 오류율 | 정상 구간에서 5xx 및 타임아웃(10초, 가정) 비율 < 1% (가정). |
-| NFR-04 | DB 커넥션 | `pg` Pool `max` = 20 (가정, 서버 프로세스 1개 기준). 프로세스를 늘리면 합계가 PostgreSQL `max_connections` 이하가 되도록 조정한다. |
+| NFR-04 | DB 커넥션 | `pg` Pool `max` = 20 (가정, 서버 프로세스 1개 기준). 프로세스를 늘리면 합계가 PostgreSQL `max_connections` 이하가 되도록 조정한다. 운영(Vercel 서버리스)은 함수 인스턴스마다 Pool이 생기므로 인스턴스 수 × 20이 `max_connections`를 넘지 않도록 커넥션 풀러 주소를 쓰거나 `max`를 낮춘다. |
 | NFR-05 | 데이터 규모 | 부하 테스트 데이터: 사용자 1000명, 사용자당 할일 평균 100건 (가정), 총 약 10만 행. 목록은 페이지네이션 없이 전체 반환한다 (PD-02). |
 
 검증 방법: k6로 다음 시나리오를 실행한다. 로그인은 60초에 걸쳐 분산해 1000 VU가 진입하고(bcrypt CPU 부하 분산, R-03), 이후 5분간 조회 80%(목록 50, 캘린더 30) / 쓰기 20%(등록 8, 수정 4, 완료 4, 삭제 4) 비율로 요청한다. 측정은 램프 이후 5분 구간만 집계한다. VU는 로그인 1회 후 받은 액세스 쿠키로 요청한다. 액세스 토큰 만료 15분(NFR-06)이 측정 구간 5분보다 길어 리프레시는 시나리오에 넣지 않는다. 다만 k6 스크립트는 401을 받으면 `POST /api/auth/refresh` 1회 후 원 요청을 재시도한다. 결과 수치와 측정 환경(CPU·메모리, 부하 생성기 위치)을 함께 기록한다. 부하 생성기와 서버가 같은 PC면 결과는 "미검증"으로 기록한다 (R-02).
@@ -160,7 +161,7 @@ F-11을 P0에 둔 이유: F-02(카테고리별 등록)와 F-05(카테고리 필�
 
 | ID | 요구 | 기준 |
 |----|------|------|
-| NFR-06 | 인증 방식 | 액세스 토큰 + 리프레시 토큰. (1) 액세스 토큰: JWT, 서명 HS384, claims `sub`(userId), `iat`, `exp`. 쿠키 이름 `token`, `HttpOnly`, `SameSite=Lax`(개발)/`None`(운영), `Path=/`, `Max-Age=900`(15분, 가정). (2) 리프레시 토큰: JWT가 아닌 불투명 난수(`crypto.randomBytes(32)` base64url). 서버는 SHA-256 hex 해시(64자)만 `refresh_tokens` 테이블(7장)에 저장한다. 쿠키 이름 `refresh_token`, `HttpOnly`, `SameSite=Lax`(개발)/`None`(운영), `Path=/api/auth`, `Max-Age=1209600`(14일, 가정). (3) `Secure`는 두 쿠키 모두 `NODE_ENV=production`에서만 설정하고, 같은 조건에서 `SameSite=None`이다(운영은 SPA·API가 다른 site). CSRF는 CORS 허용 목록(`CORS_ORIGIN`)과 JSON 본문 프리플라이트로 막는다한다(로컬 HTTP 허용). (4) 인증 미들웨어는 액세스 토큰만 검증한다(`jsonwebtoken` `algorithms: ['HS384']` 고정). 없음·무효·만료는 `UNAUTHORIZED`(BR-53). 리프레시 쿠키는 보지 않는다. (5) `JWT_SECRET`은 48자 이상(HS384 키 길이 384비트 권장). 없거나 짧으면 기동 실패. (6) 발급·회전·폐기 흐름은 6.4. SPA와 API는 개발·운영 모두 다른 origin이다(개발은 Vite `:5173` → Express `:3000`). Express가 CORS 헤더를 직접 붙인다: 허용 origin은 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록만, 응답은 요청 Origin 그대로(`*` 금지) + `Access-Control-Allow-Credentials: true`, 프리플라이트 `OPTIONS`는 204. 클라이언트는 `fetch`에 `credentials: 'include'`를 쓴다. 운영 쿠키가 `SameSite=None; Secure`라 SPA와 API가 다른 site(예: `*.vercel.app` 두 도메인)여도 된다. 개발은 `Lax`(localhost 포트만 다름). 의존성 추가 없음(`jsonwebtoken`, Node `crypto`, CORS는 미들웨어 직접 작성). |
+| NFR-06 | 인증 방식 | 액세스 토큰 + 리프레시 토큰. (1) 액세스 토큰: JWT, 서명 HS384, claims `sub`(userId), `iat`, `exp`. 쿠키 이름 `token`, `HttpOnly`, `SameSite=Lax`(개발)/`None`(운영), `Path=/`, `Max-Age=900`(15분, 가정). (2) 리프레시 토큰: JWT가 아닌 불투명 난수(`crypto.randomBytes(32)` base64url). 서버는 SHA-256 hex 해시(64자)만 `refresh_tokens` 테이블(7장)에 저장한다. 쿠키 이름 `refresh_token`, `HttpOnly`, `SameSite=Lax`(개발)/`None`(운영), `Path=/api/auth`, `Max-Age=1209600`(14일, 가정). (3) `Secure`는 두 쿠키 모두 `NODE_ENV=production`에서만 설정하고, 같은 조건에서 `SameSite=None`이다(운영은 SPA·API가 다른 site). CSRF는 CORS 허용 목록(`CORS_ORIGIN`)과 JSON 본문 프리플라이트로 막는다한다(로컬 HTTP 허용). (4) 인증 미들웨어는 액세스 토큰만 검증한다(`jsonwebtoken` `algorithms: ['HS384']` 고정). 없음·무효·만료는 `UNAUTHORIZED`(BR-53). 리프레시 쿠키는 보지 않는다. (5) `JWT_SECRET`은 48자 이상(HS384 키 길이 384비트 권장). 없거나 짧으면 로컬 `server.js`가 기동 실패한다. 운영(Vercel)은 `app.js` default export가 진입점이라 이 검사가 실행되지 않으므로 환경변수 값을 배포자가 보장해야 한다(누락 시 요청 시점 오류). (6) 발급·회전·폐기 흐름은 6.4. SPA와 API는 개발·운영 모두 다른 origin이다(개발은 Vite `:5173` → Express `:3000`). Express가 CORS 헤더를 직접 붙인다: 허용 origin은 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록만, 응답은 요청 Origin 그대로(`*` 금지) + `Access-Control-Allow-Credentials: true`, 프리플라이트 `OPTIONS`는 204. 클라이언트는 `fetch`에 `credentials: 'include'`를 쓴다. 운영 쿠키가 `SameSite=None; Secure`라 SPA와 API가 다른 site(예: `*.vercel.app` 두 도메인)여도 된다. 개발은 `Lax`(localhost 포트만 다름). 의존성 추가 없음(`jsonwebtoken`, Node `crypto`, CORS는 미들웨어 직접 작성). |
 | NFR-07 | 비밀번호 | `bcrypt` 해시 저장, cost 10 (가정). 원문 저장·로그 출력 금지 (BR-05). |
 | NFR-08 | 전송 | 운영 환경은 HTTPS만 허용한다. 로컬 개발은 HTTP 허용. |
 | NFR-09 | 입력·쿼리 | 모든 SQL은 `pg`의 파라미터 바인딩(`$1`)을 사용한다. 문자열 연결로 SQL을 만들지 않는다. 입력 길이·형식 검증은 BR-41~46을 서버에서 수행한다. |
@@ -304,13 +305,13 @@ TodoStatus는 DB에 저장하지 않고 서버가 요청마다 ST-01~04 순서�
 | R-03 | bcrypt 해시 연산의 CPU 부하로 로그인 동시 폭주 시 지연 | 부하 테스트에서 로그인을 60초에 분산(5.1). 필요 시 cost 조정(PD-03과 함께 판단) |
 | R-04 | 기준일을 클라이언트가 전달(D-05)하므로 기기 시간 오설정 시 상태 표시가 어긋남 | 본인 화면의 표시에만 영향을 주고 타인에게는 영향 없음을 허용 리스크로 수용 (D-05 closed) |
 | R-05 | 자동화 테스트 최소화로 회귀 오류 발견이 늦음 | ST-01~04 단위 테스트, 프론트 BR-35 조회 기간 계산 단위 테스트, BR 수용 기준 기반 수동 체크리스트(9.1), 핵심 API 호출 스크립트 1벌 |
-| R-06 | 로그아웃 후 액세스 토큰이 최대 15분 잔존(블랙리스트 없음) (PD-01) | 리프레시는 DB 폐기·회전·재사용 탐지로 차단 (6.4). 액세스 토큰은 `HttpOnly`·`SameSite=Lax` 쿠키(운영은 `Secure` 추가, NFR-06)로 스크립트 탈취를 막고 만료 15분에 맡긴다. 잔존은 MVP 수용 리스크 |
+| R-06 | 로그아웃 후 액세스 토큰이 최대 15분 잔존(블랙리스트 없음) (PD-01) | 리프레시는 DB 폐기·회전·재사용 탐지로 차단 (6.4). 액세스 토큰은 `HttpOnly` 쿠키(개발 `SameSite=Lax`, 운영 `SameSite=None; Secure`, NFR-06)로 스크립트 탈취를 막고 만료 15분에 맡긴다. 잔존은 MVP 수용 리스크 |
 
 ### 10.2 가정
 
 | ID | 가정 |
 |----|------|
-| A-01 | 서버는 1대, Node 프로세스 1개로 시작한다. 배포·호스팅 사양은 PD-04에서 확정한다. |
+| A-01 | 로컬 개발·부하 테스트는 Node 프로세스 1개로 한다. 운영은 Vercel 서버리스 함수라 프로세스 수와 사양은 플랫폼이 정한다 (PD-04 resolved). |
 | A-02 | 사용자당 할일 수는 평균 100건 수준이다 (NFR-05). 이를 크게 넘는 사용은 MVP 대상이 아니다. |
 | A-03 | 예산은 1인 개발에 준하며 유료 부하 테스트 서비스·별도 인프라를 쓰지 않는다. |
 | A-04 | NFR의 모든 수치(응답 시간, 오류율, Pool 크기, 토큰 만료 시간, bcrypt cost)는 목표 설정을 위한 가정이며, 부하 테스트 결과로 조정한다. |

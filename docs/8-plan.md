@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.14 |
+| 현재 버전 | v0.15 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.16, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/7-erd.md` v0.6, `docs/schema.sql`, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.17, `docs/3-user-scenario.md` v0.7, `docs/4-wireframe.md` v0.9, `docs/5-project-principle.md` v0.15, `docs/6-arch-diagram.md` v0.10, `docs/7-erd.md` v0.6, `docs/schema.sql`, `docs/9-api-design.md` v0.8, `backend/swagger.yaml` v0.12 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -30,6 +30,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 | v0.12 | 2026-11-05 | - | T-F02에 다크 모드(`lib/theme.ts`, CP-01 테마 버튼, `styles.css` 다크 토큰) 수행 작업·완료 조건 추가(vitest 37건). 참조 버전 갱신 | 문서 정보, T-F02 |
 | v0.13 | 2026-11-06 | - | 코드 대조: T-X01 scripts(`swagger:json`, `load:seed`)·`.env.example`(`CORS_ORIGIN`)·README 5단계, T-B08 산출물 `tests/user-service.test.js`, T-X05에 Playwright MCP 통합 테스트(`test/e2e/`, US-01~19 114항목) 기록. 참조 버전 갱신 | 문서 정보, 2장, T-X01, T-X05 |
 | v0.14 | 2026-11-06 | - | T-X05에 운영 배포(Vercel) 스모크 `test/e2e/scenarios/prod-smoke.js` 9항목 통과 기록, T-X03 완료 조건에 Vercel 배포 확인 추가. 참조 버전 갱신 | 문서 정보, T-X03, T-X05 |
+| v0.15 | 2026-11-06 | - | 실서비스 대조 정정: T-X03 산출물에 `frontend/vercel.json`·완료 조건에 Vercel 배포 확인 실제 추가(v0.14 기록과 일치시킴), `SameSite` 개발 `Lax`/운영 `None`(T-B03, T-X03), `.env.example` 키 5개, T-X05 통합 테스트 항목 수 114→111 정정(v0.13의 114는 합계 오기, 그룹 합 111). 참조 버전 갱신 | 문서 정보, 2장, T-B03, T-X01, T-X03, T-X05 |
 
 ---
 
@@ -83,7 +84,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 | T-F08 | 캘린더 월 뷰 | 프론트 | Day 2 오후 | T-F06, T-F07 | `pages/CalendarPage.tsx`, `components/calendar/CalendarBar.tsx`, `MonthView.tsx`, `lib/calendar-lanes.ts`(+`.test.ts`), `calendar.test.tsx` |
 | T-F09 | 캘린더 주·일 뷰·기간 이동 | 프론트 | Day 2 오후 | T-F08 | `components/calendar/WeekView.tsx`, `DayView.tsx`, `calendar.test.tsx` |
 | T-F10 | 반응형 375px | 프론트 | Day 2 오후 | T-F09 | `styles.css`, `TopNav.tsx`, `MonthView.tsx`, `WeekView.tsx` |
-| T-X03 | 운영 빌드·CORS 배포 확인 | 공통 | Day 2 오후 | T-F10 | `frontend/dist`, `CORS_ORIGIN` 운영 값 |
+| T-X03 | 운영 빌드·CORS 배포 확인 | 공통 | Day 2 오후 | T-F10 | `frontend/dist`(빌드 산출물, git 제외), `frontend/vercel.json`, `CORS_ORIGIN` 운영 값 |
 | T-X04 | 부하 테스트·쿼리 계획 기록 | 공통 | Day 2 오후 | T-B07, T-X03 | `backend/tests/load-seed.js`, `backend/tests/load.js`(k6), `docs/perf-result.md` |
 | T-X05 | 수동 검증 체크리스트 실행 | 공통 | Day 2 오후 | T-F10 | PRD 9.1 체크 결과 |
 | T-B08 | (P1) 내 정보 API | 백엔드 | 여유 시 | T-B03 | `routes/users.js`, `services/user-service.js`, `tests/user-service.test.js` |
@@ -113,7 +114,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 
 - [x] `backend`, `frontend` 각각에서 `npm install`이 오류 없이 끝난다
 - [x] 설치된 의존성이 원칙 3.5 허용 목록 밖에 없다 (`dotenv`, ORM, UI 라이브러리 없음)
-- [x] `.env.example`에 키 4개가 설명과 함께 있고 `.env`·`.env.test`는 추적되지 않는다
+- [x] `.env.example`에 키 5개(`CORS_ORIGIN` 포함)가 설명과 함께 있고 `.env`·`.env.test`는 추적되지 않는다
 - [x] 양쪽 `npx eslint .`가 통과한다
 - [x] `README.md`에 실행 순서가 있다 (현재 5단계: DB 생성, 백엔드 env, 프론트 env, migrate·seed, dev)
 
@@ -260,13 +261,13 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 수행 작업:
 
 1. `repositories/user-repo.js`: 이메일(소문자 비교) 조회, 생성. `repositories/refresh-token-repo.js`: 삽입, 해시 조회, 폐기(`revoked_at = now()`), 사용자 전체 폐기, 정리(사용자의 만료·폐기 행 삭제). `services/auth-service.js`: 가입(BR-04 중복 검사 → 사용자 생성 → 기본 카테고리 생성, 한 트랜잭션, BR-11), 로그인(BR-06, bcrypt 비교, 실패 사유 미구분, 성공 시 만료·폐기 행 삭제), 가입·로그인 성공 시 리프레시 토큰(`crypto.randomBytes(32)` base64url) 생성 → SHA-256 hex 해시 행 삽입(`expires_at` +14일), refresh(해시 조회 → 없음·만료 `UNAUTHORIZED` → `revoked_at` 있으면 사용자 전체 폐기 후 `UNAUTHORIZED` → 정상이면 기존 행 폐기 + 새 행 삽입을 한 트랜잭션으로 회전), logout(쿠키 해시 행 폐기).
-2. `middlewares/auth.js`: 쿠키 `token` JWT(HS384, `sub`, `iat`, `exp`) 검증(`jwt.verify` `algorithms: ['HS384']` 고정) → `req.userId`. 없거나 무효·만료면 `UNAUTHORIZED`. `refresh_token` 쿠키는 보지 않는다. 두 쿠키 옵션(`token`: `HttpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age=900`. `refresh_token`: `HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, `Max-Age=1209600`. 둘 다 운영만 `Secure`)과 발급·삭제 함수를 이 파일에 둔다.
+2. `middlewares/auth.js`: 쿠키 `token` JWT(HS384, `sub`, `iat`, `exp`) 검증(`jwt.verify` `algorithms: ['HS384']` 고정) → `req.userId`. 없거나 무효·만료면 `UNAUTHORIZED`. `refresh_token` 쿠키는 보지 않는다. 두 쿠키 옵션(`token`: `HttpOnly`, `Path=/`, `Max-Age=900`. `refresh_token`: `HttpOnly`, `Path=/api/auth`, `Max-Age=1209600`. `SameSite`는 개발 `Lax`, 운영 `None`이고 `Secure`는 운영만)과 발급·삭제 함수를 이 파일에 둔다.
 3. `routes/auth.js`: `POST /api/auth/signup`(검증 → 가입 → 두 쿠키 발급 → 201), `POST /api/auth/login`(→ 두 쿠키 발급 → 200), `POST /api/auth/refresh`(인증 미들웨어 없음 → 회전 → 두 쿠키 발급 → 200 `{ user: { id, name } }`, 실패 시 401 + 두 쿠키 `Max-Age=0`), `POST /api/auth/logout`(인증 미들웨어 없음 → 리프레시 행 폐기 → 두 쿠키 `Max-Age=0` → 204). 가입·로그인 응답에 `user { id, name }` 포함(AD-A2).
 4. `tests/auth-service.test.js`: BR-04, BR-06, BR-11 수용 기준과 리프레시 회전·재사용 탐지·로그아웃 폐기 케이스. 테스트 DB 사용, `pg` mock 금지.
 
 완료 조건:
 
-- [x] 새 이메일로 가입하면 201, `Set-Cookie: token=...; HttpOnly; SameSite=Lax; Path=/; Max-Age=900`와 `Set-Cookie: refresh_token=...; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600`가 오고 응답에 `user.id`, `user.name`이 있다
+- [x] 새 이메일로 가입하면(개발 기준, 운영은 `SameSite=None; Secure`) 201, `Set-Cookie: token=...; HttpOnly; SameSite=Lax; Path=/; Max-Age=900`와 `Set-Cookie: refresh_token=...; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600`가 오고 응답에 `user.id`, `user.name`이 있다
 - [x] 액세스 토큰 헤더의 `alg`가 `HS384`이고 claims에 `sub`, `iat`, `exp`가 있다. 다른 알고리즘으로 서명한 토큰은 401 `UNAUTHORIZED`다 (`algorithms` 고정)
 - [x] 가입·로그인 직후 `refresh_tokens`에 그 사용자의 행이 1개 늘고 `token_hash`가 64자 hex이며 쿠키 원문과 다르다
 - [x] `POST /api/auth/refresh`가 200 `{ user: { id, name } }`과 새 `token`·`refresh_token` 쿠키를 돌려주고, 기존 행은 `revoked_at`이 채워지고 새 행이 1개 생긴다 (회전)
@@ -663,7 +664,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 수행 작업:
 
 1. `frontend`에서 `VITE_API_URL`을 운영 API origin으로 두고 `npm run build` → `dist/`. `dist/`는 정적 호스팅(모든 경로를 `index.html`로 폴백, SPA 라우팅)에 올린다. Express는 정적 파일을 제공하지 않는다.
-2. 백엔드 `CORS_ORIGIN`에 운영 SPA origin을 넣고 `NODE_ENV=production npm start`로 기동 확인. SPA와 API는 같은 site여야 한다 (쿠키 `SameSite=Lax`, NFR-06 (6)).
+2. 백엔드 `CORS_ORIGIN`에 운영 SPA origin을 넣고 `NODE_ENV=production npm start`로 기동 확인. 운영은 쿠키가 `SameSite=None; Secure`라 SPA와 API가 다른 site여도 된다 (개발은 `Lax`, NFR-06 (3)(6)).
 
 완료 조건:
 
@@ -672,6 +673,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 - [x] SPA origin에서 `/api/health` 호출이 200이고 응답에 `Access-Control-Allow-Origin`이 SPA origin이다. `CORS_ORIGIN`에 없는 origin의 `OPTIONS`에는 CORS 헤더가 없다
 - [x] 운영 모드 로그인 응답 쿠키에 `Secure`가 있다 (HTTP에서는 브라우저가 저장하지 않으므로 응답 헤더로 확인)
 - [x] `CORS_ORIGIN` 없이 `npm start`하면 `CORS_ORIGIN is missing`으로 기동 실패한다
+- [x] Vercel 배포: 프론트 `todolist-kje-fe`(`frontend/vercel.json` 리라이트), 백엔드 `todolist-kje-be`(`app.js` default export). 운영 로그인 응답 쿠키가 `SameSite=None; Secure`이고 `Access-Control-Allow-Origin`이 `https://todolist-kje-fe.vercel.app`임을 확인했다 (PRD PD-04)
 
 ### T-X04 부하 테스트·쿼리 계획 기록
 
@@ -718,7 +720,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 - [x] US-18이 375px에서 기대 결과와 같다
 - [x] PRD 9.1의 P0 항목 11개가 모두 체크됐다
 - [x] `backend`·`frontend`의 `npm test`와 `npm run smoke`가 모두 통과한 상태다
-- [x] Playwright MCP 통합 테스트 `test/e2e/`(US-01~19, 114항목, 스크린샷 43장)가 전부 통과했다. 결과 `test/e2e/report.md`
+- [x] Playwright MCP 통합 테스트 `test/e2e/`(US-01~19, 111항목, 스크린샷 43장)가 전부 통과했다. 결과 `test/e2e/report.md`
 - [x] 운영 배포(`https://todolist-kje-fe.vercel.app` + `https://todolist-kje-be.vercel.app`)에서 `prod-smoke.js` 9항목(cross-site 쿠키 로그인, 등록·완료·삭제, 캘린더, 새로고침, 다크 모드, 로그아웃, 5xx 없음)이 통과했다 (PRD PD-04)
 - [x] 실패 기록이 0건이거나, 남은 실패가 P1(F-03) 관련뿐이다
 

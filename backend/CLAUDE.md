@@ -4,7 +4,7 @@
 
 ## 반드시 지켜야 할 지침
 
-- 배포할 때 바뀔 수 있는 값은 환경변수로 분리한다. 현재 사용하는 환경변수: `DATABASE_URL`, `JWT_SECRET`(48자 이상), `PORT`(기본 3000), `NODE_ENV`, `CORS_ORIGIN`(허용 SPA origin, 쉼표 구분). 새 환경변수를 추가하면 `.env.example`에 키를 등록하고 `src/server.js`의 기동 검사에 넣는다. `.env`, `.env.test`는 커밋하지 않는다.
+- 배포할 때 바뀔 수 있는 값은 환경변수로 분리한다. 현재 사용하는 환경변수: `DATABASE_URL`, `JWT_SECRET`(48자 이상), `PORT`(기본 3000, Vercel에서는 무시), `NODE_ENV`, `CORS_ORIGIN`(허용 SPA origin, 쉼표 구분). 새 환경변수를 추가하면 `.env.example`에 키를 등록하고 `src/server.js`의 기동 검사에 넣는다. 운영(Vercel)은 `app.js` default export가 진입점이라 `server.js` 검사가 실행되지 않으므로 Vercel 환경변수에도 직접 등록한다. `.env`, `.env.test`는 커밋하지 않는다.
 - SOLID 원칙과 Clean 아키텍처를 준수한다. 의존 방향은 `routes → services → repositories → db` 한 방향이다. 역방향 import 금지.
 - 라우트에 SQL을 쓰지 않는다. 서비스에 `req`/`res`를 넘기지 않는다. 리포지토리는 마지막 인자로 `db = pool`을 받아 트랜잭션 클라이언트를 주입받는다.
 - HTTP 상태 코드와 오류 코드는 `src/errors/codes.js`에만 둔다. 오류는 `AppError(code, message)`로 던지고 `error-handler`가 응답으로 바꾼다.
@@ -22,7 +22,7 @@ src/
   repositories/    SQL만. 고정 SQL + 파라미터, 유니크 위반은 isUniqueViolation으로 판별
   db/              pool.js(타입 파서, withTransaction), migrate.js, migrations/NNN_*.sql, seed.sql
   errors/          codes.js(CODES, HTTP), app-error.js
-  middlewares/     cors.js(CORS_ORIGIN 허용 목록, 프리플라이트 204), auth.js(JWT HS384 쿠키, refresh 회전), error-handler.js
+  middlewares/     cors.js(CORS_ORIGIN 허용 목록, 프리플라이트 204), auth.js(쿠키 옵션·발급·삭제, 액세스 JWT HS384 검증. refresh 회전은 services/auth-service.js), error-handler.js
 tests/             node:test, DB를 쓰는 테스트 파일마다 beforeEach(resetDb). 롤백 검증은 DB 트리거로, pg 모킹 금지
 ```
 

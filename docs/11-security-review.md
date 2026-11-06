@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 백엔드 보안 검토 |
-| 현재 버전 | v0.5 |
+| 현재 버전 | v0.6 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.16, `docs/5-project-principle.md` v0.14, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
+| 참조 문서 | `docs/2-PRD.md` v0.17, `docs/5-project-principle.md` v0.15, `docs/9-api-design.md` v0.8, `backend/swagger.yaml` v0.12 |
 | 설계 근거 | PRD 6.4·NFR-06~10, 도메인 정의서 BR-01·02·06·51~53 |
 
 ## 변경 이력
@@ -20,6 +20,7 @@
 | v0.3 | 2026-11-05 | - | S-01~S-06 조치 완료 반영. 2장 결과를 양호로, 3장 각 항목에 조치 내용, 4장 체크. S-01은 PRD 6.4 규칙으로 승격(비밀번호 변경 시 리프레시 전부 폐기 + 새 쿠키) | 문서 정보, 2장, 3장, 4장 |
 | v0.4 | 2026-11-06 | - | 대상 파일 수 22→23 정정(`backend/src/**/*.js` 실제 개수). 참조 버전 갱신 | 문서 정보, 1장 |
 | v0.5 | 2026-11-06 | - | 설계 결정 표: 쿠키 `SameSite`를 운영 `None`+`Secure`로(Vercel 다른 site 배포), CSRF 완화 근거를 CORS 허용 목록 + JSON 본문 프리플라이트로 갱신. 참조 버전 갱신 | 문서 정보, 설계 결정 |
+| v0.6 | 2026-11-06 | - | 실서비스(Vercel) 기준 갱신: PD-04 결정 반영(HSTS는 Vercel 종단이 붙임, 응답 헤더 확인), `server.js` 검사는 로컬 한정, S-06 운영 `sslmode` 미확인 명시, 후속 조치(배포 후 `npm audit` 재실행 0건, PD-03 재검토). 참조 버전 갱신 | 문서 정보, 설계 결정, A02, A05, A06, S-04, S-06, 4장 |
 
 ---
 
@@ -49,11 +50,11 @@
 | 항목 | 결과 | 근거 파일:줄 | 조치 |
 |------|------|-------------|------|
 | A01 Broken Access Control | 양호 | `routes/users.js`, `routes/categories.js`, `routes/todos.js` (`requireAuth`), `repositories/todo-repo.js`·`category-repo.js` 모든 쿼리에 `user_id`, `routes/users.js` `/me` 고정(BR-03), `services/todo-service.js` BR-16 | 없음 |
-| A02 Cryptographic Failures | 양호 | `server.js:5-9` (JWT_SECRET 48자 검사), `middlewares/auth.js` (HS384 고정), `services/auth-service.js` (bcrypt 10, SHA-256, randomBytes 32), `routes/validate.js` (비밀번호 UTF-8 72바이트 검사), `.env.example` (운영 `sslmode=require` 안내) | S-03·S-06 조치 완료 |
+| A02 Cryptographic Failures | 양호 | `server.js:5-9` (JWT_SECRET 48자 검사, 로컬 기동 전용. 운영 Vercel은 `app.js` 진입이라 미실행), `middlewares/auth.js` (HS384 고정), `services/auth-service.js` (bcrypt 10, SHA-256, randomBytes 32), `routes/validate.js` (비밀번호 UTF-8 72바이트 검사), `.env.example` (운영 `sslmode=require` 안내) | S-03·S-06 조치 완료 |
 | A03 Injection | 양호 | `repositories/*.js` 전체 `$n` 바인딩, `todo-repo.js` 고정 SQL, `refresh-token-repo.js` 상수 조각만 결합, `db/migrate.js` 고정 디렉터리 파일 | 없음 |
 | A04 Insecure Design | 양호 | `routes/validate.js:6` (ID 15자리 이하), `db/pool.js:5` | S-02 조치 완료 |
-| A05 Security Misconfiguration | 양호 | `app.js` (`x-powered-by` 비활성. HSTS·nosniff는 PD-04 결정 후 리버스 프록시), `middlewares/cors.js` (Origin 정확 일치, `*` 없음), `error-handler.js` (500 응답에 내부 정보 없음), `.gitignore:69-71` (`.env`, `.env.*` 제외, `.env.example`만 허용) | S-04 조치 완료 |
-| A06 Vulnerable Components | 양호 | `npm audit --omit=dev` 2026-11-05: 운영 의존성 98개, 취약점 0 (info 0, low 0, moderate 0, high 0, critical 0). express 5.3.0, jsonwebtoken 9.0.3, bcrypt 6.0.0, pg 8.23.1, cookie-parser 1.4.7 | 배포 전 재실행 |
+| A05 Security Misconfiguration | 양호 | `app.js` (`x-powered-by` 비활성. 운영 Vercel 응답에 `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`가 붙음(2026-11-06 확인). `X-Content-Type-Options`는 없음), `middlewares/cors.js` (Origin 정확 일치, `*` 없음), `error-handler.js` (500 응답에 내부 정보 없음), `.gitignore:69-71` (`.env`, `.env.*` 제외, `.env.example`만 허용) | S-04 조치 완료 |
+| A06 Vulnerable Components | 양호 | `npm audit --omit=dev` 2026-11-05: 운영 의존성 98개, 취약점 0 (info 0, low 0, moderate 0, high 0, critical 0). express 5.3.0, jsonwebtoken 9.0.3, bcrypt 6.0.0, pg 8.23.1, cookie-parser 1.4.7 | 2026-11-06 배포 후 재실행: 취약점 0 |
 | A07 Identification and Authentication Failures | 양호 | `services/auth-service.js` (BR-06 더미 해시로 타이밍 동일화, 회전·재사용 탐지 `FOR UPDATE`), `services/user-service.js` (비밀번호 변경 시 리프레시 전부 폐기 + 새 토큰 발급) | S-01 조치 완료 |
 | A08 Software and Data Integrity Failures | 양호 | `package-lock.json` 존재, `middlewares/auth.js` `algorithms` 고정으로 `alg` 변조 차단, 역직렬화는 `express.json`뿐 | 배포는 `npm ci` 사용 |
 | A09 Security Logging and Monitoring Failures | 양호 | `middlewares/error-handler.js` (오류 1줄 JSON + 인증된 요청의 `userId`), `services/auth-service.js` (재사용 탐지 `event: 'refresh_reuse'` 1줄). 비밀번호·토큰은 로그에 남지 않음 | S-05 조치 완료 |
@@ -90,7 +91,7 @@
 - 위치: `backend/src/app.js`
 - 문제: Express 5는 기본으로 `X-Powered-By: Express`를 보낸다. `X-Content-Type-Options: nosniff` 헤더도 없다.
 - 재현: `curl -i http://localhost:3000/api/health` 응답에 `X-Powered-By: Express`가 있다.
-- 제안: `app.disable('x-powered-by')` 1줄을 추가한다. HSTS·nosniff 등은 PD-04(HTTPS 종료 지점) 결정 후 리버스 프록시에서 설정한다. helmet 의존성은 추가하지 않는다(원칙 3.5).
+- 제안: `app.disable('x-powered-by')` 1줄을 추가한다. HSTS는 운영(Vercel)이 HTTPS 종단에서 붙인다(`Strict-Transport-Security` 응답 헤더 확인). nosniff는 설정하지 않는다. helmet 의존성은 추가하지 않는다(원칙 3.5).
 - 조치(2026-11-05): `app.js`에 추가. `smoke.js`가 헤더 부재를 확인
 
 ### S-05 보안 이벤트 로그 부족 (A09, Low)
@@ -104,9 +105,9 @@
 ### S-06 DB 연결 TLS 미설정 (A02, Low, 추정)
 
 - 위치: `backend/src/db/pool.js`, `backend/.env.example`
-- 문제: TLS 옵션이 없다. 운영 DB가 다른 호스트에 있으면 자격 증명과 데이터가 평문으로 오갈 수 있다. 배포 구성은 PD-04 미정이라 추정이다.
+- 문제: TLS 옵션이 없다. 운영 DB가 다른 호스트에 있으면 자격 증명과 데이터가 평문으로 오갈 수 있다. 운영(Vercel)은 DB가 외부 호스트라 해당한다. 운영 `DATABASE_URL`의 `sslmode` 값은 sensitive라 확인하지 못했다(추정).
 - 제안: 운영 `DATABASE_URL`에 `sslmode=require`를 쓴다고 `.env.example` 주석에 명시한다. 코드 변경은 필요 없다.
-- 조치(2026-11-05): `.env.example` 주석에 명시. 실제 적용은 PD-04 결정 시
+- 조치(2026-11-05): `.env.example` 주석에 명시. 운영 `DATABASE_URL` 적용 여부는 미확인이라 배포자가 확인한다
 
 ## 4. 후속 조치
 
@@ -115,6 +116,6 @@
 - [x] S-03 비밀번호 72바이트 검사를 추가하거나 BR-44에 바이트 기준을 명시한다
 - [x] S-04 `app.disable('x-powered-by')`를 추가한다
 - [x] S-05 재사용 탐지 이벤트 로그와 userId를 추가한다
-- [x] S-06 `.env.example`에 `sslmode=require` 안내 (실제 적용은 PD-04 결정 시)
-- [ ] PD-03(브루트포스 방어) 재검토 시점을 운영 배포 전으로 정한다
-- [ ] 배포 전 `npm audit --omit=dev`를 재실행한다
+- [x] S-06 `.env.example`에 `sslmode=require` 안내 (운영 `DATABASE_URL` 적용 여부는 미확인, 배포자 확인 필요)
+- [ ] PD-03(브루트포스 방어) 재검토: 운영 배포가 끝났으므로(2026-11-06) 재검토 시점을 정한다
+- [x] 배포 후 `npm audit --omit=dev`를 재실행한다 (2026-11-06, 취약점 0)

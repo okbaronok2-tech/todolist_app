@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList API 설계 |
-| 현재 버전 | v0.7 |
+| 현재 버전 | v0.8 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.16, `docs/3-user-scenario.md` v0.6, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.14, `backend/swagger.yaml` v0.11 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.17, `docs/3-user-scenario.md` v0.7, `docs/5-project-principle.md` v0.15, `docs/6-arch-diagram.md` v0.10, `docs/8-plan.md` v0.15, `backend/swagger.yaml` v0.12 |
 | 정본 | PRD 6.3·6.4·NFR-06. 이 문서는 그 내용을 엔드포인트 표로 고정한다. 기계 판독용 명세는 `backend/swagger.yaml`이며 둘은 같은 내용이어야 한다 |
 
 ## 변경 이력
@@ -22,6 +22,7 @@
 | v0.5 | 2026-11-05 | - | 공통 규칙에 CORS(`CORS_ORIGIN` 허용 목록, `Allow-Credentials`, 프리플라이트 204, 클라이언트 `credentials: 'include'`) 추가 (swagger v0.8, `backend/src/middlewares/cors.js`와 동일), 참조 버전 갱신 | 문서 정보, 1장 |
 | v0.6 | 2026-11-05 | - | 11-security 조치 반영: ID 15자리 이하, 비밀번호 72바이트, `PATCH /api/users/me` 비밀번호 변경 시 리프레시 전부 폐기 + 새 쿠키 2개 (swagger v0.9와 동일), 참조 버전 갱신 | 문서 정보, 1장, 2장 |
 | v0.7 | 2026-11-06 | - | 인증 쿠키 `SameSite` 개발 `Lax` / 운영 `None`+`Secure` 표기 (PRD v0.15). 참조 버전 갱신 | 문서 정보, 2장 |
+| v0.8 | 2026-11-06 | - | 실서비스 기준 정정: `CORS_ORIGIN` 기동 검사는 로컬 `server.js` 한정(운영 Vercel은 미검사), 완료 멱등(이미 완료면 `completedAt` 유지), 서버 URL(운영·개발) 기재. 참조 버전 갱신 | 문서 정보, 2장, 3장 |
 
 ---
 
@@ -31,7 +32,8 @@
 - id는 DB `BIGINT`를 JSON 숫자로 보낸다. 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열, 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열 (PRD 7장, PR-05).
 - 인증: 쿠키 `token`(액세스 JWT HS384, `HttpOnly; Path=/; Max-Age=900`)과 `refresh_token`(불투명 난수, `HttpOnly; Path=/api/auth; Max-Age=1209600`). `SameSite`는 개발 `Lax`, 운영 `None`+`Secure` (NFR-06, 다른 site 배포). 인증 미들웨어는 `token`만 검증한다.
 - 비보호 경로: `GET /api/health`, `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout` (PRD 6.4, AD-06). 나머지는 `token` 없음·무효·만료 시 401 `UNAUTHORIZED` (BR-01, BR-53).
-- CORS (NFR-06 (6), `middlewares/cors.js`): SPA와 API는 다른 origin이다. 요청 `Origin`이 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록에 있을 때만 `Access-Control-Allow-Origin: <그 Origin>`, `Access-Control-Allow-Credentials: true`, `Vary: Origin`을 붙인다. `OPTIONS` 프리플라이트는 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`, `Max-Age: 600`). 목록 밖 Origin에는 헤더가 없다. 클라이언트는 `fetch`에 `credentials: 'include'`가 필요하다. `CORS_ORIGIN`이 없으면 서버가 기동하지 않는다.
+- 서버: 운영 `https://todolist-kje-be.vercel.app`(Vercel 서버리스, HTTPS만), 개발 `http://localhost:3000`.
+- CORS (NFR-06 (6), `middlewares/cors.js`): SPA와 API는 다른 origin이다. 요청 `Origin`이 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록에 있을 때만 `Access-Control-Allow-Origin: <그 Origin>`, `Access-Control-Allow-Credentials: true`, `Vary: Origin`을 붙인다. `OPTIONS` 프리플라이트는 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`, `Max-Age: 600`). 목록 밖 Origin에는 헤더가 없다. 클라이언트는 `fetch`에 `credentials: 'include'`가 필요하다. `CORS_ORIGIN`이 없으면 로컬 `server.js`는 기동하지 않는다. 운영(Vercel, `app.js` 진입)에는 기동 검사가 없고 `cors.js`는 목록이 비면 어떤 Origin에도 헤더를 붙이지 않는다.
 - 거부 응답 본문은 `{ "code", "message" }` (BR-51). HTTP 매핑(PRD 6.3): `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400, `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.
 - 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식(양의 정수 15자리 이하가 아니면 DB 조회 없이 `NOT_FOUND`) → 리소스 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 코드로 거부하고 부분 저장하지 않는다.
 - 경로·쿼리·본문의 ID가 형식 위반·타인 소유·미존재면 모두 같은 본문의 `NOT_FOUND` (BR-02, BR-16).
@@ -59,7 +61,7 @@
 | GET | `/api/todos/:id` | 필요 | 쿼리 `today` | 200 `Todo` | `UNAUTHORIZED` → `VALIDATION_ERROR`(`today`) → `NOT_FOUND` | UC-06, BR-02, AD-C3, AD-13 |
 | PATCH | `/api/todos/:id` | 필요 | 쿼리 `today`. 본문은 POST와 같음(편집 필드 전체, `title`·`startDate`·`endDate` 필수). `isCompleted`·`status` 무시 | 200 `Todo` (완료 여부 불변) | `UNAUTHORIZED` → `VALIDATION_ERROR` → `INVALID_DATE_RANGE` → `NOT_FOUND`(id, `categoryId`) | UC-06, BR-12, BR-16, BR-21~23, BR-26, BR-54, AD-09 |
 | DELETE | `/api/todos/:id` | 필요 | - | 204 (영구 삭제) | `UNAUTHORIZED` → `NOT_FOUND` | UC-08, BR-27, AD-13 |
-| PATCH | `/api/todos/:id/completed` | 필요 | 쿼리 `today`. 본문 `isCompleted`(boolean 필수, 명시 지정·멱등) | 200 `Todo` (`true`면 `completedAt = now()`, `false`면 null) | `UNAUTHORIZED` → `VALIDATION_ERROR` → `NOT_FOUND` | UC-07, BR-25, BR-28, D-10, AD-10 |
+| PATCH | `/api/todos/:id/completed` | 필요 | 쿼리 `today`. 본문 `isCompleted`(boolean 필수, 명시 지정·멱등) | 200 `Todo` (`true`면 `completedAt = now()`이고 이미 완료면 기존 값 유지, `false`면 null) | `UNAUTHORIZED` → `VALIDATION_ERROR` → `NOT_FOUND` | UC-07, BR-25, BR-28, D-10, AD-10 |
 | GET | `/api/health` | 없음 | - | 200 `{ "ok": true, "db": "up" }` (`SELECT 1`) | 503 `{ "ok": false, "db": "down" }` | PRD 6.3, 원칙 6.3 |
 
 ## 3. 응답 객체

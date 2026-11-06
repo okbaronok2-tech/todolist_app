@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 아키텍처 다이어그램 |
-| 현재 버전 | v0.9 |
+| 현재 버전 | v0.10 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.16, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.14, `docs/7-erd.md` v0.6, `docs/9-api-design.md` v0.7 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.17, `docs/3-user-scenario.md` v0.7, `docs/4-wireframe.md` v0.9, `docs/5-project-principle.md` v0.15, `docs/7-erd.md` v0.6, `docs/9-api-design.md` v0.8 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어그램)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임, PR은 프로젝트 원칙의 ID를 참조만 하며 재정의하지 않는다. 다이어그램은 모두 mermaid 코드 블록이다. 문서 간 표현이 다른 지점은 PRD를 기준으로 그리고 10장에 나열한다.
 
@@ -25,6 +25,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어�
 | v0.7 | 2026-11-05 | - | PRD v0.10 CORS 방식 반영. AD-01 CORS 문장, AD-02 개발·운영을 프록시·정적 제공에서 다른 origin + CORS로 수정, AD-03 `app.js` 라벨·`cors.js` 노드, AD-06 정적 제공 노드를 cors 노드로 교체, 참조 버전 갱신 | 문서 정보, AD-01, AD-02, AD-03, AD-06 |
 | v0.8 | 2026-11-05 | - | AD-03을 구현(`frontend/src`)에 맞춤. `CalendarBar`, `queries/use-auth`, `lib/calendar-lanes·status·error-text`, 세션 만료 핸들러 등록(ROOT → ST)과 세션 복구(ROOT → API `me`) 간선, 참조 버전 갱신 | 문서 정보, AD-03 |
 | v0.9 | 2026-11-06 | - | AD-03 `lib/`에 `theme.ts`(다크 모드)·`log.ts`(개발 모드 로그) 추가. 참조 버전 갱신 | 문서 정보, AD-03 |
+| v0.10 | 2026-11-06 | - | 실서비스(Vercel) 기준 정정: AD-02 운영은 서버리스·다른 site·HTTPS는 Vercel 종단(PD-04 resolved), 운영 노드 라벨, AD-07 쿠키 `SameSite` 개발 `Lax`/운영 `None`. 참조 버전 갱신 AD-03 간선(`queries → stores`, `api·components·stores → lib`) 추가, AD-07·08·13·16 오류 표시를 코드별 한국어 문구로, refresh 5xx·네트워크 오류 분기, NOT_FOUND 1.2초 지연. | 문서 정보, AD-02, AD-07, AD-03, AD-07, AD-08, AD-13, AD-16 |
 
 ---
 
@@ -65,7 +66,7 @@ flowchart LR
 
 ### AD-02 개발 / 운영 배포 차이
 
-개발은 브라우저가 Vite(`:5173`)에서 SPA를 받고 Express(`:3000`)의 `/api`를 CORS로 직접 호출한다. 운영은 SPA 정적 호스팅과 Express API를 따로 두고 `CORS_ORIGIN`에 SPA origin을 등록한다. 쿠키가 `SameSite=Lax`라 둘은 같은 site여야 한다 (NFR-06 (6), 원칙 6.1, 7.3). 운영은 HTTPS만 허용한다 (NFR-08). HTTPS 종료 지점은 PD-04(open)다.
+개발은 브라우저가 Vite(`:5173`)에서 SPA를 받고 Express(`:3000`)의 `/api`를 CORS로 직접 호출한다. 운영은 SPA 정적 호스팅과 Express API를 따로 두고 `CORS_ORIGIN`에 SPA origin을 등록한다. 운영은 Vercel이다. SPA는 정적 배포(`todolist-kje-fe`), API는 Express 서버리스 함수(`todolist-kje-be`, `app.js` default export)다. 운영 쿠키는 `SameSite=None; Secure`라 둘이 다른 site여도 된다(개발은 `Lax`로 같은 site) (NFR-06 (3)(6), 원칙 6.1, 7.3). 운영은 HTTPS만 허용하며 Vercel이 종단한다 (NFR-08, PD-04 resolved).
 
 ```mermaid
 flowchart TB
@@ -81,8 +82,8 @@ flowchart TB
 
     subgraph PROD["운영 (NODE_ENV=production, HTTPS만, 쿠키 Secure)"]
         PB["브라우저"]
-        PE["Express 1 프로세스 (A-01, API만)"]
-        PS["SPA 정적 호스팅 (frontend/dist)"]
+        PE["Express 서버리스 함수 (Vercel, API만)"]
+        PS["SPA 정적 배포 (Vercel, frontend/dist)"]
         PP[("PostgreSQL 17")]
         PB -->|"/ (SPA 자산)"| PS
         PB -->|"/api/* (CORS, CORS_ORIGIN에 SPA origin)"| PE
@@ -141,6 +142,10 @@ flowchart TB
     PAGES --> Q
     PAGES --> ST
     PAGES --> LIB
+    COMP --> LIB
+    API --> LIB
+    Q --> ST
+    ST --> LIB
     CAL --> CMN
     CMN -.->|"예외: CP-01 로그아웃 mutation만"| Q
     Q --> API
@@ -281,7 +286,7 @@ sequenceDiagram
     RT->>RT: 형식·길이 검사 BR-43, BR-44, BR-45
     alt 형식 위반
         RT-->>FE: 400 VALIDATION_ERROR
-        FE->>U: SC-02 유지, CP-02 message 표시
+        FE->>U: SC-02 유지, CP-02 오류 문구 표시
     else 통과
         RT->>SV: signup(input)
         SV->>DB: BEGIN
@@ -299,7 +304,7 @@ sequenceDiagram
             SV->>DB: INSERT refresh_tokens (user_id, token_hash SHA-256, expires_at +14일) NFR-06
             SV-->>RT: user { id, name } + 리프레시 토큰 원문
             RT->>RT: 액세스 토큰 JWT HS384 서명 (sub = userId, iat, exp +15분)
-            RT-->>FE: 2xx + Set-Cookie token (Path=/, Max-Age=900) + Set-Cookie refresh_token (Path=/api/auth, Max-Age=1209600), 둘 다 HttpOnly SameSite=Lax
+            RT-->>FE: 2xx + Set-Cookie token (Path=/, Max-Age=900) + Set-Cookie refresh_token (Path=/api/auth, Max-Age=1209600), 둘 다 HttpOnly, SameSite는 개발 Lax / 운영 None+Secure
             FE->>FE: app-store user 설정
             FE->>U: SC-03 이동 (SC-01 거치지 않음), 빈 목록 안내 CP-06
         end
@@ -327,7 +332,7 @@ sequenceDiagram
     alt 자격 증명 불일치 (BR-06)
         SV-->>RT: AppError INVALID_CREDENTIALS
         RT-->>FE: 401 INVALID_CREDENTIALS
-        FE->>U: SC-01 유지, 단일 message 표시 (이동 없음)
+        FE->>U: SC-01 유지, 단일 오류 문구 표시 (이동 없음)
     else 일치
         SV->>DB: DELETE refresh_tokens WHERE user_id = $1 AND (expires_at < now() OR revoked_at IS NOT NULL)
         SV->>DB: INSERT refresh_tokens (user_id, token_hash SHA-256, expires_at +14일)
@@ -541,7 +546,7 @@ sequenceDiagram
 
 ### AD-13 목록에서 NOT_FOUND 처리 (BR-02, BR-27, UC-06~08, US-11, US-17, SC-03, PRD 4.2)
 
-SC-03의 수정·완료·삭제 요청과 SC-07의 이름 변경·삭제 요청이 `NOT_FOUND`면 오류를 표시하고 해당 목록을 다시 조회한다. 편집 화면 진입 시 `NOT_FOUND`는 오류 표시 후 SC-03으로 이동한다. 타인 소유·미존재·형식 오류 ID의 응답 본문은 모두 같다 (BR-02).
+SC-03의 수정·완료·삭제 요청과 SC-07의 이름 변경·삭제 요청이 `NOT_FOUND`면 오류를 표시하고 해당 목록을 다시 조회한다. 편집 화면 진입 시 `NOT_FOUND`는 오류 표시 후 1.2초 뒤 SC-03으로 이동한다. 타인 소유·미존재·형식 오류 ID의 응답 본문은 모두 같다 (BR-02).
 
 ```mermaid
 sequenceDiagram
@@ -564,8 +569,8 @@ sequenceDiagram
             FE->>U: 목록에서 사라짐 (BR-27)
         end
     end
-    Note over FE,U: NOT_FOUND 분기 (페이지 onError, CP-02는 message만 표시)
-    FE->>FE: CP-02에 message 표시 (code는 표시하지 않음)
+    Note over FE,U: NOT_FOUND 분기 (queries의 onError가 재조회, CP-02는 코드별 한국어 문구 표시)
+    FE->>FE: CP-02에 코드별 한국어 문구 표시 (code 문자열은 표시하지 않음, VALIDATION_ERROR만 서버 message 병기)
     FE->>BE: todos.list(filter, today) 재조회
     BE-->>FE: 2xx 현재 목록
     FE->>U: 최신 목록 표시, 필터 선택 유지 (CP-06)
@@ -574,7 +579,7 @@ sequenceDiagram
     U->>FE: /todos/:id/edit 진입
     FE->>BE: 할일 조회
     BE-->>FE: 404 NOT_FOUND
-    FE->>U: 오류 메시지 표시 후 SC-03 이동
+    FE->>U: 오류 메시지 표시 후 1.2초 뒤 SC-03 이동
 ```
 
 ### AD-14 로그아웃 (UC-03, BR-01, F-09, US-03, CP-01, PD-01, NFR-06)
@@ -614,7 +619,7 @@ sequenceDiagram
 
 ### AD-16 액세스 토큰 만료 → 리프레시 → 재시도 (NFR-06, BR-53, US-16, PRD 4.2)
 
-보호 API가 `UNAUTHORIZED`를 반환하면 `api/client.ts`가 `POST /api/auth/refresh`를 1회 호출하고, 성공하면 원 요청을 1회 재시도한다. 동시에 여러 요청이 실패하면 진행 중인 리프레시 Promise 1개를 공유한다. `/api/auth/*` 요청의 `UNAUTHORIZED`는 리프레시를 시도하지 않는다. 회전(기존 행 폐기 + 새 행 삽입)은 한 트랜잭션이다. `revoked_at`이 이미 있는 토큰이 다시 오면 재사용 탐지로 그 사용자의 리프레시 행 전부를 폐기한다 (PRD 6.4).
+보호 API가 `UNAUTHORIZED`를 반환하면 `api/client.ts`가 `POST /api/auth/refresh`를 1회 호출하고, 성공하면 원 요청을 1회 재시도한다. 동시에 여러 요청이 실패하면 진행 중인 리프레시 Promise 1개를 공유한다. `/api/auth/*` 요청의 `UNAUTHORIZED`는 리프레시를 시도하지 않는다. 회전(기존 행 폐기 + 새 행 삽입)은 한 트랜잭션이다. `revoked_at`이 이미 있는 토큰이 다시 오면 재사용 탐지로 그 사용자의 리프레시 행 전부를 폐기한다 (PRD 6.4). refresh 호출 자체가 5xx나 네트워크 오류로 실패하면 일시 장애로 보고 세션 만료 처리 없이 원 요청의 오류를 그대로 표시한다(`api/client.ts`의 refresh 결과 `error`).
 
 ```mermaid
 sequenceDiagram

@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 프론트엔드 연동 가이드 |
-| 현재 버전 | v0.8 |
+| 현재 버전 | v0.9 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.16, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.14, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
+| 참조 문서 | `docs/2-PRD.md` v0.17, `docs/5-project-principle.md` v0.15, `docs/6-arch-diagram.md` v0.10, `docs/8-plan.md` v0.15, `docs/9-api-design.md` v0.8, `backend/swagger.yaml` v0.12 |
 | 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
 
 ## 변경 이력
@@ -23,6 +23,7 @@
 | v0.6 | 2026-11-06 | - | `today` 필수 엔드포인트 수 6→5로 정정(코드 `routes/todos.js` 기준), 참조 버전 갱신 | 문서 정보, 4장 |
 | v0.7 | 2026-11-06 | - | 쿠키 표·CSRF 항목을 운영 `SameSite=None; Secure`에 맞춤 (PRD v0.15). 참조 버전 갱신 | 문서 정보, 5장, 11장 |
 | v0.8 | 2026-11-06 | - | 11장 운영 배포(Vercel) 추가: 프론트·백엔드 URL, 환경변수, SPA 리라이트, 쿠키 조건, 운영 스모크. 참조 버전 갱신 | 문서 정보, 11장 |
+| v0.9 | 2026-11-06 | - | 실서비스 기준 정정: 1장 환경변수 기동 실패는 로컬 한정, 3장 `SameSite` 같은 site 조건은 개발 한정(운영 `None; Secure`), 11장 `PORT`·런타임 기재. 참조 버전 갱신 6장 오류 문구(VALIDATION_ERROR만 서버 message 병기, 계약 밖 코드는 code 그대로)·`ErrorMessage` 위치·NOT_FOUND 1.2초 지연 정정. | 문서 정보, 1장, 3장, 11장, 6장 |
 
 ---
 
@@ -44,10 +45,10 @@ npm run dev            # http://localhost:3000, 파일 변경 시 자동 재시�
 | 키 | 값 | 비고 |
 |----|----|------|
 | `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/todolist` | pg Pool 연결 문자열 |
-| `JWT_SECRET` | 48자 이상 임의 문자열 | 기본값 없음. 없거나 짧으면 기동 실패 (NFR-06) |
+| `JWT_SECRET` | 48자 이상 임의 문자열 | 기본값 없음. 없거나 짧으면 로컬 `server.js`는 기동 실패 (NFR-06). 운영 Vercel은 검사가 실행되지 않는다 |
 | `PORT` | `3000` | 기본 3000 |
 | `NODE_ENV` | `development` | `production`이면 쿠키에 `Secure` |
-| `CORS_ORIGIN` | `http://localhost:5173` | 허용 SPA origin, 쉼표 구분. 없으면 기동 실패 |
+| `CORS_ORIGIN` | `http://localhost:5173` | 허용 SPA origin, 쉼표 구분. 없으면 로컬 `server.js`는 기동 실패. 운영 Vercel은 검사 없음(빈 목록이면 CORS 헤더가 안 붙어 브라우저가 막는다) |
 
 기동 확인: `GET /api/health` → 200 `{ "ok": true, "db": "up" }`. DB 연결 실패면 503 `{ "ok": false, "db": "down" }`.
 
@@ -62,7 +63,7 @@ npm run dev            # http://localhost:3000, 파일 변경 시 자동 재시�
 VITE_API_URL=http://localhost:3000
 ```
 
-`fetch`는 `${import.meta.env.VITE_API_URL}/api/...` 절대 URL에 반드시 `credentials: 'include'`를 붙인다. 빠지면 쿠키가 전송·저장되지 않아 보호 API가 전부 `UNAUTHORIZED`다. `Authorization` 헤더는 없다. 쿠키가 `SameSite=Lax`라 SPA와 API는 같은 site(등록 도메인 동일, 포트·서브도메인만 다름)여야 한다. 다른 site에 두려면 쿠키를 `SameSite=None; Secure`로 바꿔야 한다 (현재 미지원).
+`fetch`는 `${import.meta.env.VITE_API_URL}/api/...` 절대 URL에 반드시 `credentials: 'include'`를 붙인다. 빠지면 쿠키가 전송·저장되지 않아 보호 API가 전부 `UNAUTHORIZED`다. `Authorization` 헤더는 없다. 개발은 쿠키가 `SameSite=Lax`라 SPA와 API가 같은 site(`localhost` 포트만 다름)다. 운영(`NODE_ENV=production`)은 `SameSite=None; Secure`라 SPA와 API가 다른 site(`todolist-kje-fe.vercel.app` ↔ `todolist-kje-be.vercel.app`)여도 된다.
 
 ## 3. 인증·쿠키
 
@@ -137,7 +138,7 @@ export async function request<T>(path: string, options: { method?: 'GET' | 'POST
 
 ## 6. 오류 모델
 
-거부 응답 본문은 항상 `{ "code": string, "message": string }` (BR-51). `message`는 영어 디버그용이며 화면에는 코드별 한국어 문구를 쓴다.
+거부 응답 본문은 항상 `{ "code": string, "message": string }` (BR-51). `message`는 영어 디버그용이며 화면에는 코드별 한국어 문구를 쓴다. 단 `VALIDATION_ERROR`는 어느 필드·제약인지 서버 `message`에만 있어 `입력값이 올바르지 않습니다. (message)`로 덧붙이고, 계약 밖 코드는 code 문자열을 그대로 표시한다 (`lib/error-text.ts`).
 
 | 코드 | HTTP | 발생 상황 |
 |------|------|-----------|
@@ -159,9 +160,9 @@ export async function request<T>(path: string, options: { method?: 'GET' | 'POST
 
 | 코드 | 처리 |
 |------|------|
-| `VALIDATION_ERROR`, `INVALID_DATE_RANGE`, `DUPLICATE_*`, `CATEGORY_LIMIT_EXCEEDED`, `INVALID_CREDENTIALS` | 현재 화면 유지, 폼 아래 `ErrorMessage`(CP-02) |
+| `VALIDATION_ERROR`, `INVALID_DATE_RANGE`, `DUPLICATE_*`, `CATEGORY_LIMIT_EXCEEDED`, `INVALID_CREDENTIALS` | 현재 화면 유지, 제목 아래 `ErrorMessage`(CP-02, 폼 위. 카테고리 관리는 추가 폼 아래·목록 위) |
 | `UNAUTHORIZED` | 4장 refresh 흐름. 최종 실패만 `/login` |
-| `NOT_FOUND` | 편집 진입(`GET /api/todos/:id`)은 안내 후 목록으로 이동. 나머지는 `ErrorMessage`(CP-02)에 표시 후 관련 목록 refetch(`queries/`의 `onError`) |
+| `NOT_FOUND` | 편집 진입(`GET /api/todos/:id`)은 안내 후 1.2초 뒤 목록으로 이동. 나머지는 `ErrorMessage`(CP-02)에 표시 후 관련 목록 refetch(`queries/`의 `onError`) |
 | `DEFAULT_CATEGORY_PROTECTED`, `INTERNAL_ERROR` | `ErrorMessage`(CP-02). 토스트 컴포넌트는 없다 |
 
 `ApiError`는 `types/api.ts`의 `{ code, message }`이며 `code`는 위 9개 유니온 + `INTERNAL_ERROR`.
@@ -242,7 +243,8 @@ Swagger UI는 API와 같은 origin(`:3000`)에서 제공되므로 "Try it out"�
 | 항목 | 값 |
 |------|----|
 | 프론트 | `https://todolist-kje-fe.vercel.app` — 프로젝트 `todolist-kje-fe`, Root Directory `frontend`, Framework Vite, 환경변수 `VITE_API_URL=https://todolist-kje-be.vercel.app`. `frontend/vercel.json`이 모든 경로를 `index.html`로 리라이트한다(react-router 직접 진입·새로고침) |
-| 백엔드 | `https://todolist-kje-be.vercel.app` — 프로젝트 `todolist-kje-be`, Express 서버리스 함수(`backend/src/app.js` default export). 환경변수 `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`, `CORS_ORIGIN=https://todolist-kje-fe.vercel.app` |
+| 백엔드 | `https://todolist-kje-be.vercel.app` — 프로젝트 `todolist-kje-be`, Express 서버리스 함수(`backend/src/app.js` default export). 환경변수 `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`, `CORS_ORIGIN=https://todolist-kje-fe.vercel.app`, `PORT`(설정돼 있으나 서버리스에서는 쓰이지 않는다) |
+| 런타임 | Vercel 프로젝트 기본 Node 26.x(`nodejs26.x`, 두 프로젝트 확인). 로컬 개발·테스트는 Node 24, `backend/package.json` `engines`는 `>=22` |
 | 쿠키 | 운영은 `SameSite=None; Secure` (3장). 두 도메인이 다른 site라 `Lax`면 로그인 뒤 모든 보호 API가 401이 된다 |
 | 시드 | 운영 DB에는 시드 계정이 없다. 가입해서 쓴다 |
 | 검증 | `test/e2e/scenarios/prod-smoke.js`(Playwright MCP): 로그인 → 등록 → 완료 → 캘린더 → 새로고침 → 삭제 → 다크 모드 → 로그아웃, API 5xx 없음 |

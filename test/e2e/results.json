@@ -11,8 +11,8 @@
     "spa": "http://localhost:5173 (vite dev)"
   },
   "summary": {
-    "items": 114,
-    "passed": 114,
+    "items": 111,
+    "passed": 111,
     "failed": 0,
     "screenshots": 43,
     "appDefects": 0,

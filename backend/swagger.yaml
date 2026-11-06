@@ -1,18 +1,18 @@
 # =============================================================================
 # 문서명    : TodoList API 명세 (OpenAPI 3.0.3)
-# 현재 버전 : v0.11
+# 현재 버전 : v0.12
 # 상태      : 초안
 # 작성일    : 2026-11-04
 # 참조 문서 :
 #   - docs/1-domain-definition.md v0.9
-#   - docs/2-PRD.md v0.16 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
-#   - docs/3-user-scenario.md v0.6
-#   - docs/5-project-principle.md v0.14
-#   - docs/6-arch-diagram.md v0.9
+#   - docs/2-PRD.md v0.17 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+#   - docs/3-user-scenario.md v0.7
+#   - docs/5-project-principle.md v0.15
+#   - docs/6-arch-diagram.md v0.10
 #   - docs/7-erd.md v0.6
-#   - docs/8-plan.md v0.14
+#   - docs/8-plan.md v0.15
 #   - docs/schema.sql
-#   - docs/9-api-design.md v0.7 (같은 내용의 표)
+#   - docs/9-api-design.md v0.8 (같은 내용의 표)
 #
 # 변경 이력
 # | 버전 | 날짜       | 작성자 | 변경 내용 | 영향 범위 |
@@ -28,6 +28,7 @@
 # | v0.9 | 2026-11-05 | -      | 11-security 조치: ID 15자리 이하, `Password` 72바이트, `PATCH /api/users/me` 비밀번호 변경 시 리프레시 전부 폐기 + `Set-Cookie` 2개 (PRD v0.12 6.4), 참조 버전 갱신 | 머리 주석, info 공통 규칙, x-document-info, /api/users/me, Password |
 # | v0.10 | 2026-11-06 | -      | 코드 대조: `Email` pattern 공백 거부(`^[^@\s]+@[^@\s]+$`), `PATCH /api/users/me` 200에 `Set-Cookie` 헤더 선언, 오류 example `message`를 실제 서버 영문 문구로(화면 한국어 문구는 `error-text.ts`), 참조 버전 갱신 | 머리 주석, info, x-document-info, /api/users/me, Email, 오류 응답 example |
 # | v0.11 | 2026-11-06 | -      | 쿠키 `SameSite` 개발 `Lax` / 운영 `None`+`Secure` (PRD v0.15 NFR-06, Vercel 다른 site 배포), 참조 버전 갱신 | 머리 주석, info, x-document-info, cookieAuth, SetAuthCookies, ClearAuthCookies |
+# | v0.12 | 2026-11-06 | -      | 코드·실서비스 대조: 공통 규칙 CORS 설명의 `SameSite=Lax` 같은 site 조건을 개발 한정으로(운영 `None`+`Secure`), 완료 처리 멱등(`completedAt` 유지) 설명, `x-document-info.date`를 작성일과 일치, `servers`에 운영 URL 추가, 참조 버전 갱신 | 머리 주석, info, x-document-info, servers, 공통 규칙, PATCH /api/todos/{id}/completed |
 #
 # 아래 x-document-info, x-changelog는 이 주석과 같은 내용을 기계가 읽도록 둔 것이다.
 # =============================================================================
@@ -35,27 +36,27 @@ openapi: 3.0.3
 
 info:
   title: TodoList API
-  version: 0.11.0
+  version: 0.12.0
   description: |
     TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.
 
     ## 참조 문서
     - `docs/1-domain-definition.md` v0.9 (F, UC, BR, ST, D)
-    - `docs/2-PRD.md` v0.16 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
-    - `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)
-    - `docs/5-project-principle.md` v0.14 (4장 API 규칙, 6.2 쿠키)
-    - `docs/6-arch-diagram.md` v0.9 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
+    - `docs/2-PRD.md` v0.17 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+    - `docs/3-user-scenario.md` v0.7 (US, 예시 데이터)
+    - `docs/5-project-principle.md` v0.15 (4장 API 규칙, 6.2 쿠키)
+    - `docs/6-arch-diagram.md` v0.10 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
     - `docs/7-erd.md` v0.6
-    - `docs/8-plan.md` v0.14 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
+    - `docs/8-plan.md` v0.15 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
     - `docs/schema.sql`
-    - `docs/9-api-design.md` v0.7 (같은 내용의 표)
+    - `docs/9-api-design.md` v0.8 (같은 내용의 표)
 
     ## 공통 규칙
     - 모든 경로는 `/api` 접두어를 가진다 (PRD 6.3).
     - 필드명은 camelCase (원칙 4장). id는 정수(DB `BIGINT`)를 JSON 숫자로 보낸다 (PRD 7장).
     - 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열이다 (PRD 7장, PR-05). 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열이다.
     - 인증: 쿠키 `token`(액세스, JWT HS384, 15분)과 `refresh_token`(리프레시, 불투명, 14일, `Path=/api/auth`). 비보호 경로는 `GET /api/health`, `POST /api/auth/signup|login|refresh|logout` (AD-06, BR-01).
-    - CORS: SPA와 API는 다른 origin이다. 서버는 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록의 Origin에만 `Access-Control-Allow-Origin`(요청 Origin 그대로)과 `Access-Control-Allow-Credentials: true`를 붙이고, `OPTIONS` 프리플라이트에 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`)를 준다. 클라이언트는 `credentials: 'include'`가 필요하다. 쿠키가 `SameSite=Lax`라 SPA와 API는 같은 site여야 한다 (NFR-06 (6)).
+    - CORS: SPA와 API는 다른 origin이다. 서버는 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록의 Origin에만 `Access-Control-Allow-Origin`(요청 Origin 그대로)과 `Access-Control-Allow-Credentials: true`를 붙이고, `OPTIONS` 프리플라이트에 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`)를 준다. 클라이언트는 `credentials: 'include'`가 필요하다. 쿠키 `SameSite`는 개발 `Lax`, 운영 `None`+`Secure`라 운영은 SPA와 API가 다른 site여도 된다 (NFR-06 (3)(6)).
     - 거부 응답 본문은 `{ "code", "message" }`이며 `code`는 BR-51의 9개 중 하나다. HTTP status 매핑(PRD 6.3):
       `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400,
       `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.
@@ -69,19 +70,19 @@ info:
 
 x-document-info:
   name: TodoList API 명세 (OpenAPI 3.0.3)
-  version: v0.11
+  version: v0.12
   status: 초안
-  date: "2026-11-05"
+  date: "2026-11-04"
   references:
     - { path: docs/1-domain-definition.md, version: v0.9 }
-    - { path: docs/2-PRD.md, version: v0.16 }
-    - { path: docs/3-user-scenario.md, version: v0.6 }
-    - { path: docs/5-project-principle.md, version: v0.14 }
-    - { path: docs/6-arch-diagram.md, version: v0.9 }
+    - { path: docs/2-PRD.md, version: v0.17 }
+    - { path: docs/3-user-scenario.md, version: v0.7 }
+    - { path: docs/5-project-principle.md, version: v0.15 }
+    - { path: docs/6-arch-diagram.md, version: v0.10 }
     - { path: docs/7-erd.md, version: v0.6 }
-    - { path: docs/8-plan.md, version: v0.14 }
+    - { path: docs/8-plan.md, version: v0.15 }
     - { path: docs/schema.sql, version: null }
-    - { path: docs/9-api-design.md, version: v0.7 }
+    - { path: docs/9-api-design.md, version: v0.8 }
 
 x-changelog:
   - version: v0.1
@@ -139,8 +140,15 @@ x-changelog:
     author: "-"
     changes: "쿠키 SameSite 개발 Lax / 운영 None+Secure (PRD v0.15 NFR-06, Vercel 다른 site 배포), 참조 버전 갱신"
     scope: 머리 주석, info, x-document-info, cookieAuth, SetAuthCookies, ClearAuthCookies
+  - version: v0.12
+    date: "2026-11-06"
+    author: "-"
+    changes: "코드·실서비스 대조: 공통 규칙 CORS 설명의 SameSite Lax 같은 site 조건을 개발 한정으로(운영 None+Secure), 완료 처리 멱등(completedAt 유지) 설명, x-document-info.date를 작성일과 일치, servers에 운영 URL 추가, 참조 버전 갱신"
+    scope: 머리 주석, info, x-document-info, servers, 공통 규칙, PATCH /api/todos/{id}/completed
 
 servers:
+  - url: https://todolist-kje-be.vercel.app
+    description: 운영 (Vercel 서버리스 함수, PRD PD-04). 허용 SPA origin은 `https://todolist-kje-fe.vercel.app`, HTTPS만, 쿠키 `SameSite=None; Secure`.
   - url: http://localhost:3000
     description: 로컬 개발 (Express `PORT` 기본 3000, 원칙 6.1, T-B01). SPA(`http://localhost:5173`)와 다른 origin이며 CORS로 호출한다. 운영도 다른 origin(HTTPS, NFR-08), 허용 SPA origin은 `CORS_ORIGIN`.
 
@@ -715,7 +723,7 @@ paths:
       summary: 할일 완료 처리 / 완료 취소
       description: |
         `isCompleted` 값을 명시 지정한다 (토글 아님, 멱등, D-10). 같은 값을 다시 보내도 결과가 같다.
-        `true`면 `completedAt = now()`, `false`면 `completedAt = null` (BR-25, BR-28). 완료 취소 시 상태는 ST-02~04로 다시 판정된다.
+        `true`면 `completedAt = now()`(이미 완료 상태면 기존 값을 유지, 멱등), `false`면 `completedAt = null` (BR-25, BR-28). 완료 취소 시 상태는 ST-02~04로 다시 판정된다.
         클라이언트는 낙관적 갱신 없이 응답의 `status`로 배지를 갱신한다 (PRD 4.2).
 
         - 관련: F-10, UC-07, BR-02, BR-25, BR-28, ST-01~04, D-10, US-10, US-17, SC-03, AD-10, T-B05
