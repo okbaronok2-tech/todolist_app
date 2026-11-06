@@ -13,7 +13,7 @@
 | `docs/2-PRD.md` | PRD (정본: 4.2 화면 동작, 6.3 API, 6.4 인증, NFR, 7장 DB) | v0.14 |
 | `docs/3-user-scenario.md` | 사용자 시나리오 (US, 샘플 데이터) | v0.6 |
 | `docs/4-wireframe.md` | 와이어프레임 (WF, CP) | v0.8 |
-| `docs/5-project-principle.md` | 프로젝트 구조 설계 원칙 (PR, 디렉터리 트리) | v0.12 |
+| `docs/5-project-principle.md` | 프로젝트 구조 설계 원칙 (PR, 디렉터리 트리) | v0.13 |
 | `docs/6-arch-diagram.md` | 아키텍처 다이어그램 (AD, mermaid) | v0.9 |
 | `docs/7-erd.md` | ERD (mermaid) | v0.6 |
 | `docs/8-plan.md` | 실행 계획 (WBS, Task T-X/D/B/F) | v0.13 |

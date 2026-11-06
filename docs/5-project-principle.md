@@ -4,7 +4,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.12 |
+| 현재 버전 | v0.13 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
@@ -28,6 +28,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.10 | 2026-11-05 | - | 7.1 `docs/perf-result.md` 작성 완료 표기, 7.2에 `load-seed.js`·`load.js`(k6, `npm run load:seed`), 참조 버전 갱신 | 문서 정보, 7.1, 7.2 |
 | v0.11 | 2026-11-05 | - | 7.3 트리에 `lib/theme.ts`(다크 모드, 스타일 가이드 2.4)·`lib/log.ts`(개발 모드 콘솔 로그) 추가. 3.3에 개발 모드 로그 규칙(`import.meta.env.DEV`에서만, 비밀번호·토큰·본문 제외) 추가. 참조 버전 갱신 | 문서 정보, 3.3, 7.3 |
 | v0.12 | 2026-11-06 | - | 7.1 트리를 실제에 맞춤: `README.md` 5단계, `test/e2e/`(Playwright MCP 통합 테스트 스크립트·리포트·스크린샷) 추가. 참조 버전 갱신 | 문서 정보, 7.1 |
+| v0.13 | 2026-11-06 | - | 7.2 `app.js`에 default export 추가 기록(Vercel 서버리스가 default export 핸들러를 요구. `server.js`·테스트는 named export 유지). 참조 버전 갱신 | 문서 정보, 7.2 |
 
 ---
 
@@ -241,7 +242,7 @@ backend/
 ├── .prettierrc
 ├── src/
 │   ├── server.js           # 환경변수 검사, app.listen, graceful shutdown
-│   ├── app.js              # express(), cors·미들웨어·라우트 등록, 오류 미들웨어 (정적 파일 제공 없음)
+│   ├── app.js              # express(), cors·미들웨어·라우트 등록, 오류 미들웨어 (정적 파일 제공 없음). named `app` + default export (서버리스 핸들러)
 │   ├── routes/
 │   │   ├── auth.js         # POST signup/login/logout/refresh. 쿠키 설정·삭제, refresh·logout은 인증 미들웨어 없음 (UC-01~03, NFR-06)
 │   │   ├── users.js        # GET/PATCH users/me (UC-04, P1)

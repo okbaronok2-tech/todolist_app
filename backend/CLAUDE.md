@@ -16,7 +16,7 @@
 ```
 src/
   server.js        환경변수 검사, listen, SIGTERM/SIGINT 종료
-  app.js           express 조립: cors, json, cookie-parser, /api/health, /api/docs(개발만), 라우터, notFound, errorHandler
+  app.js           express 조립: cors, json, cookie-parser, /api/health, /api/docs(개발만), 라우터, notFound, errorHandler. named export `app` + default export(서버리스 핸들러용)
   routes/          HTTP 입출력만. validate.js로 입력 검증(BR-52 순서) 후 서비스 호출. users.js는 비밀번호 변경 시 새 쿠키 설정
   services/        비즈니스 규칙(BR), 트랜잭션 경계(withTransaction), 상태 판정(todo-status.js)
   repositories/    SQL만. 고정 SQL + 파라미터, 유니크 위반은 isUniqueViolation으로 판별

@@ -45,3 +45,6 @@ app.use('/api/todos', todosRouter);
 
 app.use(notFound);
 app.use(errorHandler);
+
+// Vercel 등 서버리스 런타임은 모듈의 default export를 핸들러로 요구한다. 로컬·테스트는 named export `app`을 쓴다 (server.js, tests/scenarios.test.js)
+export default app;

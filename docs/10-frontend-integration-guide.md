@@ -8,7 +8,7 @@
 | 현재 버전 | v0.6 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.14, `docs/5-project-principle.md` v0.12, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.13, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.10 |
+| 참조 문서 | `docs/2-PRD.md` v0.14, `docs/5-project-principle.md` v0.13, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.13, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.10 |
 | 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
 
 ## 변경 이력
