@@ -8,6 +8,7 @@ import { ErrorMessage } from './ErrorMessage';
 import { ConfirmDialog } from './ConfirmDialog';
 import { EmptyList } from './EmptyList';
 import { TopNav } from './TopNav';
+import { ThemeToggle } from './ThemeToggle';
 import { TodoRow } from './TodoRow';
 import type { Todo } from '../../types/todo';
 
@@ -68,14 +69,22 @@ describe('TopNav (CP-01)', () => {
     expect(screen.queryByText('내 정보')).toBeNull();
     expect(screen.getAllByRole('link')).toHaveLength(3);
   });
-  it('테마 버튼: 누르면 html[data-theme]과 localStorage.theme이 바뀐다', () => {
+  it('다크 모드 버튼은 메뉴에 없다', () => {
+    wrap(<TopNav />);
+    expect(screen.queryByText('다크 모드')).toBeNull();
+  });
+});
+
+describe('ThemeToggle', () => {
+  it('누르면 html[data-theme]과 localStorage.theme이 바뀌고 aria-pressed가 따라간다', () => {
     localStorage.removeItem('theme');
     delete document.documentElement.dataset.theme;
-    wrap(<TopNav />);
-    fireEvent.click(screen.getByText('다크 모드'));
+    render(<ThemeToggle />);
+    fireEvent.click(screen.getByRole('button', { name: '다크 모드' }));
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(localStorage.getItem('theme')).toBe('dark');
-    fireEvent.click(screen.getByText('라이트 모드'));
+    expect(screen.getByRole('button', { name: '라이트 모드' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: '라이트 모드' }));
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(localStorage.getItem('theme')).toBe('light');
   });

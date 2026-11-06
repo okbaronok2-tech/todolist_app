@@ -49,6 +49,10 @@ a { color: var(--c-primary); }
 .nav__item--active { color: #fff; font-weight: 700; text-decoration: underline; }
 .nav__toggle { display: none; margin-left: auto; color: #fff; border-color: #fff; background: transparent; }
 
+/* 다크 모드 토글: 메뉴와 별개로 우하단 고정. 대화상자(z-index 10)보다 아래 */
+.theme-toggle { position: fixed; right: var(--sp-4); bottom: var(--sp-4); z-index: 5; height: var(--control-h); padding: 0 var(--sp-4); background: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border-strong); border-radius: 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); font-size: var(--fs-sm); cursor: pointer; }
+.theme-toggle[aria-pressed='true'] { background: var(--c-primary-bg); border-color: var(--c-primary); color: var(--c-primary); }
+
 /* CP-02 */
 .alert { background: var(--c-danger-bg); border-left: 4px solid var(--c-danger); color: var(--c-danger); padding: var(--sp-2) var(--sp-3); margin: var(--sp-3) 0; }
 

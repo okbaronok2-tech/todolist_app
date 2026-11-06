@@ -6,6 +6,7 @@ import { setSessionExpiredHandler } from './api/client';
 import { me } from './api/auth';
 import { useAppStore } from './stores/app-store';
 import { log } from './lib/log';
+import { ThemeToggle } from './components/common/ThemeToggle';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { TodoListPage } from './pages/TodoListPage';
@@ -57,16 +58,19 @@ export function App() {
   if (!checked) return <p className="loading">불러오는 중...</p>;
 
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/todos" element={<RequireAuth><TodoListPage /></RequireAuth>} />
-      <Route path="/todos/new" element={<RequireAuth><TodoFormPage /></RequireAuth>} />
-      <Route path="/todos/:id/edit" element={<RequireAuth><TodoFormPage /></RequireAuth>} />
-      <Route path="/calendar" element={<RequireAuth><CalendarPage /></RequireAuth>} />
-      <Route path="/categories" element={<RequireAuth><CategoriesPage /></RequireAuth>} />
-      <Route path="/me" element={<RequireAuth><MePage /></RequireAuth>} />
-      <Route path="*" element={<Navigate to="/todos" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/todos" element={<RequireAuth><TodoListPage /></RequireAuth>} />
+        <Route path="/todos/new" element={<RequireAuth><TodoFormPage /></RequireAuth>} />
+        <Route path="/todos/:id/edit" element={<RequireAuth><TodoFormPage /></RequireAuth>} />
+        <Route path="/calendar" element={<RequireAuth><CalendarPage /></RequireAuth>} />
+        <Route path="/categories" element={<RequireAuth><CategoriesPage /></RequireAuth>} />
+        <Route path="/me" element={<RequireAuth><MePage /></RequireAuth>} />
+        <Route path="*" element={<Navigate to="/todos" replace />} />
+      </Routes>
+      <ThemeToggle />
+    </>
   );
 }
