@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 프론트엔드 연동 가이드 |
-| 현재 버전 | v0.7 |
+| 현재 버전 | v0.8 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.15, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.13, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
+| 참조 문서 | `docs/2-PRD.md` v0.16, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.14, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
 | 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
 
 ## 변경 이력
@@ -22,6 +22,7 @@
 | v0.5 | 2026-11-05 | - | 11-security 조치 반영: 3장 비밀번호 변경 시 새 쿠키(다른 기기 로그아웃), 8장 비밀번호 72바이트·ID 15자리, 참조 버전 갱신 | 문서 정보, 3장, 7장, 8장 |
 | v0.6 | 2026-11-06 | - | `today` 필수 엔드포인트 수 6→5로 정정(코드 `routes/todos.js` 기준), 참조 버전 갱신 | 문서 정보, 4장 |
 | v0.7 | 2026-11-06 | - | 쿠키 표·CSRF 항목을 운영 `SameSite=None; Secure`에 맞춤 (PRD v0.15). 참조 버전 갱신 | 문서 정보, 5장, 11장 |
+| v0.8 | 2026-11-06 | - | 11장 운영 배포(Vercel) 추가: 프론트·백엔드 URL, 환경변수, SPA 리라이트, 쿠키 조건, 운영 스모크. 참조 버전 갱신 | 문서 정보, 11장 |
 
 ---
 
@@ -233,3 +234,17 @@ export async function request<T>(path: string, options: { method?: 'GET' | 'POST
 - 운영 모드에서는 제공하지 않는다.
 
 Swagger UI는 API와 같은 origin(`:3000`)에서 제공되므로 "Try it out"에 쿠키가 그대로 붙는다. 로그인을 먼저 실행하면 이후 보호 API도 호출된다.
+
+---
+
+## 11. 운영 배포 (Vercel, PRD PD-04)
+
+| 항목 | 값 |
+|------|----|
+| 프론트 | `https://todolist-kje-fe.vercel.app` — 프로젝트 `todolist-kje-fe`, Root Directory `frontend`, Framework Vite, 환경변수 `VITE_API_URL=https://todolist-kje-be.vercel.app`. `frontend/vercel.json`이 모든 경로를 `index.html`로 리라이트한다(react-router 직접 진입·새로고침) |
+| 백엔드 | `https://todolist-kje-be.vercel.app` — 프로젝트 `todolist-kje-be`, Express 서버리스 함수(`backend/src/app.js` default export). 환경변수 `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`, `CORS_ORIGIN=https://todolist-kje-fe.vercel.app` |
+| 쿠키 | 운영은 `SameSite=None; Secure` (3장). 두 도메인이 다른 site라 `Lax`면 로그인 뒤 모든 보호 API가 401이 된다 |
+| 시드 | 운영 DB에는 시드 계정이 없다. 가입해서 쓴다 |
+| 검증 | `test/e2e/scenarios/prod-smoke.js`(Playwright MCP): 로그인 → 등록 → 완료 → 캘린더 → 새로고침 → 삭제 → 다크 모드 → 로그아웃, API 5xx 없음 |
+
+`main` 푸시가 두 프로젝트를 자동 배포한다. 배포 상태·런타임 로그는 Vercel 대시보드(팀 `mce-du`) 또는 Vercel MCP로 본다.

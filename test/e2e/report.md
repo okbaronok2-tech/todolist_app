@@ -26,6 +26,8 @@
 | `us-19.js` | US-19 (P1) 내 정보 수정 (+예외 2) | 7 | 7 | 2 |
 | 합계 | US-01~19 전부 | **114** | **114** | **43** |
 
+운영 배포 스모크(별도, 로컬 시드 무관): `prod-smoke.js` 9항목 9 통과, 스크린샷 4장 (`PROD-*.png`). 대상 `https://todolist-kje-fe.vercel.app` → `https://todolist-kje-be.vercel.app`. 확인한 것: cross-site 쿠키(`SameSite=None; Secure`) 로그인, 등록·완료·삭제, 캘린더, 새로고침(SPA 리라이트) 후 세션 유지, 다크 모드, 로그아웃, API 5xx 0건.
+
 항목별 결과는 `results.json`. 실행 방법은 `README.md`.
 
 ### 실행 중 고친 것 (앱이 아니라 테스트 스크립트)

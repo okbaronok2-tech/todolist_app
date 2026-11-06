@@ -2,140 +2,621 @@
   "runAt": "2026-11-06",
   "tool": "Playwright MCP (Chromium), browser_run_code_unsafe",
   "fixedClock": "2026-11-03T12:00:00",
-  "viewport": { "desktop": "1280x900", "mobile": "375x740" },
-  "servers": { "api": "http://localhost:3000 (npm run dev)", "spa": "http://localhost:5173 (vite dev)" },
-  "summary": { "items": 114, "passed": 114, "failed": 0, "screenshots": 43, "appDefects": 0 },
+  "viewport": {
+    "desktop": "1280x900",
+    "mobile": "375x740"
+  },
+  "servers": {
+    "api": "http://localhost:3000 (npm run dev)",
+    "spa": "http://localhost:5173 (vite dev)"
+  },
+  "summary": {
+    "items": 114,
+    "passed": 114,
+    "failed": 0,
+    "screenshots": 43,
+    "appDefects": 0,
+    "prodSmoke": {
+      "items": 9,
+      "passed": 9,
+      "screenshots": 4
+    }
+  },
   "groups": [
-    { "file": "us-01.js", "scenarios": ["US-01"], "rows": [
-      { "step": "US-01-1 /signup 표시, 입력 제약 안내 3개", "pass": true },
-      { "step": "US-01-ex DUPLICATE_EMAIL(대소문자만 다름): /signup 유지, 오류 표시", "pass": true, "note": "이미 가입된 이메일입니다." },
-      { "step": "US-01-ex VALIDATION 비밀번호 7자", "pass": true, "note": "입력값이 올바르지 않습니다. (password must be 8 to 64 characters)" },
-      { "step": "US-01-ex VALIDATION 이메일 @ 없음", "pass": true, "note": "(email must be local@domain, 254 chars or less)" },
-      { "step": "US-01-ex VALIDATION 이름 공백만", "pass": true, "note": "(name must be 1 to 50 characters after trim)" },
-      { "step": "US-01-2 가입 후 /todos 자동 로그인, token·refresh_token HttpOnly", "pass": true },
-      { "step": "US-01-3 할일 0건 빈 목록 안내", "pass": true },
-      { "step": "US-01-4 카테고리 '기본' 1개만", "pass": true }
-    ] },
-    { "file": "us-02-03.js", "scenarios": ["US-02", "US-03"], "rows": [
-      { "step": "US-02-1 비밀번호 오류: INVALID_CREDENTIALS 401, 단일 오류, /login 유지", "pass": true },
-      { "step": "US-02-2 없는 이메일: 1단계와 같은 코드·메시지 (BR-06)", "pass": true, "note": "{\"code\":\"INVALID_CREDENTIALS\",\"message\":\"invalid email or password\"}" },
-      { "step": "US-02-3 로그인 성공: /todos 7건, HttpOnly 쿠키 2개", "pass": true },
-      { "step": "US-03-1 로그아웃: Set-Cookie로 token·refresh_token 삭제, 쿠키 0개, /login", "pass": true, "note": "set-cookie 2개" },
-      { "step": "US-03-2 뒤로 가기: 할일 제목 0건, /login", "pass": true },
-      { "step": "US-03-3 /calendar 직접 입력 → /login (BR-01)", "pass": true },
-      { "step": "US-03 쿠키 없는 todos 요청 UNAUTHORIZED 401", "pass": true }
-    ] },
-    { "file": "us-12-15.js", "scenarios": ["US-12", "US-13", "US-14", "US-15"], "rows": [
-      { "step": "US-12 필터 미선택/미선택 → [6,1,2,5,4,3,7]", "pass": true },
-      { "step": "US-12 필터 업무/미선택 → [1,2,5,3]", "pass": true },
-      { "step": "US-12 필터 미선택/기한 초과 → [6,2]", "pass": true },
-      { "step": "US-12 필터 업무/진행중 → [5]", "pass": true },
-      { "step": "US-12 필터 개인/완료 → [] 빈 목록 안내", "pass": true, "note": "조건에 맞는 할일이 없습니다." },
-      { "step": "US-12 모든 목록 요청에 today=2026-11-03", "pass": true, "note": "10건" },
-      { "step": "US-12-ex today 누락 / today=2026/11/03 → VALIDATION_ERROR 400", "pass": true },
-      { "step": "US-13-1/2 월 뷰 42칸, 요청 from=10-26 to=12-06 today=11-03", "pass": true },
-      { "step": "US-13-3/4 7건 전부 표시(완료 포함, 업무 필터 미적용)", "pass": true, "note": "막대 11개" },
-      { "step": "US-13-3 완료·기한 초과 상태 구분 표시", "pass": true },
-      { "step": "US-13-5 [다음] → 2026-11-30~2027-01-03, 빈 캘린더", "pass": true },
-      { "step": "US-13-5 [오늘] → 2026-11 복귀", "pass": true },
-      { "step": "US-13-6 할일 5 선택 → /todos/5/edit", "pass": true },
-      { "step": "US-14-1 주 뷰 11-02~11-08, 요청 from/to/today", "pass": true },
-      { "step": "US-14-2 날짜 칸별 할일 표와 일치 (할일 6 미표시)", "pass": true },
-      { "step": "US-14-3 [다음] 11-09~11-15: 할일 7이 11-09, 11-10 칸", "pass": true },
-      { "step": "US-14-4 [오늘] → 11-02~11-08 복귀", "pass": true },
-      { "step": "US-15-1 일 뷰 11-03: 할일 5, 4, 요청 from=to=11-03", "pass": true },
-      { "step": "US-15-2 [이전] 11-02: 할일 1, 2, 5", "pass": true },
-      { "step": "US-15-3 [다음] 두 번 11-04: 할일 3", "pass": true }
-    ] },
-    { "file": "us-07.js", "scenarios": ["US-07"], "rows": [
-      { "step": "US-12 보강: 로그인 직후 목록 요청에 today 포함", "pass": true },
-      { "step": "US-07-1 [등록] → /todos/new", "pass": true },
-      { "step": "US-07-2 저장 → /todos 8건", "pass": true },
-      { "step": "US-07-3 저장 → 9건", "pass": true },
-      { "step": "US-07 고객 미팅 준비: 11-05~11-05, 기본, 시작 전, 미완료", "pass": true },
-      { "step": "US-07 견적서 작성: 11-03~11-04, 업무, 진행중", "pass": true },
-      { "step": "US-07 목록 순서 6,1,2,5,4,견적서,3,고객,7", "pass": true }
-    ] },
-    { "file": "us-04-06-05.js", "scenarios": ["US-04", "US-06", "US-05"], "rows": [
-      { "step": "US-04-1 /categories: 기본(기본 카테고리 표시), 과제", "pass": true },
-      { "step": "US-04-2 동아리 추가 → 3개", "pass": true },
-      { "step": "US-04-3 이름 변경 '동아리 활동' 반영", "pass": true },
-      { "step": "US-04-4 등록 화면 카테고리 선택지: 기본, 과제, 동아리 활동", "pass": true },
-      { "step": "US-04-ex 앞뒤 공백 과제 추가 → DUPLICATE_CATEGORY_NAME, 개수 불변", "pass": true },
-      { "step": "US-04-ex 31자 → 화면은 maxlength=30으로 차단, API는 VALIDATION_ERROR 400", "pass": true },
-      { "step": "US-04-ex 20개에서 추가 → CATEGORY_LIMIT_EXCEEDED, 개수 불변", "pass": true },
-      { "step": "US-04 정리: 임시 카테고리 삭제 후 3개", "pass": true },
-      { "step": "US-06-1 기본 행 [이름 변경]·[삭제] 비활성", "pass": true },
-      { "step": "US-06-2 과제 → '기본' 이름 변경: DUPLICATE_CATEGORY_NAME, 과제 유지", "pass": true },
-      { "step": "US-06-3 '기본' 추가 → DUPLICATE_CATEGORY_NAME, 개수 불변", "pass": true },
-      { "step": "US-06-4 API 기본 카테고리 삭제 → DEFAULT_CATEGORY_PROTECTED 403", "pass": true },
-      { "step": "US-06-5 API 기본 카테고리 이름 변경 → DEFAULT_CATEGORY_PROTECTED 403", "pass": true },
-      { "step": "US-06 기본 카테고리 '기본' 1개 유지", "pass": true },
-      { "step": "US-05-1 삭제 확인 대화상자, 기본 카테고리 이동 안내", "pass": true },
-      { "step": "US-05-2 취소 → 변화 없음", "pass": true },
-      { "step": "US-05-3 확인 → 과제 사라짐", "pass": true },
-      { "step": "US-05-4 할일 8 카테고리 '기본', 필터 선택지에 과제 없음, 할일 1건", "pass": true }
-    ] },
-    { "file": "us-09-10-11.js", "scenarios": ["US-09", "US-10", "US-11"], "rows": [
-      { "step": "US-09-1 편집 화면에 기존 값", "pass": true },
-      { "step": "US-09-2/3 할일 3: 11-03~11-06, 개인, 진행중", "pass": true },
-      { "step": "US-09-4 카테고리 미선택 저장 → 기본 (BR-12)", "pass": true },
-      { "step": "US-09-5 완료 할일 제목 수정 → 완료 유지, 7건 불변", "pass": true },
-      { "step": "US-09-ex 시작일 > 종료일 → INVALID_DATE_RANGE 400, 화면 유지", "pass": true },
-      { "step": "US-09-ex 제목 공백만 → VALIDATION_ERROR 400, 필드 오류", "pass": true },
-      { "step": "US-09-ex [취소] → 목록 복귀, 기존 값 유지", "pass": true },
-      { "step": "US-10-1 할일 2(기한 초과) 체크 → 완료, completedAt 비null", "pass": true },
-      { "step": "US-10-2 해제 → 기한 초과, completedAt null", "pass": true },
-      { "step": "US-10-3 할일 5 체크 → 완료 / 해제 → 진행중", "pass": true },
-      { "step": "US-10-4 할일 3 체크 → 완료 / 해제 → 진행중(수정 후 11-03~11-06)", "pass": true },
-      { "step": "US-10-5 할일 1 해제 → 기한 초과 / 다시 체크 → 완료", "pass": true },
-      { "step": "US-10 요청 본문에 isCompleted true/false 명시 (D-10), 8회", "pass": true },
-      { "step": "US-11-1 삭제 확인 대화상자", "pass": true },
-      { "step": "US-11-2 취소 → 7건 유지", "pass": true },
-      { "step": "US-11-3 확인 → 헬스장 등록 사라짐, 6건", "pass": true },
-      { "step": "US-11-4 /todos/6/edit → NOT_FOUND 오류 표시 후 /todos 이동", "pass": true }
-    ] },
-    { "file": "us-08-17.js", "scenarios": ["US-08", "US-17"], "rows": [
-      { "step": "US-08-1 제목 비움 → VALIDATION_ERROR 400, 제목 필드 오류, 화면 유지", "pass": true },
-      { "step": "US-08-2 시작일 > 종료일: 클라이언트 사전 안내 + 서버 INVALID_DATE_RANGE 400", "pass": true, "note": "안내 '시작일이 종료일보다 늦습니다. 저장하면 서버가 거부합니다.'" },
-      { "step": "US-08-3 과거 날짜 저장 성공 → 2건, 기한 초과", "pass": true },
-      { "step": "US-08-ex 제목 101자 → VALIDATION_ERROR / 제목 없음+역순 → VALIDATION_ERROR(BR-52) / 시작=종료 → 201", "pass": true },
-      { "step": "US-17 /todos/1/edit → NOT_FOUND 오류 표시 후 /todos", "pass": true },
-      { "step": "US-17 /todos/9999/edit → NOT_FOUND 오류 표시 후 /todos", "pass": true },
-      { "step": "US-17 /todos/abc/edit → NOT_FOUND 오류 표시 후 /todos", "pass": true },
-      { "step": "US-17-1~3 응답 본문 동일(BR-02), 5xx 없음", "pass": true, "note": "{\"code\":\"NOT_FOUND\",\"message\":\"resource not found\"} ×3" },
-      { "step": "US-17-4 타인 할일 1 수정·완료·삭제 → 모두 NOT_FOUND 404", "pass": true },
-      { "step": "US-17-5 타인 카테고리 3으로 등록·필터 → NOT_FOUND 404 (BR-16)", "pass": true },
-      { "step": "US-17 PS-01 할일 수 불변 (2건)", "pass": true },
-      { "step": "US-17 PS-02 할일 1 불변 (완료, 11-01~11-02)", "pass": true }
-    ] },
-    { "file": "us-16.js", "scenarios": ["US-16"], "rows": [
-      { "step": "US-16-a-2 token 쿠키만 삭제", "pass": true },
-      { "step": "US-16-a-3 401 → refresh 1회 → 재시도 1회 → 성공, /todos 복귀, 새 쿠키 2개", "pass": true, "note": "PATCH /api/todos/3 → POST /api/auth/refresh → PATCH /api/todos/3" },
-      { "step": "US-16-b-6 401 → refresh도 401 → /login 이동 (refresh 1회, 재시도 없음)", "pass": true, "note": "PATCH /api/todos/3 → POST /api/auth/refresh" },
-      { "step": "US-16-b-7 재로그인 후 할일 3 제목 '팀 회의 자료 준비(a)' (b 미반영, BR-53)", "pass": true }
-    ] },
-    { "file": "us-18.js", "scenarios": ["US-18"], "rows": [
-      { "step": "US-18-1 /signup 단일 열", "pass": true, "note": "grid columns=1" },
-      { "step": "US-18-2 로그인 → /todos, 상단 간이 메뉴 [메뉴] 버튼 표시", "pass": true },
-      { "step": "US-18-3 등록 → 2건", "pass": true },
-      { "step": "US-18-4 할일 8 완료 체크 → 완료", "pass": true },
-      { "step": "US-18-5 상태 완료 → 할일 8만 / 미선택 → 2건", "pass": true },
-      { "step": "US-18-6 종료일 11-08 수정 → 11-05~11-08", "pass": true },
-      { "step": "US-18-7 삭제 → 1건", "pass": true },
-      { "step": "US-18-8 카테고리 시험 추가 → 3개", "pass": true },
-      { "step": "US-18-9 월 뷰: 할일 8이 11-02~11-06 칸에 표시 (점 5칸)", "pass": true, "note": "dots=5 bars=1" },
-      { "step": "US-18-10 로그아웃 → /login", "pass": true },
-      { "step": "US-18 뒤로 가기 /signup → /login", "pass": true }
-    ] },
-    { "file": "us-19.js", "scenarios": ["US-19"], "rows": [
-      { "step": "US-19-1 /me 현재 이름 '이서준'", "pass": true },
-      { "step": "US-19-2 이름 '이서준(팀장)' 저장 반영", "pass": true },
-      { "step": "US-19-3 현재 비밀번호 오류 → INVALID_CREDENTIALS 401, /me 유지", "pass": true },
-      { "step": "US-19-4 비밀번호 변경 성공 200, 새 쿠키 2개 발급 (S-01)", "pass": true, "note": "Set-Cookie token, refresh_token" },
-      { "step": "US-19-ex 새 비밀번호 7자 / 이름 공백만 → VALIDATION_ERROR 400", "pass": true },
-      { "step": "US-19-5 옛 비밀번호 로그인 실패 401", "pass": true },
-      { "step": "US-19-5 새 비밀번호 로그인 성공", "pass": true }
-    ] }
+    {
+      "file": "us-01.js",
+      "scenarios": [
+        "US-01"
+      ],
+      "rows": [
+        {
+          "step": "US-01-1 /signup 표시, 입력 제약 안내 3개",
+          "pass": true
+        },
+        {
+          "step": "US-01-ex DUPLICATE_EMAIL(대소문자만 다름): /signup 유지, 오류 표시",
+          "pass": true,
+          "note": "이미 가입된 이메일입니다."
+        },
+        {
+          "step": "US-01-ex VALIDATION 비밀번호 7자",
+          "pass": true,
+          "note": "입력값이 올바르지 않습니다. (password must be 8 to 64 characters)"
+        },
+        {
+          "step": "US-01-ex VALIDATION 이메일 @ 없음",
+          "pass": true,
+          "note": "(email must be local@domain, 254 chars or less)"
+        },
+        {
+          "step": "US-01-ex VALIDATION 이름 공백만",
+          "pass": true,
+          "note": "(name must be 1 to 50 characters after trim)"
+        },
+        {
+          "step": "US-01-2 가입 후 /todos 자동 로그인, token·refresh_token HttpOnly",
+          "pass": true
+        },
+        {
+          "step": "US-01-3 할일 0건 빈 목록 안내",
+          "pass": true
+        },
+        {
+          "step": "US-01-4 카테고리 '기본' 1개만",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-02-03.js",
+      "scenarios": [
+        "US-02",
+        "US-03"
+      ],
+      "rows": [
+        {
+          "step": "US-02-1 비밀번호 오류: INVALID_CREDENTIALS 401, 단일 오류, /login 유지",
+          "pass": true
+        },
+        {
+          "step": "US-02-2 없는 이메일: 1단계와 같은 코드·메시지 (BR-06)",
+          "pass": true,
+          "note": "{\"code\":\"INVALID_CREDENTIALS\",\"message\":\"invalid email or password\"}"
+        },
+        {
+          "step": "US-02-3 로그인 성공: /todos 7건, HttpOnly 쿠키 2개",
+          "pass": true
+        },
+        {
+          "step": "US-03-1 로그아웃: Set-Cookie로 token·refresh_token 삭제, 쿠키 0개, /login",
+          "pass": true,
+          "note": "set-cookie 2개"
+        },
+        {
+          "step": "US-03-2 뒤로 가기: 할일 제목 0건, /login",
+          "pass": true
+        },
+        {
+          "step": "US-03-3 /calendar 직접 입력 → /login (BR-01)",
+          "pass": true
+        },
+        {
+          "step": "US-03 쿠키 없는 todos 요청 UNAUTHORIZED 401",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-12-15.js",
+      "scenarios": [
+        "US-12",
+        "US-13",
+        "US-14",
+        "US-15"
+      ],
+      "rows": [
+        {
+          "step": "US-12 필터 미선택/미선택 → [6,1,2,5,4,3,7]",
+          "pass": true
+        },
+        {
+          "step": "US-12 필터 업무/미선택 → [1,2,5,3]",
+          "pass": true
+        },
+        {
+          "step": "US-12 필터 미선택/기한 초과 → [6,2]",
+          "pass": true
+        },
+        {
+          "step": "US-12 필터 업무/진행중 → [5]",
+          "pass": true
+        },
+        {
+          "step": "US-12 필터 개인/완료 → [] 빈 목록 안내",
+          "pass": true,
+          "note": "조건에 맞는 할일이 없습니다."
+        },
+        {
+          "step": "US-12 모든 목록 요청에 today=2026-11-03",
+          "pass": true,
+          "note": "10건"
+        },
+        {
+          "step": "US-12-ex today 누락 / today=2026/11/03 → VALIDATION_ERROR 400",
+          "pass": true
+        },
+        {
+          "step": "US-13-1/2 월 뷰 42칸, 요청 from=10-26 to=12-06 today=11-03",
+          "pass": true
+        },
+        {
+          "step": "US-13-3/4 7건 전부 표시(완료 포함, 업무 필터 미적용)",
+          "pass": true,
+          "note": "막대 11개"
+        },
+        {
+          "step": "US-13-3 완료·기한 초과 상태 구분 표시",
+          "pass": true
+        },
+        {
+          "step": "US-13-5 [다음] → 2026-11-30~2027-01-03, 빈 캘린더",
+          "pass": true
+        },
+        {
+          "step": "US-13-5 [오늘] → 2026-11 복귀",
+          "pass": true
+        },
+        {
+          "step": "US-13-6 할일 5 선택 → /todos/5/edit",
+          "pass": true
+        },
+        {
+          "step": "US-14-1 주 뷰 11-02~11-08, 요청 from/to/today",
+          "pass": true
+        },
+        {
+          "step": "US-14-2 날짜 칸별 할일 표와 일치 (할일 6 미표시)",
+          "pass": true
+        },
+        {
+          "step": "US-14-3 [다음] 11-09~11-15: 할일 7이 11-09, 11-10 칸",
+          "pass": true
+        },
+        {
+          "step": "US-14-4 [오늘] → 11-02~11-08 복귀",
+          "pass": true
+        },
+        {
+          "step": "US-15-1 일 뷰 11-03: 할일 5, 4, 요청 from=to=11-03",
+          "pass": true
+        },
+        {
+          "step": "US-15-2 [이전] 11-02: 할일 1, 2, 5",
+          "pass": true
+        },
+        {
+          "step": "US-15-3 [다음] 두 번 11-04: 할일 3",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-07.js",
+      "scenarios": [
+        "US-07"
+      ],
+      "rows": [
+        {
+          "step": "US-12 보강: 로그인 직후 목록 요청에 today 포함",
+          "pass": true
+        },
+        {
+          "step": "US-07-1 [등록] → /todos/new",
+          "pass": true
+        },
+        {
+          "step": "US-07-2 저장 → /todos 8건",
+          "pass": true
+        },
+        {
+          "step": "US-07-3 저장 → 9건",
+          "pass": true
+        },
+        {
+          "step": "US-07 고객 미팅 준비: 11-05~11-05, 기본, 시작 전, 미완료",
+          "pass": true
+        },
+        {
+          "step": "US-07 견적서 작성: 11-03~11-04, 업무, 진행중",
+          "pass": true
+        },
+        {
+          "step": "US-07 목록 순서 6,1,2,5,4,견적서,3,고객,7",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-04-06-05.js",
+      "scenarios": [
+        "US-04",
+        "US-06",
+        "US-05"
+      ],
+      "rows": [
+        {
+          "step": "US-04-1 /categories: 기본(기본 카테고리 표시), 과제",
+          "pass": true
+        },
+        {
+          "step": "US-04-2 동아리 추가 → 3개",
+          "pass": true
+        },
+        {
+          "step": "US-04-3 이름 변경 '동아리 활동' 반영",
+          "pass": true
+        },
+        {
+          "step": "US-04-4 등록 화면 카테고리 선택지: 기본, 과제, 동아리 활동",
+          "pass": true
+        },
+        {
+          "step": "US-04-ex 앞뒤 공백 과제 추가 → DUPLICATE_CATEGORY_NAME, 개수 불변",
+          "pass": true
+        },
+        {
+          "step": "US-04-ex 31자 → 화면은 maxlength=30으로 차단, API는 VALIDATION_ERROR 400",
+          "pass": true
+        },
+        {
+          "step": "US-04-ex 20개에서 추가 → CATEGORY_LIMIT_EXCEEDED, 개수 불변",
+          "pass": true
+        },
+        {
+          "step": "US-04 정리: 임시 카테고리 삭제 후 3개",
+          "pass": true
+        },
+        {
+          "step": "US-06-1 기본 행 [이름 변경]·[삭제] 비활성",
+          "pass": true
+        },
+        {
+          "step": "US-06-2 과제 → '기본' 이름 변경: DUPLICATE_CATEGORY_NAME, 과제 유지",
+          "pass": true
+        },
+        {
+          "step": "US-06-3 '기본' 추가 → DUPLICATE_CATEGORY_NAME, 개수 불변",
+          "pass": true
+        },
+        {
+          "step": "US-06-4 API 기본 카테고리 삭제 → DEFAULT_CATEGORY_PROTECTED 403",
+          "pass": true
+        },
+        {
+          "step": "US-06-5 API 기본 카테고리 이름 변경 → DEFAULT_CATEGORY_PROTECTED 403",
+          "pass": true
+        },
+        {
+          "step": "US-06 기본 카테고리 '기본' 1개 유지",
+          "pass": true
+        },
+        {
+          "step": "US-05-1 삭제 확인 대화상자, 기본 카테고리 이동 안내",
+          "pass": true
+        },
+        {
+          "step": "US-05-2 취소 → 변화 없음",
+          "pass": true
+        },
+        {
+          "step": "US-05-3 확인 → 과제 사라짐",
+          "pass": true
+        },
+        {
+          "step": "US-05-4 할일 8 카테고리 '기본', 필터 선택지에 과제 없음, 할일 1건",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-09-10-11.js",
+      "scenarios": [
+        "US-09",
+        "US-10",
+        "US-11"
+      ],
+      "rows": [
+        {
+          "step": "US-09-1 편집 화면에 기존 값",
+          "pass": true
+        },
+        {
+          "step": "US-09-2/3 할일 3: 11-03~11-06, 개인, 진행중",
+          "pass": true
+        },
+        {
+          "step": "US-09-4 카테고리 미선택 저장 → 기본 (BR-12)",
+          "pass": true
+        },
+        {
+          "step": "US-09-5 완료 할일 제목 수정 → 완료 유지, 7건 불변",
+          "pass": true
+        },
+        {
+          "step": "US-09-ex 시작일 > 종료일 → INVALID_DATE_RANGE 400, 화면 유지",
+          "pass": true
+        },
+        {
+          "step": "US-09-ex 제목 공백만 → VALIDATION_ERROR 400, 필드 오류",
+          "pass": true
+        },
+        {
+          "step": "US-09-ex [취소] → 목록 복귀, 기존 값 유지",
+          "pass": true
+        },
+        {
+          "step": "US-10-1 할일 2(기한 초과) 체크 → 완료, completedAt 비null",
+          "pass": true
+        },
+        {
+          "step": "US-10-2 해제 → 기한 초과, completedAt null",
+          "pass": true
+        },
+        {
+          "step": "US-10-3 할일 5 체크 → 완료 / 해제 → 진행중",
+          "pass": true
+        },
+        {
+          "step": "US-10-4 할일 3 체크 → 완료 / 해제 → 진행중(수정 후 11-03~11-06)",
+          "pass": true
+        },
+        {
+          "step": "US-10-5 할일 1 해제 → 기한 초과 / 다시 체크 → 완료",
+          "pass": true
+        },
+        {
+          "step": "US-10 요청 본문에 isCompleted true/false 명시 (D-10), 8회",
+          "pass": true
+        },
+        {
+          "step": "US-11-1 삭제 확인 대화상자",
+          "pass": true
+        },
+        {
+          "step": "US-11-2 취소 → 7건 유지",
+          "pass": true
+        },
+        {
+          "step": "US-11-3 확인 → 헬스장 등록 사라짐, 6건",
+          "pass": true
+        },
+        {
+          "step": "US-11-4 /todos/6/edit → NOT_FOUND 오류 표시 후 /todos 이동",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-08-17.js",
+      "scenarios": [
+        "US-08",
+        "US-17"
+      ],
+      "rows": [
+        {
+          "step": "US-08-1 제목 비움 → VALIDATION_ERROR 400, 제목 필드 오류, 화면 유지",
+          "pass": true
+        },
+        {
+          "step": "US-08-2 시작일 > 종료일: 클라이언트 사전 안내 + 서버 INVALID_DATE_RANGE 400",
+          "pass": true,
+          "note": "안내 '시작일이 종료일보다 늦습니다. 저장하면 서버가 거부합니다.'"
+        },
+        {
+          "step": "US-08-3 과거 날짜 저장 성공 → 2건, 기한 초과",
+          "pass": true
+        },
+        {
+          "step": "US-08-ex 제목 101자 → VALIDATION_ERROR / 제목 없음+역순 → VALIDATION_ERROR(BR-52) / 시작=종료 → 201",
+          "pass": true
+        },
+        {
+          "step": "US-17 /todos/1/edit → NOT_FOUND 오류 표시 후 /todos",
+          "pass": true
+        },
+        {
+          "step": "US-17 /todos/9999/edit → NOT_FOUND 오류 표시 후 /todos",
+          "pass": true
+        },
+        {
+          "step": "US-17 /todos/abc/edit → NOT_FOUND 오류 표시 후 /todos",
+          "pass": true
+        },
+        {
+          "step": "US-17-1~3 응답 본문 동일(BR-02), 5xx 없음",
+          "pass": true,
+          "note": "{\"code\":\"NOT_FOUND\",\"message\":\"resource not found\"} ×3"
+        },
+        {
+          "step": "US-17-4 타인 할일 1 수정·완료·삭제 → 모두 NOT_FOUND 404",
+          "pass": true
+        },
+        {
+          "step": "US-17-5 타인 카테고리 3으로 등록·필터 → NOT_FOUND 404 (BR-16)",
+          "pass": true
+        },
+        {
+          "step": "US-17 PS-01 할일 수 불변 (2건)",
+          "pass": true
+        },
+        {
+          "step": "US-17 PS-02 할일 1 불변 (완료, 11-01~11-02)",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-16.js",
+      "scenarios": [
+        "US-16"
+      ],
+      "rows": [
+        {
+          "step": "US-16-a-2 token 쿠키만 삭제",
+          "pass": true
+        },
+        {
+          "step": "US-16-a-3 401 → refresh 1회 → 재시도 1회 → 성공, /todos 복귀, 새 쿠키 2개",
+          "pass": true,
+          "note": "PATCH /api/todos/3 → POST /api/auth/refresh → PATCH /api/todos/3"
+        },
+        {
+          "step": "US-16-b-6 401 → refresh도 401 → /login 이동 (refresh 1회, 재시도 없음)",
+          "pass": true,
+          "note": "PATCH /api/todos/3 → POST /api/auth/refresh"
+        },
+        {
+          "step": "US-16-b-7 재로그인 후 할일 3 제목 '팀 회의 자료 준비(a)' (b 미반영, BR-53)",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-18.js",
+      "scenarios": [
+        "US-18"
+      ],
+      "rows": [
+        {
+          "step": "US-18-1 /signup 단일 열",
+          "pass": true,
+          "note": "grid columns=1"
+        },
+        {
+          "step": "US-18-2 로그인 → /todos, 상단 간이 메뉴 [메뉴] 버튼 표시",
+          "pass": true
+        },
+        {
+          "step": "US-18-3 등록 → 2건",
+          "pass": true
+        },
+        {
+          "step": "US-18-4 할일 8 완료 체크 → 완료",
+          "pass": true
+        },
+        {
+          "step": "US-18-5 상태 완료 → 할일 8만 / 미선택 → 2건",
+          "pass": true
+        },
+        {
+          "step": "US-18-6 종료일 11-08 수정 → 11-05~11-08",
+          "pass": true
+        },
+        {
+          "step": "US-18-7 삭제 → 1건",
+          "pass": true
+        },
+        {
+          "step": "US-18-8 카테고리 시험 추가 → 3개",
+          "pass": true
+        },
+        {
+          "step": "US-18-9 월 뷰: 할일 8이 11-02~11-06 칸에 표시 (점 5칸)",
+          "pass": true,
+          "note": "dots=5 bars=1"
+        },
+        {
+          "step": "US-18-10 로그아웃 → /login",
+          "pass": true
+        },
+        {
+          "step": "US-18 뒤로 가기 /signup → /login",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "us-19.js",
+      "scenarios": [
+        "US-19"
+      ],
+      "rows": [
+        {
+          "step": "US-19-1 /me 현재 이름 '이서준'",
+          "pass": true
+        },
+        {
+          "step": "US-19-2 이름 '이서준(팀장)' 저장 반영",
+          "pass": true
+        },
+        {
+          "step": "US-19-3 현재 비밀번호 오류 → INVALID_CREDENTIALS 401, /me 유지",
+          "pass": true
+        },
+        {
+          "step": "US-19-4 비밀번호 변경 성공 200, 새 쿠키 2개 발급 (S-01)",
+          "pass": true,
+          "note": "Set-Cookie token, refresh_token"
+        },
+        {
+          "step": "US-19-ex 새 비밀번호 7자 / 이름 공백만 → VALIDATION_ERROR 400",
+          "pass": true
+        },
+        {
+          "step": "US-19-5 옛 비밀번호 로그인 실패 401",
+          "pass": true
+        },
+        {
+          "step": "US-19-5 새 비밀번호 로그인 성공",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "file": "prod-smoke.js",
+      "scenarios": [
+        "PROD"
+      ],
+      "note": "운영 배포 https://todolist-kje-fe.vercel.app (API https://todolist-kje-be.vercel.app), 기준일 고정 없음",
+      "rows": [
+        {
+          "step": "PROD 로그인 → /todos (cross-site 쿠키 저장)",
+          "pass": true,
+          "note": "token·refresh_token @todolist-kje-be.vercel.app sameSite=None secure=true"
+        },
+        {
+          "step": "PROD 할일 등록 → 목록에 표시 (보호 API에 쿠키 전송)",
+          "pass": true
+        },
+        {
+          "step": "PROD 완료 체크 200 → 완료",
+          "pass": true
+        },
+        {
+          "step": "PROD 캘린더 월 뷰에 막대",
+          "pass": true
+        },
+        {
+          "step": "PROD 새로고침(직접 진입, SPA 리라이트) 후 세션 유지",
+          "pass": true
+        },
+        {
+          "step": "PROD 삭제 → 목록에서 제거",
+          "pass": true
+        },
+        {
+          "step": "PROD 다크 모드 전환",
+          "pass": true
+        },
+        {
+          "step": "PROD 로그아웃 → /login, 쿠키 0개",
+          "pass": true
+        },
+        {
+          "step": "PROD API 응답에 5xx 없음",
+          "pass": true
+        }
+      ]
+    }
   ]
 }

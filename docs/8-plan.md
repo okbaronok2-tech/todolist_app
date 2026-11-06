@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 실행 계획 |
-| 현재 버전 | v0.13 |
+| 현재 버전 | v0.14 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.15, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/7-erd.md` v0.6, `docs/schema.sql`, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.16, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/7-erd.md` v0.6, `docs/schema.sql`, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 
@@ -29,6 +29,7 @@ ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데�
 | v0.11 | 2026-11-05 | - | T-X04 완료: `tests/load-seed.js`(`npm run load:seed`)·`tests/load.js`(k6 v2.3.0, `noCookiesReset`), `docs/perf-result.md` v0.1(로컬 1000 VU 결과, EXPLAIN 2건), 완료 조건 5개 체크. 11-security S-01~S-06 조치 반영(PRD v0.12, 도메인 v0.9), 참조 버전 갱신 | 문서 정보, 2장, T-X04 |
 | v0.12 | 2026-11-05 | - | T-F02에 다크 모드(`lib/theme.ts`, CP-01 테마 버튼, `styles.css` 다크 토큰) 수행 작업·완료 조건 추가(vitest 37건). 참조 버전 갱신 | 문서 정보, T-F02 |
 | v0.13 | 2026-11-06 | - | 코드 대조: T-X01 scripts(`swagger:json`, `load:seed`)·`.env.example`(`CORS_ORIGIN`)·README 5단계, T-B08 산출물 `tests/user-service.test.js`, T-X05에 Playwright MCP 통합 테스트(`test/e2e/`, US-01~19 114항목) 기록. 참조 버전 갱신 | 문서 정보, 2장, T-X01, T-X05 |
+| v0.14 | 2026-11-06 | - | T-X05에 운영 배포(Vercel) 스모크 `test/e2e/scenarios/prod-smoke.js` 9항목 통과 기록, T-X03 완료 조건에 Vercel 배포 확인 추가. 참조 버전 갱신 | 문서 정보, T-X03, T-X05 |
 
 ---
 
@@ -718,6 +719,7 @@ docs 1~7과 `schema.sql`을 실행 가능한 Task로 분해한다. 각 Task는 1
 - [x] PRD 9.1의 P0 항목 11개가 모두 체크됐다
 - [x] `backend`·`frontend`의 `npm test`와 `npm run smoke`가 모두 통과한 상태다
 - [x] Playwright MCP 통합 테스트 `test/e2e/`(US-01~19, 114항목, 스크린샷 43장)가 전부 통과했다. 결과 `test/e2e/report.md`
+- [x] 운영 배포(`https://todolist-kje-fe.vercel.app` + `https://todolist-kje-be.vercel.app`)에서 `prod-smoke.js` 9항목(cross-site 쿠키 로그인, 등록·완료·삭제, 캘린더, 새로고침, 다크 모드, 로그아웃, 5xx 없음)이 통과했다 (PRD PD-04)
 - [x] 실패 기록이 0건이거나, 남은 실패가 P1(F-03) 관련뿐이다
 
 ### T-B08 (P1) 내 정보 API

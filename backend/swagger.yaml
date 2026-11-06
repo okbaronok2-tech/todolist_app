@@ -5,12 +5,12 @@
 # 작성일    : 2026-11-04
 # 참조 문서 :
 #   - docs/1-domain-definition.md v0.9
-#   - docs/2-PRD.md v0.15 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+#   - docs/2-PRD.md v0.16 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
 #   - docs/3-user-scenario.md v0.6
 #   - docs/5-project-principle.md v0.14
 #   - docs/6-arch-diagram.md v0.9
 #   - docs/7-erd.md v0.6
-#   - docs/8-plan.md v0.13
+#   - docs/8-plan.md v0.14
 #   - docs/schema.sql
 #   - docs/9-api-design.md v0.7 (같은 내용의 표)
 #
@@ -41,12 +41,12 @@ info:
 
     ## 참조 문서
     - `docs/1-domain-definition.md` v0.9 (F, UC, BR, ST, D)
-    - `docs/2-PRD.md` v0.15 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+    - `docs/2-PRD.md` v0.16 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
     - `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)
     - `docs/5-project-principle.md` v0.14 (4장 API 규칙, 6.2 쿠키)
     - `docs/6-arch-diagram.md` v0.9 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
     - `docs/7-erd.md` v0.6
-    - `docs/8-plan.md` v0.13 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
+    - `docs/8-plan.md` v0.14 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
     - `docs/schema.sql`
     - `docs/9-api-design.md` v0.7 (같은 내용의 표)
 
@@ -74,12 +74,12 @@ x-document-info:
   date: "2026-11-05"
   references:
     - { path: docs/1-domain-definition.md, version: v0.9 }
-    - { path: docs/2-PRD.md, version: v0.15 }
+    - { path: docs/2-PRD.md, version: v0.16 }
     - { path: docs/3-user-scenario.md, version: v0.6 }
     - { path: docs/5-project-principle.md, version: v0.14 }
     - { path: docs/6-arch-diagram.md, version: v0.9 }
     - { path: docs/7-erd.md, version: v0.6 }
-    - { path: docs/8-plan.md, version: v0.13 }
+    - { path: docs/8-plan.md, version: v0.14 }
     - { path: docs/schema.sql, version: null }
     - { path: docs/9-api-design.md, version: v0.7 }
 

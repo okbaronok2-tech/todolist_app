@@ -35,6 +35,7 @@ Playwright MCP의 `run_code`는 `import`·`require`가 막혀 있어 공통 함�
 | 8 | `us-16.js` | PS-02 | 할일 3 제목 변경 | |
 | 9 | `us-18.js` | PS-01 (375px) | 할일·카테고리 추가 | `npm run seed` |
 | 10 | `us-19.js` | PS-02 | 이름·비밀번호 변경 (`seojun5678`) | |
+| - | `prod-smoke.js` | 운영 `e2e-probe@example.com` | 운영 DB에 할일 1건 만들고 삭제 | 로컬 서버 불필요. 운영 URL 고정, 기준일 고정 없음 |
 
 끝나면 `npm run seed`로 원복한다.
 

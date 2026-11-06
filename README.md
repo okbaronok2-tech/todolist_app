@@ -8,6 +8,8 @@
 4. 스키마·시드: `cd backend && npm install && npm run migrate && npm run seed`
 5. 실행: 터미널 1 `cd backend && npm run dev` (API :3000), 터미널 2 `cd frontend && npm install && npm run dev` (SPA :5173, API는 CORS로 직접 호출).
 
+운영 배포(Vercel): 프론트 `https://todolist-kje-fe.vercel.app`, API `https://todolist-kje-be.vercel.app`. `main` 푸시로 자동 배포. 설정은 `docs/10-frontend-integration-guide.md` 운영 배포 장.
+
 통합 테스트: 두 서버 실행 중에 Playwright MCP로 `test/e2e/dist/*.js`를 실행한다 (`test/e2e/README.md`). 결과 `test/e2e/report.md`.
 
 브라우저 `http://localhost:5173`. 시드 계정은 `docs/10-frontend-integration-guide.md` 9장. 설계 문서는 `docs/`, API 명세는 `docs/9-api-design.md`·`backend/swagger.yaml`.
