@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 아키텍처 다이어그램 |
-| 현재 버전 | v0.8 |
+| 현재 버전 | v0.9 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.13, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.7, `docs/5-project-principle.md` v0.11, `docs/7-erd.md` v0.5, `docs/9-api-design.md` v0.6 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.14, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.12, `docs/7-erd.md` v0.5, `docs/9-api-design.md` v0.6 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어그램)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임, PR은 프로젝트 원칙의 ID를 참조만 하며 재정의하지 않는다. 다이어그램은 모두 mermaid 코드 블록이다. 문서 간 표현이 다른 지점은 PRD를 기준으로 그리고 10장에 나열한다.
 
@@ -24,6 +24,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 AD(아키텍처 다이어�
 | v0.6 | 2026-11-05 | - | 1장 문서 수 6개 → 7개(`docs/9-api-design.md` 포함), 참조 버전 갱신 | 문서 정보, 1장 |
 | v0.7 | 2026-11-05 | - | PRD v0.10 CORS 방식 반영. AD-01 CORS 문장, AD-02 개발·운영을 프록시·정적 제공에서 다른 origin + CORS로 수정, AD-03 `app.js` 라벨·`cors.js` 노드, AD-06 정적 제공 노드를 cors 노드로 교체, 참조 버전 갱신 | 문서 정보, AD-01, AD-02, AD-03, AD-06 |
 | v0.8 | 2026-11-05 | - | AD-03을 구현(`frontend/src`)에 맞춤. `CalendarBar`, `queries/use-auth`, `lib/calendar-lanes·status·error-text`, 세션 만료 핸들러 등록(ROOT → ST)과 세션 복구(ROOT → API `me`) 간선, 참조 버전 갱신 | 문서 정보, AD-03 |
+| v0.9 | 2026-11-06 | - | AD-03 `lib/`에 `theme.ts`(다크 모드)·`log.ts`(개발 모드 로그) 추가. 참조 버전 갱신 | 문서 정보, AD-03 |
 
 ---
 
@@ -128,6 +129,7 @@ flowchart TB
         L2["calendar-range.ts: BR-35 from/to, PRD 4.2 이전·다음"]
         L3["calendar-lanes.ts: BR-33 칸 포함, 막대 lane (스타일 가이드 3.7)"]
         L4["status.ts: CP-04 글자·수식어 / error-text.ts: 코드 → 한국어 문구"]
+        L5["theme.ts: 다크 모드 localStorage.theme → html[data-theme] / log.ts: 개발 모드 콘솔 로그"]
     end
 
     subgraph TYPES["types/"]

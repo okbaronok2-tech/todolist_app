@@ -1,0 +1,35 @@
+// US-01 회원가입 후 자동 로그인 (+ 예외 분기)
+await setup();
+await clearSession();
+await page.goto(BASE + '/login');
+await page.getByRole('link', { name: '가입 화면' }).click();
+await page.waitForURL('**/signup');
+ok('US-01-1 /signup 표시, 입력 제약 안내 3개', (await page.locator('.field__hint').count()) >= 3);
+await shot('US-01-1-signup');
+const tryBad = async (email, pw, name, label) => {
+  await page.locator('#email').fill(email); await page.locator('#password').fill(pw); await page.locator('#name').fill(name);
+  await page.getByRole('button', { name: '가입' }).click();
+  await sleep(500);
+  const err = (await alertText()) ?? (await fieldErrors()).join('|');
+  ok(`US-01-ex ${label}: /signup 유지, 오류 표시`, page.url().endsWith('/signup') && !!err, err);
+};
+await tryBad('HANEUL@example.com', 'haneul1234', '김하늘', 'DUPLICATE_EMAIL(대소문자만 다름)');
+await shot('US-01-ex-duplicate-email');
+await tryBad('haneul.new@example.com', 'abc1234', '김하늘', 'VALIDATION 비밀번호 7자');
+await tryBad('haneul.example.com', 'haneul1234', '김하늘', 'VALIDATION 이메일 @ 없음');
+await tryBad('haneul.new@example.com', 'haneul1234', '   ', 'VALIDATION 이름 공백만');
+await shot('US-01-ex-validation');
+await page.locator('#email').fill('haneul.new@example.com'); await page.locator('#password').fill('haneul1234'); await page.locator('#name').fill('김하늘');
+await page.getByRole('button', { name: '가입' }).click();
+await page.waitForURL('**/todos');
+await page.locator('.empty').waitFor();
+const cookies = (await page.context().cookies()).map((c) => c.name + (c.httpOnly ? ':httpOnly' : ''));
+ok('US-01-2 가입 후 /todos 자동 로그인, token·refresh_token HttpOnly', cookies.includes('token:httpOnly') && cookies.includes('refresh_token:httpOnly'), cookies.join(','));
+ok('US-01-3 할일 0건 빈 목록 안내', (await page.locator('.empty').textContent()).includes('등록된 할일이 없습니다'));
+await shot('US-01-3-empty-list');
+await page.getByRole('link', { name: '카테고리 관리' }).click();
+await page.waitForURL('**/categories');
+await page.locator('.category-list').waitFor();
+const cats = await page.locator('.category-row:not(.category-row--head)').allTextContents();
+ok("US-01-4 카테고리 '기본' 1개만", cats.length === 1 && cats[0].includes('기본'), cats.join('|'));
+await shot('US-01-4-categories');

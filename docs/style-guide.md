@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 스타일 가이드 |
-| 현재 버전 | v0.3 |
+| 현재 버전 | v0.4 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.13 (4.3 반응형, 2.2 비범위, R-01), `docs/4-wireframe.md` v0.7 (CP-01~06, WF-01~07, 5장), `docs/5-project-principle.md` v0.11 (3.5 의존성, 7.3 `styles.css`), `docs/assets/wf-05-calendar-month.svg` |
+| 참조 문서 | `docs/2-PRD.md` v0.14 (4.3 반응형, 2.2 비범위, R-01), `docs/4-wireframe.md` v0.8 (CP-01~06, WF-01~07, 5장), `docs/5-project-principle.md` v0.12 (3.5 의존성, 7.3 `styles.css`), `docs/assets/wf-05-calendar-month.svg` |
 | 참고 자료 | 네이버 캘린더 PC 웹 월간·주간·일간 뷰 화면(2026-11-05 캡처). 격자·막대·도구줄 배치만 참고한다. 색상·로고·문구 등 브랜드 자산은 쓰지 않는다 |
 | 정본 관계 | 와이어프레임 1.2가 제외한 색·폰트·여백·접근성을 이 문서가 정한다. 배치·요소·동작은 와이어프레임과 PRD가 정본이며 충돌하면 그쪽을 따른다. 예외: WF-05 캘린더의 할일 표시 방식(막대)은 이 문서 3.7이 보강하며 와이어프레임 WF-05에 그 사실을 적었다 |
 
@@ -19,6 +19,7 @@
 | v0.1 | 2026-11-05 | - | 초안 작성. 토큰, 타이포, 컴포넌트(CP-01~06, 버튼, 입력), 캘린더 막대 표시, 반응형, 접근성, `styles.css` 골격 | 전체 |
 | v0.2 | 2026-11-05 | - | 정본 관계에 WF-05 막대 표시 보강 명시, 5장 제목에 PRD 2.2 비범위 안의 최소 기준임을 명시, 참조 버전 갱신 | 문서 정보, 5장 |
 | v0.3 | 2026-11-05 | - | 다크 모드 추가: 2.4 다크 토큰 표·동작(저장 키 `theme`, OS 설정 기본, `html[data-theme]`), 2.1에 `--c-btn-text`·`--c-fill-text`, 3.3 CP-01 테마 버튼, 6장 골격·클래스 표 갱신, 1장 '다크 모드 없음' 삭제, 참조 버전 갱신 | 문서 정보, 1, 2.1, 2.4, 3.3, 6 |
+| v0.4 | 2026-11-06 | - | `styles.css` 대조: 3.1 버튼 글자색을 `--c-fill-text`·`--c-btn-text` 토큰으로, 2.2 표 본문은 `--fs-md`(머리글만 `--fs-sm`), 6장 골격에 `--gutter`, 클래스 표에서 없는 `.cal__bar--cont-*` 대신 `.cal__cont`. 참조 버전 갱신 | 문서 정보, 2.2, 3.1, 6 |
 
 ---
 
@@ -96,7 +97,7 @@
 | 본문 | `--fs-md`, `line-height: 1.5`, `--c-text` |
 | 화면 제목 (`캘린더`, `할일 목록`) | `--fs-xl`, bold |
 | 캘린더 기간 글자 (`2026-11`, `11-02 ~ 11-08`) | `--fs-lg`, bold |
-| 표 본문, 캘린더 날짜 숫자 | `--fs-sm` |
+| 표 머리글, 캘린더 날짜 숫자 | `--fs-sm` (표 본문은 본문 `--fs-md` 상속) |
 | 배지, 캘린더 막대 글자, 필드 오류 | `--fs-xs` |
 | 날짜·숫자 | `font-variant-numeric: tabular-nums` (열 정렬 고정) |
 
@@ -154,9 +155,9 @@
 
 | 종류 | 스타일 | 쓰는 곳 |
 |------|--------|---------|
-| 주 (`.btn--primary`) | 배경 `--c-primary`, 글자 흰색 | [로그인] [가입] [저장] [등록] [확인] [추가] |
-| 보조 (`.btn`) | 배경 흰색, 테두리 `--c-border-strong`, 글자 `--c-nav-bg` | [이전] [오늘] [다음] [취소] [편집] [이름 변경] [메뉴] |
-| 위험 (`.btn--danger`) | 배경 흰색, 테두리·글자 `--c-danger`. 대화상자 [확인]이 삭제이면 배경 `--c-danger`, 글자 흰색 | [삭제], CP-03 삭제 확인 |
+| 주 (`.btn--primary`) | 배경 `--c-primary`, 글자 `--c-fill-text` | [로그인] [가입] [저장] [등록] [확인] [추가] |
+| 보조 (`.btn`) | 배경 `--c-bg`, 테두리 `--c-border-strong`, 글자 `--c-btn-text` | [이전] [오늘] [다음] [취소] [편집] [이름 변경] [메뉴] |
+| 위험 (`.btn--danger`) | 배경 흰색, 테두리·글자 `--c-danger`. 대화상자 [확인]이 삭제이면 배경 `--c-danger`, 글자 `--c-fill-text` | [삭제], CP-03 삭제 확인 |
 | 비활성 (`[-삭제-]`) | 배경 `--c-neutral-bg`, 글자 `--c-text-disabled`, `cursor: not-allowed` | BR-13·17 기본 카테고리, 요청 중 버튼 |
 
 높이 `--control-h`, 좌우 패딩 `--sp-3`, 글자 `--fs-md`. hover는 배경을 4% 어둡게(`filter: brightness(.96)`). 묶음 버튼(`[이전] [오늘] [다음]`)은 사이 간격 없이 붙이고 바깥 모서리만 둥글린다.
@@ -255,9 +256,9 @@
   --font: 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
   --fs-xs: 12px; --fs-sm: 13px; --fs-md: 14px; --fs-lg: 18px; --fs-xl: 22px;
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
-  --radius: 4px; --control-h: 32px; --page-w: 1280px;
+  --radius: 4px; --control-h: 32px; --page-w: 1280px; --gutter: 20px;
 }
-@media (max-width: 767px) { :root { --control-h: 40px; } }
+@media (max-width: 767px) { :root { --control-h: 40px; --gutter: 16px; } }
 :root[data-theme='dark'] { color-scheme: dark; /* 2.4 표의 색 토큰 재정의 */ }
 ```
 
@@ -271,6 +272,6 @@
 | `.field`, `.field__label`, `.field__error`, `.field__hint` | 3.2 |
 | `.table`, `.todo-row`, `.todo-row--completed` | CP-05 |
 | `.empty` | CP-06 |
-| `.cal`, `.cal__toolbar`, `.cal__range`, `.cal__views`, `.cal__head`, `.cal__cell`, `.cal__cell--today`, `.cal__cell--other-month`, `.cal__date`, `.cal__bar`, `.cal__bar--<상태>`, `.cal__bar--cont-left`, `.cal__bar--cont-right`, `.cal__dot` | 3.7 |
+| `.cal`, `.cal__toolbar`, `.cal__range`, `.cal__views`, `.cal__head`, `.cal__cell`, `.cal__cell--today`, `.cal__cell--other-month`, `.cal__date`, `.cal__bar`, `.cal__bar--<상태>`, `.cal__cont`(이어짐 표시 ‹ ›), `.cal__dot` | 3.7 |
 
 막대 상태 수식어는 배지와 같은 네 이름을 쓴다. 상태 문자열은 `types/todo.ts`의 `TodoStatus`를 소문자-하이픈으로 바꾼 값이다.

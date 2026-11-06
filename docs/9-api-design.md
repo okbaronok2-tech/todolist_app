@@ -8,7 +8,7 @@
 | 현재 버전 | v0.6 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.13, `docs/3-user-scenario.md` v0.6, `docs/5-project-principle.md` v0.11, `docs/6-arch-diagram.md` v0.8, `docs/8-plan.md` v0.12, `backend/swagger.yaml` v0.9 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.14, `docs/3-user-scenario.md` v0.6, `docs/5-project-principle.md` v0.12, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.13, `backend/swagger.yaml` v0.10 |
 | 정본 | PRD 6.3·6.4·NFR-06. 이 문서는 그 내용을 엔드포인트 표로 고정한다. 기계 판독용 명세는 `backend/swagger.yaml`이며 둘은 같은 내용이어야 한다 |
 
 ## 변경 이력

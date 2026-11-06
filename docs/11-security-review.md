@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 백엔드 보안 검토 |
-| 현재 버전 | v0.3 |
+| 현재 버전 | v0.4 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.13, `docs/5-project-principle.md` v0.11, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.9 |
+| 참조 문서 | `docs/2-PRD.md` v0.14, `docs/5-project-principle.md` v0.12, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.10 |
 | 설계 근거 | PRD 6.4·NFR-06~10, 도메인 정의서 BR-01·02·06·51~53 |
 
 ## 변경 이력
@@ -18,12 +18,13 @@
 | v0.1 | 2026-11-05 | - | 초안 작성. 읽기 전용 수동 검토 + `npm audit` | 전체 |
 | v0.2 | 2026-11-05 | - | CORS 방식 전환(PRD v0.10) 반영. 설계 결정 표의 CORS 행을 `CORS_ORIGIN` 허용 목록으로, `SameSite=Lax` 같은 site 조건 행 추가, A05 근거에 `middlewares/cors.js`, 참조 버전 갱신 | 문서 정보, 1장, 2장 A05 |
 | v0.3 | 2026-11-05 | - | S-01~S-06 조치 완료 반영. 2장 결과를 양호로, 3장 각 항목에 조치 내용, 4장 체크. S-01은 PRD 6.4 규칙으로 승격(비밀번호 변경 시 리프레시 전부 폐기 + 새 쿠키) | 문서 정보, 2장, 3장, 4장 |
+| v0.4 | 2026-11-06 | - | 대상 파일 수 22→23 정정(`backend/src/**/*.js` 실제 개수). 참조 버전 갱신 | 문서 정보, 1장 |
 
 ---
 
 ## 1. 범위·방법·도구
 
-- 대상: `backend/src/**/*.js`(22개), `backend/package.json`, `backend/package-lock.json`, `backend/.env.example`, `.gitignore`, `backend/swagger.yaml`.
+- 대상: `backend/src/**/*.js`(23개), `backend/package.json`, `backend/package-lock.json`, `backend/.env.example`, `.gitignore`, `backend/swagger.yaml`.
 - 기준: OWASP Top 10 2021 A01~A10 (https://owasp.org/www-project-top-ten/).
 - 도구: `sast` MCP는 연결에 실패했고 gemini-cli·codex는 설치되어 있지 않다. 수동 코드 검토로 진행했다. `npm audit --omit=dev --json`은 `backend/`에서 실행했다 (2절 A06).
 - 표기: "추정"은 코드만으로 확정할 수 없는 판단이다. "설계 결정"은 PRD에 근거가 있는 의도된 동작이며 결함으로 세지 않는다.

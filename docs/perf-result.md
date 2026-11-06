@@ -8,7 +8,7 @@
 | 현재 버전 | v0.1 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.13 (5.1 NFR-01~05, R-02, R-03, A-01, PD-04), `docs/8-plan.md` v0.12 (T-X04), `backend/tests/load.js`, `backend/tests/load-seed.js` |
+| 참조 문서 | `docs/2-PRD.md` v0.14 (5.1 NFR-01~05, R-02, R-03, A-01, PD-04), `docs/8-plan.md` v0.13 (T-X04), `backend/tests/load.js`, `backend/tests/load-seed.js` |
 
 ## 변경 이력
 

@@ -1,0 +1,53 @@
+// US-08 할일 등록 오류와 과거 날짜, US-17 타인 리소스 접근 차단 (PS-01, 시드 상태)
+await setup();
+await clearSession();
+await login('haneul@example.com', 'haneul1234');
+await page.goto(BASE + '/todos/new'); await page.locator('#title').waitFor();
+await fillTodoForm({ title: '', startDate: '2026-11-05', endDate: '2026-11-07' });
+const [r1] = await Promise.all([page.waitForResponse((r) => r.url().endsWith('/api/todos?today=' + TODAY) && r.request().method() === 'POST'), page.getByRole('button', { name: '저장' }).click()]);
+await sleep(300);
+let errs = await fieldErrors();
+ok('US-08-1 제목 비움 → VALIDATION_ERROR 400, 제목 필드 오류, 화면 유지', r1.status() === 400 && errs.length > 0 && page.url().endsWith('/todos/new'), errs.join('|'));
+await shot('US-08-1-title-required');
+await fillTodoForm({ title: '중간고사 정리', startDate: '2026-11-07', endDate: '2026-11-05' });
+await sleep(200);
+const hint = (await page.locator('.field__hint, .field__error').allTextContents()).join('|');
+const [r2] = await Promise.all([page.waitForResponse((r) => r.url().endsWith('/api/todos?today=' + TODAY) && r.request().method() === 'POST'), page.getByRole('button', { name: '저장' }).click()]);
+await sleep(300);
+errs = (await fieldErrors()).join('|');
+ok('US-08-2 시작일 > 종료일: 클라이언트 사전 안내 + 서버 INVALID_DATE_RANGE 400', /종료일|시작일/.test(hint) && r2.status() === 400 && (await r2.json()).code === 'INVALID_DATE_RANGE' && errs.length > 0, `hint="${hint}" err="${errs}"`);
+await shot('US-08-2-date-range');
+await fillTodoForm({ title: '지난 퀴즈 오답 정리', startDate: '2026-10-20', endDate: '2026-10-22' });
+await page.getByRole('button', { name: '저장' }).click(); await page.waitForURL('**/todos'); await waitList();
+const past = await rowInfo('지난 퀴즈 오답 정리');
+ok('US-08-3 과거 날짜 저장 성공 → 2건, 기한 초과', (await titles()).length === 2 && past.status === '기한 초과', JSON.stringify(past));
+await shot('US-08-3-past-overdue');
+const longTitle = await api('POST', '/api/todos?today=' + TODAY, { title: '가'.repeat(101), startDate: '2026-11-05', endDate: '2026-11-05' });
+const both = await api('POST', '/api/todos?today=' + TODAY, { title: '', startDate: '2026-11-07', endDate: '2026-11-05' });
+const same = await api('POST', '/api/todos?today=' + TODAY, { title: '같은 날', startDate: '2026-11-05', endDate: '2026-11-05' });
+ok('US-08-ex 제목 101자 → VALIDATION_ERROR / 제목 없음+역순 → VALIDATION_ERROR(BR-52) / 시작=종료 → 201', longTitle.status === 400 && longTitle.body.code === 'VALIDATION_ERROR' && both.status === 400 && both.body.code === 'VALIDATION_ERROR' && same.status === 201, `${longTitle.body.code} ${both.body.code} ${same.status}`);
+await api('DELETE', `/api/todos/${same.body.id}`);
+// US-17
+const nfBodies = [];
+for (const p of ['/todos/1/edit', '/todos/9999/edit', '/todos/abc/edit']) {
+  await page.goto(BASE + p); await sleep(300);
+  const a = await alertText();
+  nfBodies.push(a);
+  if (p === '/todos/1/edit') await shot('US-17-1-not-found');
+  await page.waitForURL('**/todos', { timeout: 3000 }).catch(() => {});
+  ok(`US-17 ${p} → NOT_FOUND 오류 표시 후 /todos`, !!a && page.url().endsWith('/todos'), `${a} → ${page.url()}`);
+}
+const apiNf = await Promise.all([api('GET', '/api/todos/1?today=' + TODAY), api('GET', '/api/todos/9999?today=' + TODAY), api('GET', '/api/todos/abc?today=' + TODAY)]);
+ok('US-17-1~3 응답 본문 동일(존재 여부 노출 없음, BR-02), 5xx 없음', apiNf.every((r) => r.status === 404) && new Set(apiNf.map((r) => JSON.stringify(r.body))).size === 1, apiNf.map((r) => r.status + ' ' + JSON.stringify(r.body)).join(' / '));
+const upd = await api('PATCH', '/api/todos/1?today=' + TODAY, { title: '해킹', startDate: '2026-11-01', endDate: '2026-11-02' });
+const comp = await api('PATCH', '/api/todos/1/completed?today=' + TODAY, { isCompleted: false });
+const del = await api('DELETE', '/api/todos/1');
+ok('US-17-4 타인 할일 1 수정·완료·삭제 → 모두 NOT_FOUND 404', [upd, comp, del].every((r) => r.status === 404 && r.body.code === 'NOT_FOUND'), [upd, comp, del].map((r) => r.status).join(','));
+const cat3 = await api('POST', '/api/todos?today=' + TODAY, { title: '남의 카테고리', startDate: '2026-11-05', endDate: '2026-11-05', categoryId: 3 });
+const filt3 = await api('GET', '/api/todos?today=' + TODAY + '&categoryId=3');
+ok('US-17-5 타인 카테고리 3으로 등록·필터 → NOT_FOUND 404 (BR-16)', cat3.status === 404 && filt3.status === 404, `${cat3.status} ${filt3.status}`);
+ok('US-17 PS-01 할일 수 불변 (2건)', (await api('GET', '/api/todos?today=' + TODAY)).body.length === 2);
+await clearSession();
+await login('seojun@example.com', 'seojun1234');
+const t1 = await rowInfo('주간 보고서 제출');
+ok('US-17 PS-02 할일 1 불변 (완료, 11-01~11-02)', t1.status === '완료' && t1.period === '11-01~11-02' && t1.checked, JSON.stringify(t1));

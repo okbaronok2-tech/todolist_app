@@ -1,16 +1,16 @@
 # =============================================================================
 # 문서명    : TodoList API 명세 (OpenAPI 3.0.3)
-# 현재 버전 : v0.9
+# 현재 버전 : v0.10
 # 상태      : 초안
 # 작성일    : 2026-11-04
 # 참조 문서 :
 #   - docs/1-domain-definition.md v0.9
-#   - docs/2-PRD.md v0.13 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+#   - docs/2-PRD.md v0.14 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
 #   - docs/3-user-scenario.md v0.6
-#   - docs/5-project-principle.md v0.11
-#   - docs/6-arch-diagram.md v0.8
+#   - docs/5-project-principle.md v0.12
+#   - docs/6-arch-diagram.md v0.9
 #   - docs/7-erd.md v0.5
-#   - docs/8-plan.md v0.12
+#   - docs/8-plan.md v0.13
 #   - docs/schema.sql
 #   - docs/9-api-design.md v0.6 (같은 내용의 표)
 #
@@ -26,6 +26,7 @@
 # | v0.7 | 2026-11-05 | -      | 코드 반영: 본문 파싱 오류(JSON·100kb·charset) 400 `VALIDATION_ERROR`, 5xx 본문 `INTERNAL_ERROR` 확정, `currentPassword` 문자열 검증, 개발 모드 `/api/docs`·`/api/docs.json` 안내 | 머리 주석, info 공통 규칙, x-document-info, UserUpdateRequest |
 # | v0.8 | 2026-11-05 | -      | CORS 방식 전환(PRD v0.10): 공통 규칙에 CORS(`CORS_ORIGIN`, `Allow-Credentials`, `credentials: 'include'`) 추가, servers 설명 수정, 참조 버전 갱신 | 머리 주석, info 공통 규칙, servers, x-document-info |
 # | v0.9 | 2026-11-05 | -      | 11-security 조치: ID 15자리 이하, `Password` 72바이트, `PATCH /api/users/me` 비밀번호 변경 시 리프레시 전부 폐기 + `Set-Cookie` 2개 (PRD v0.12 6.4), 참조 버전 갱신 | 머리 주석, info 공통 규칙, x-document-info, /api/users/me, Password |
+# | v0.10 | 2026-11-06 | -      | 코드 대조: `Email` pattern 공백 거부(`^[^@\s]+@[^@\s]+$`), `PATCH /api/users/me` 200에 `Set-Cookie` 헤더 선언, 오류 example `message`를 실제 서버 영문 문구로(화면 한국어 문구는 `error-text.ts`), 참조 버전 갱신 | 머리 주석, info, x-document-info, /api/users/me, Email, 오류 응답 example |
 #
 # 아래 x-document-info, x-changelog는 이 주석과 같은 내용을 기계가 읽도록 둔 것이다.
 # =============================================================================
@@ -33,18 +34,18 @@ openapi: 3.0.3
 
 info:
   title: TodoList API
-  version: 0.9.0
+  version: 0.10.0
   description: |
     TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.
 
     ## 참조 문서
     - `docs/1-domain-definition.md` v0.9 (F, UC, BR, ST, D)
-    - `docs/2-PRD.md` v0.13 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
+    - `docs/2-PRD.md` v0.14 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)
     - `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)
-    - `docs/5-project-principle.md` v0.11 (4장 API 규칙, 6.2 쿠키)
-    - `docs/6-arch-diagram.md` v0.8 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
+    - `docs/5-project-principle.md` v0.12 (4장 API 규칙, 6.2 쿠키)
+    - `docs/6-arch-diagram.md` v0.9 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)
     - `docs/7-erd.md` v0.5
-    - `docs/8-plan.md` v0.12 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
+    - `docs/8-plan.md` v0.13 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)
     - `docs/schema.sql`
     - `docs/9-api-design.md` v0.6 (같은 내용의 표)
 
@@ -67,17 +68,17 @@ info:
 
 x-document-info:
   name: TodoList API 명세 (OpenAPI 3.0.3)
-  version: v0.9
+  version: v0.10
   status: 초안
   date: "2026-11-05"
   references:
     - { path: docs/1-domain-definition.md, version: v0.9 }
-    - { path: docs/2-PRD.md, version: v0.13 }
+    - { path: docs/2-PRD.md, version: v0.14 }
     - { path: docs/3-user-scenario.md, version: v0.6 }
-    - { path: docs/5-project-principle.md, version: v0.11 }
-    - { path: docs/6-arch-diagram.md, version: v0.8 }
+    - { path: docs/5-project-principle.md, version: v0.12 }
+    - { path: docs/6-arch-diagram.md, version: v0.9 }
     - { path: docs/7-erd.md, version: v0.5 }
-    - { path: docs/8-plan.md, version: v0.12 }
+    - { path: docs/8-plan.md, version: v0.13 }
     - { path: docs/schema.sql, version: null }
     - { path: docs/9-api-design.md, version: v0.6 }
 
@@ -127,6 +128,11 @@ x-changelog:
     author: "-"
     changes: "11-security 조치: ID 15자리 이하, Password 72바이트, PATCH /api/users/me 비밀번호 변경 시 리프레시 전부 폐기 + Set-Cookie 2개 (PRD v0.12 6.4), 참조 버전 갱신"
     scope: 머리 주석, info 공통 규칙, x-document-info, /api/users/me, Password
+  - version: v0.10
+    date: "2026-11-06"
+    author: "-"
+    changes: "코드 대조: Email pattern 공백 거부, PATCH /api/users/me 200에 Set-Cookie 헤더 선언, 오류 example message를 실제 서버 영문 문구로, 참조 버전 갱신"
+    scope: 머리 주석, info, x-document-info, /api/users/me, Email, 오류 응답 example
 
 servers:
   - url: http://localhost:3000
@@ -331,7 +337,10 @@ paths:
                   newPassword: seojun5678
       responses:
         "200":
-          description: 수정 후 내 정보
+          description: 수정 후 내 정보. 비밀번호를 바꾼 경우에만 새 인증 쿠키 2개를 함께 설정한다 (S-01).
+          headers:
+            Set-Cookie:
+              $ref: "#/components/headers/SetAuthCookies"
           content:
             application/json:
               schema:
@@ -1049,7 +1058,7 @@ components:
       type: string
       format: email
       maxLength: 254
-      pattern: '^[^@]+@[^@]+$'
+      pattern: '^[^@\s]+@[^@\s]+$'
       description: "`local@domain` 형식, 254자 이하 (BR-43). 저장·비교는 대소문자 무시 (BR-04)."
 
     Password:
@@ -1185,7 +1194,7 @@ components:
                     enum: [UNAUTHORIZED]
           example:
             code: UNAUTHORIZED
-            message: 인증이 필요합니다.
+            message: authentication required
 
     InvalidCredentials:
       description: |
@@ -1203,7 +1212,7 @@ components:
                     enum: [INVALID_CREDENTIALS]
           example:
             code: INVALID_CREDENTIALS
-            message: 이메일 또는 비밀번호가 올바르지 않습니다.
+            message: invalid email or password
 
     UnauthorizedOrInvalidCredentials:
       description: |
@@ -1223,12 +1232,12 @@ components:
             unauthorized:
               value:
                 code: UNAUTHORIZED
-                message: 인증이 필요합니다.
+                message: authentication required
             invalidCredentials:
               summary: US-19 3단계
               value:
                 code: INVALID_CREDENTIALS
-                message: 현재 비밀번호가 올바르지 않습니다.
+                message: current password is incorrect
 
     RefreshUnauthorized:
       description: |
@@ -1250,7 +1259,7 @@ components:
                     enum: [UNAUTHORIZED]
           example:
             code: UNAUTHORIZED
-            message: 다시 로그인해 주세요.
+            message: please log in again
 
     NotFound:
       description: |
@@ -1268,7 +1277,7 @@ components:
                     enum: [NOT_FOUND]
           example:
             code: NOT_FOUND
-            message: 요청한 리소스를 찾을 수 없습니다.
+            message: resource not found
 
     ValidationError:
       description: |
@@ -1286,7 +1295,7 @@ components:
                     enum: [VALIDATION_ERROR]
           example:
             code: VALIDATION_ERROR
-            message: today는 YYYY-MM-DD 형식이어야 합니다.
+            message: today must be YYYY-MM-DD
 
     ValidationOrDateRangeError:
       description: |
@@ -1308,12 +1317,12 @@ components:
               summary: 제목 공백만 (US-08 1단계)
               value:
                 code: VALIDATION_ERROR
-                message: 제목은 1자 이상 100자 이하여야 합니다.
+                message: title must be 1 to 100 characters after trim
             dateRange:
               summary: 시작일 11-07, 종료일 11-05 (US-08 2단계)
               value:
                 code: INVALID_DATE_RANGE
-                message: 시작일은 종료일보다 늦을 수 없습니다.
+                message: startDate must be on or before endDate
 
     DuplicateEmail:
       description: |
@@ -1331,7 +1340,7 @@ components:
                     enum: [DUPLICATE_EMAIL]
           example:
             code: DUPLICATE_EMAIL
-            message: 이미 가입된 이메일입니다.
+            message: email already registered
 
     DuplicateCategoryName:
       description: |
@@ -1349,7 +1358,7 @@ components:
                     enum: [DUPLICATE_CATEGORY_NAME]
           example:
             code: DUPLICATE_CATEGORY_NAME
-            message: 같은 이름의 카테고리가 이미 있습니다.
+            message: category name already exists
 
     CategoryCreateConflict:
       description: |
@@ -1371,12 +1380,12 @@ components:
               summary: 이름 ' 과제 ' (US-04)
               value:
                 code: DUPLICATE_CATEGORY_NAME
-                message: 같은 이름의 카테고리가 이미 있습니다.
+                message: category name already exists
             limit:
               summary: 20개 상태에서 추가 (US-04)
               value:
                 code: CATEGORY_LIMIT_EXCEEDED
-                message: 카테고리는 최대 20개까지 만들 수 있습니다.
+                message: at most 20 categories per user
 
     DefaultCategoryProtected:
       description: |
@@ -1394,4 +1403,4 @@ components:
                     enum: [DEFAULT_CATEGORY_PROTECTED]
           example:
             code: DEFAULT_CATEGORY_PROTECTED
-            message: 기본 카테고리는 변경하거나 삭제할 수 없습니다.
+            message: default category cannot be deleted

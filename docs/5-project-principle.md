@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.11 |
+| 현재 버전 | v0.12 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.13, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.7 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.14, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -27,6 +27,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.9 | 2026-11-05 | - | 코드 리뷰 반영. 3.5 심사 결과에 `@testing-library/dom`·ESLint 템플릿 세트, 7.1 트리(docs 1~11·style-guide, `swagger/`, `CLAUDE.md`, `.claude/`), 7.2(`swagger:json`, `swagger.yaml`, `CLAUDE.md`, `.env.test`, `load.js` 미작성 표기), 7.3(`queries/use-auth.ts`, `auth.ts updateMe`, `.prettierrc`), 참조 버전 갱신 | 문서 정보, 3.5, 7.1, 7.2, 7.3 |
 | v0.10 | 2026-11-05 | - | 7.1 `docs/perf-result.md` 작성 완료 표기, 7.2에 `load-seed.js`·`load.js`(k6, `npm run load:seed`), 참조 버전 갱신 | 문서 정보, 7.1, 7.2 |
 | v0.11 | 2026-11-05 | - | 7.3 트리에 `lib/theme.ts`(다크 모드, 스타일 가이드 2.4)·`lib/log.ts`(개발 모드 콘솔 로그) 추가. 3.3에 개발 모드 로그 규칙(`import.meta.env.DEV`에서만, 비밀번호·토큰·본문 제외) 추가. 참조 버전 갱신 | 문서 정보, 3.3, 7.3 |
+| v0.12 | 2026-11-06 | - | 7.1 트리를 실제에 맞춤: `README.md` 5단계, `test/e2e/`(Playwright MCP 통합 테스트 스크립트·리포트·스크린샷) 추가. 참조 버전 갱신 | 문서 정보, 7.1 |
 
 ---
 
@@ -217,11 +218,12 @@ todolist_app/
 ├── frontend/       # Vite + React SPA
 ├── docs/           # 설계 문서 (1~11, style-guide.md, perf-result.md, schema.sql, assets/)
 ├── swagger/        # swagger.json (backend/swagger.yaml에서 생성)
+├── test/e2e/       # Playwright MCP 통합 테스트: scenarios/*.js + lib.js → build.mjs → dist/, report.md, screenshots/
 ├── prompts/        # 문서 생성 프롬프트
 ├── .claude/        # 스킬 (develop-backend, develop-frontend, issue-resolver-backend)
 ├── CLAUDE.md       # 최상위 지침, 문서 목록·버전
 ├── .gitignore      # node_modules, dist, .env, .env.test
-└── README.md       # 실행 순서 3줄 (DB 생성 → migrate·seed → dev)
+└── README.md       # 실행 순서 5단계 (DB 생성 → 백엔드 env → 프론트 env → migrate·seed → dev)
 ```
 
 GitHub 이슈 작업 브랜치는 `feature-<이슈번호>`, `main`에서 분기, PR로 병합.

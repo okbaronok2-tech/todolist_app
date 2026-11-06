@@ -1,0 +1,77 @@
+// US-09 할일 수정, US-10 완료 처리·취소, US-11 할일 삭제 확인 (PS-02, 시드 7건)
+await setup();
+await clearSession();
+await login('seojun@example.com', 'seojun1234');
+// US-09
+await rowOf('팀 회의 자료 준비').getByRole('button', { name: '편집' }).click();
+await page.waitForURL('**/todos/3/edit'); await page.locator('#title').waitFor(); await sleep(300);
+const pre = { title: await page.locator('#title').inputValue(), s: await page.locator('#startDate').inputValue(), e: await page.locator('#endDate').inputValue(), c: await page.locator('#categoryId').locator('option:checked').textContent() };
+ok('US-09-1 편집 화면에 기존 값', pre.title === '팀 회의 자료 준비' && pre.s === '2026-11-04' && pre.e === '2026-11-05' && pre.c === '업무', JSON.stringify(pre));
+await shot('US-09-1-edit-form');
+await fillTodoForm({ startDate: '2026-11-03', endDate: '2026-11-06', category: '개인' });
+await page.getByRole('button', { name: '저장' }).click(); await page.waitForURL('**/todos'); await waitList();
+let i3 = await rowInfo('팀 회의 자료 준비');
+ok('US-09-2/3 할일 3: 11-03~11-06, 개인, 진행중', i3.period === '11-03~11-06' && i3.category === '개인' && i3.status === '진행중', JSON.stringify(i3));
+await rowOf('팀 회의 자료 준비').getByRole('button', { name: '편집' }).click(); await page.waitForURL('**/todos/3/edit'); await page.locator('#categoryId').waitFor(); await sleep(300);
+await page.locator('#categoryId').selectOption({ index: 0 });
+await page.getByRole('button', { name: '저장' }).click(); await page.waitForURL('**/todos'); await waitList();
+i3 = await rowInfo('팀 회의 자료 준비');
+ok('US-09-4 카테고리 미선택 저장 → 기본 (BR-12)', i3.category === '기본', i3.category);
+await rowOf('주간 보고서 제출').getByRole('button', { name: '편집' }).click(); await page.waitForURL('**/todos/1/edit'); await page.locator('#title').waitFor(); await sleep(300);
+await fillTodoForm({ title: '주간 보고서 제출(최종)' });
+await page.getByRole('button', { name: '저장' }).click(); await page.waitForURL('**/todos'); await waitList();
+const i1 = await rowInfo('주간 보고서 제출(최종)');
+ok('US-09-5 완료 할일 제목 수정 → 완료 유지, 7건 불변', i1.status === '완료' && i1.checked && (await titles()).length === 7, JSON.stringify(i1));
+// US-09 예외
+await rowOf('팀 회의 자료 준비').getByRole('button', { name: '편집' }).click(); await page.waitForURL('**/todos/3/edit'); await page.locator('#title').waitFor(); await sleep(300);
+await fillTodoForm({ startDate: '2026-11-07', endDate: '2026-11-06' });
+const [rangeRes] = await Promise.all([page.waitForResponse((r) => r.url().includes('/api/todos/3') && r.request().method() === 'PATCH'), page.getByRole('button', { name: '저장' }).click()]);
+await sleep(300);
+let errs = (await fieldErrors()).join('|') + '|' + ((await alertText()) ?? '');
+ok('US-09-ex 시작일 > 종료일 → INVALID_DATE_RANGE 400, 화면 유지', rangeRes.status() === 400 && (await rangeRes.json()).code === 'INVALID_DATE_RANGE' && page.url().endsWith('/todos/3/edit') && errs.length > 2, errs);
+await shot('US-09-ex-date-range');
+await fillTodoForm({ title: '   ', startDate: '2026-11-03', endDate: '2026-11-06' });
+const [blankRes] = await Promise.all([page.waitForResponse((r) => r.url().includes('/api/todos/3') && r.request().method() === 'PATCH'), page.getByRole('button', { name: '저장' }).click()]);
+await sleep(300);
+errs = (await fieldErrors()).join('|');
+ok('US-09-ex 제목 공백만 → VALIDATION_ERROR 400, 필드 오류', blankRes.status() === 400 && errs.length > 0 && page.url().endsWith('/todos/3/edit'), errs);
+await page.getByRole('button', { name: '취소' }).click(); await page.waitForURL('**/todos'); await waitList();
+i3 = await rowInfo('팀 회의 자료 준비');
+ok('US-09-ex [취소] → 목록 복귀, 기존 값 유지', i3.period === '11-03~11-06' && i3.category === '기본', JSON.stringify(i3));
+// US-10
+const bodies = [];
+page.on('request', (r) => { if (r.url().includes('/completed')) bodies.push(r.postData()); });
+const toggle = async (title, expectStatus) => {
+  const row = rowOf(title);
+  const [res] = await Promise.all([page.waitForResponse((r) => r.url().includes('/completed') && r.request().method() === 'PATCH'), row.locator('input[type=checkbox]').click()]);
+  await sleep(300);
+  const info = await rowInfo(title);
+  return { status: res.status(), completedAt: (await res.json()).completedAt, badge: info.status, pass: info.status === expectStatus };
+};
+let t = await toggle('거래처 견적 회신', '완료');
+ok('US-10-1 할일 2(기한 초과) 체크 → 완료, completedAt 비null', t.pass && t.completedAt !== null, JSON.stringify(t));
+await shot('US-10-1-completed');
+t = await toggle('거래처 견적 회신', '기한 초과');
+ok('US-10-2 해제 → 기한 초과, completedAt null', t.pass && t.completedAt === null, JSON.stringify(t));
+t = await toggle('분기 계획 작성', '완료'); ok('US-10-3 할일 5 체크 → 완료', t.pass, t.badge);
+t = await toggle('분기 계획 작성', '진행중'); ok('US-10-3 해제 → 진행중', t.pass, t.badge);
+t = await toggle('팀 회의 자료 준비', '완료'); ok('US-10-4 할일 3 체크 → 완료', t.pass, t.badge);
+t = await toggle('팀 회의 자료 준비', '진행중'); ok('US-10-4 해제 → (수정 후 11-03~11-06이라) 진행중', t.pass, t.badge);
+t = await toggle('주간 보고서 제출(최종)', '기한 초과'); ok('US-10-5 할일 1 해제 → 기한 초과', t.pass, t.badge);
+t = await toggle('주간 보고서 제출(최종)', '완료'); ok('US-10-5 다시 체크 → 완료', t.pass, t.badge);
+ok('US-10 요청 본문에 isCompleted true/false 명시 (D-10)', bodies.length === 8 && bodies.every((b) => /"isCompleted":(true|false)/.test(b)), bodies.join(' '));
+// US-11
+await rowOf('헬스장 등록').getByRole('button', { name: '삭제' }).click();
+const dlg = page.getByRole('dialog');
+ok('US-11-1 삭제 확인 대화상자', await dlg.isVisible(), await dlg.textContent());
+await shot('US-11-1-delete-dialog');
+await dlg.getByRole('button', { name: '취소' }).click(); await sleep(200);
+ok('US-11-2 취소 → 7건 유지', (await titles()).length === 7);
+await rowOf('헬스장 등록').getByRole('button', { name: '삭제' }).click();
+await page.getByRole('dialog').getByRole('button', { name: '확인' }).click(); await sleep(500);
+ok('US-11-3 확인 → 헬스장 등록 사라짐, 6건', (await titles()).length === 6 && !(await titles()).includes('헬스장 등록'));
+await page.goto(BASE + '/todos/6/edit'); await sleep(400);
+const nf = await alertText();
+await shot('US-11-4-not-found');
+await page.waitForURL('**/todos', { timeout: 3000 }).catch(() => {});
+ok('US-11-4 /todos/6/edit → NOT_FOUND 오류 표시 후 /todos 이동', !!nf && page.url().endsWith('/todos'), `${nf} → ${page.url()}`);
