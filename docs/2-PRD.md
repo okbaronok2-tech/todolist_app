@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.14 |
+| 현재 버전 | v0.15 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.13 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.14 |
 
 ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 (재정의하지 않는다). 이 문서에서 새로 부여하는 ID는 SC(화면), NFR(비기능 요구), R(리스크), A(가정), PD(결정 대기)이며 도메인 정의서 ID와 충돌하지 않는다. 수치에 "가정"이 붙은 것은 측정값이 아니라 목표 설정을 위한 가정이다.
 
@@ -30,6 +30,7 @@ ID 규칙: F, UC, BR, ST, D는 도메인 정의서 ID를 그대로 참조한다 
 | v0.12 | 2026-11-05 | - | 6.4에 비밀번호 변경 시 리프레시 토큰 전부 폐기 + 현재 세션 새 쿠키 발급 규칙 추가 (11-security S-01) | 문서 정보, 6.4 |
 | v0.13 | 2026-11-05 | - | 다크 모드를 비범위(2.2)에서 제외하고 4.1 공통 상단 메뉴에 테마 전환 추가. 색·동작은 `docs/style-guide.md` 2.4가 정한다. 참조 버전 갱신 | 문서 정보, 2.2, 4.1 |
 | v0.14 | 2026-11-06 | - | 9.2 성능 체크박스 5개 체크(T-X04 완료, `docs/perf-result.md` v0.1). 참조 버전 갱신 | 문서 정보, 9.2 |
+| v0.15 | 2026-11-06 | - | NFR-06 쿠키 `SameSite`를 개발 `Lax` / 운영 `None`+`Secure`로 변경(Vercel 배포: SPA·API가 다른 site). CSRF 완화는 CORS 허용 목록 + JSON 본문(6.4). 참조 버전 갱신 | 문서 정보, NFR-06 |
 
 ---
 
@@ -158,7 +159,7 @@ F-11을 P0에 둔 이유: F-02(카테고리별 등록)와 F-05(카테고리 필�
 
 | ID | 요구 | 기준 |
 |----|------|------|
-| NFR-06 | 인증 방식 | 액세스 토큰 + 리프레시 토큰. (1) 액세스 토큰: JWT, 서명 HS384, claims `sub`(userId), `iat`, `exp`. 쿠키 이름 `token`, `HttpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age=900`(15분, 가정). (2) 리프레시 토큰: JWT가 아닌 불투명 난수(`crypto.randomBytes(32)` base64url). 서버는 SHA-256 hex 해시(64자)만 `refresh_tokens` 테이블(7장)에 저장한다. 쿠키 이름 `refresh_token`, `HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, `Max-Age=1209600`(14일, 가정). (3) `Secure`는 두 쿠키 모두 `NODE_ENV=production`에서만 설정한다(로컬 HTTP 허용). (4) 인증 미들웨어는 액세스 토큰만 검증한다(`jsonwebtoken` `algorithms: ['HS384']` 고정). 없음·무효·만료는 `UNAUTHORIZED`(BR-53). 리프레시 쿠키는 보지 않는다. (5) `JWT_SECRET`은 48자 이상(HS384 키 길이 384비트 권장). 없거나 짧으면 기동 실패. (6) 발급·회전·폐기 흐름은 6.4. SPA와 API는 개발·운영 모두 다른 origin이다(개발은 Vite `:5173` → Express `:3000`). Express가 CORS 헤더를 직접 붙인다: 허용 origin은 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록만, 응답은 요청 Origin 그대로(`*` 금지) + `Access-Control-Allow-Credentials: true`, 프리플라이트 `OPTIONS`는 204. 클라이언트는 `fetch`에 `credentials: 'include'`를 쓴다. 쿠키가 `SameSite=Lax`이므로 SPA와 API는 같은 site(등록 도메인 동일, 포트·서브도메인만 다름)여야 한다. 의존성 추가 없음(`jsonwebtoken`, Node `crypto`, CORS는 미들웨어 직접 작성). |
+| NFR-06 | 인증 방식 | 액세스 토큰 + 리프레시 토큰. (1) 액세스 토큰: JWT, 서명 HS384, claims `sub`(userId), `iat`, `exp`. 쿠키 이름 `token`, `HttpOnly`, `SameSite=Lax`(개발)/`None`(운영), `Path=/`, `Max-Age=900`(15분, 가정). (2) 리프레시 토큰: JWT가 아닌 불투명 난수(`crypto.randomBytes(32)` base64url). 서버는 SHA-256 hex 해시(64자)만 `refresh_tokens` 테이블(7장)에 저장한다. 쿠키 이름 `refresh_token`, `HttpOnly`, `SameSite=Lax`(개발)/`None`(운영), `Path=/api/auth`, `Max-Age=1209600`(14일, 가정). (3) `Secure`는 두 쿠키 모두 `NODE_ENV=production`에서만 설정하고, 같은 조건에서 `SameSite=None`이다(운영은 SPA·API가 다른 site). CSRF는 CORS 허용 목록(`CORS_ORIGIN`)과 JSON 본문 프리플라이트로 막는다한다(로컬 HTTP 허용). (4) 인증 미들웨어는 액세스 토큰만 검증한다(`jsonwebtoken` `algorithms: ['HS384']` 고정). 없음·무효·만료는 `UNAUTHORIZED`(BR-53). 리프레시 쿠키는 보지 않는다. (5) `JWT_SECRET`은 48자 이상(HS384 키 길이 384비트 권장). 없거나 짧으면 기동 실패. (6) 발급·회전·폐기 흐름은 6.4. SPA와 API는 개발·운영 모두 다른 origin이다(개발은 Vite `:5173` → Express `:3000`). Express가 CORS 헤더를 직접 붙인다: 허용 origin은 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록만, 응답은 요청 Origin 그대로(`*` 금지) + `Access-Control-Allow-Credentials: true`, 프리플라이트 `OPTIONS`는 204. 클라이언트는 `fetch`에 `credentials: 'include'`를 쓴다. 운영 쿠키가 `SameSite=None; Secure`라 SPA와 API가 다른 site(예: `*.vercel.app` 두 도메인)여도 된다. 개발은 `Lax`(localhost 포트만 다름). 의존성 추가 없음(`jsonwebtoken`, Node `crypto`, CORS는 미들웨어 직접 작성). |
 | NFR-07 | 비밀번호 | `bcrypt` 해시 저장, cost 10 (가정). 원문 저장·로그 출력 금지 (BR-05). |
 | NFR-08 | 전송 | 운영 환경은 HTTPS만 허용한다. 로컬 개발은 HTTP 허용. |
 | NFR-09 | 입력·쿼리 | 모든 SQL은 `pg`의 파라미터 바인딩(`$1`)을 사용한다. 문자열 연결로 SQL을 만들지 않는다. 입력 길이·형식 검증은 BR-41~46을 서버에서 수행한다. |

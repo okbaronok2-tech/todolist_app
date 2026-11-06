@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 프론트엔드 연동 가이드 |
-| 현재 버전 | v0.6 |
+| 현재 버전 | v0.7 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.14, `docs/5-project-principle.md` v0.13, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.13, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.10 |
+| 참조 문서 | `docs/2-PRD.md` v0.15, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/8-plan.md` v0.13, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
 | 정본 | PRD 6.3·6.4·NFR-06, `docs/9-api-design.md`, `backend/swagger.yaml`. 이 문서는 프론트 개발자가 백엔드를 붙일 때 실제로 필요한 것만 모은 것이다. 엔드포인트 상세는 정본을 본다 |
 
 ## 변경 이력
@@ -21,6 +21,7 @@
 | v0.4 | 2026-11-05 | - | 구현(`frontend/src`)에 맞춤. 4장 `client.ts` 예시(요청 옵션, refresh 결과 3종, 재시도 401 코드 판별), 6장 토스트 → CP-02 `ErrorMessage`, 8장 `User`/`Me` 구분, 참조 버전 갱신 | 문서 정보, 4장, 6장, 8장 |
 | v0.5 | 2026-11-05 | - | 11-security 조치 반영: 3장 비밀번호 변경 시 새 쿠키(다른 기기 로그아웃), 8장 비밀번호 72바이트·ID 15자리, 참조 버전 갱신 | 문서 정보, 3장, 7장, 8장 |
 | v0.6 | 2026-11-06 | - | `today` 필수 엔드포인트 수 6→5로 정정(코드 `routes/todos.js` 기준), 참조 버전 갱신 | 문서 정보, 4장 |
+| v0.7 | 2026-11-06 | - | 쿠키 표·CSRF 항목을 운영 `SameSite=None; Secure`에 맞춤 (PRD v0.15). 참조 버전 갱신 | 문서 정보, 5장, 11장 |
 
 ---
 
@@ -68,8 +69,8 @@ VITE_API_URL=http://localhost:3000
 
 | 쿠키 | 내용 | 속성 |
 |------|------|------|
-| `token` | 액세스 JWT (HS384, 15분) | `HttpOnly; SameSite=Lax; Path=/; Max-Age=900` |
-| `refresh_token` | 불투명 난수 (14일) | `HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600` |
+| `token` | 액세스 JWT (HS384, 15분) | `HttpOnly; SameSite=Lax; Path=/; Max-Age=900` (운영: `SameSite=None; Secure`) |
+| `refresh_token` | 불투명 난수 (14일) | `HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600` (운영: `SameSite=None; Secure`) |
 
 - `Secure`는 `NODE_ENV=production`에서만 붙는다. 로컬 HTTP에서 그대로 동작한다.
 - 둘 다 `HttpOnly`라 JS에서 읽을 수 없고 읽을 필요도 없다. 브라우저가 자동으로 보낸다.
@@ -193,7 +194,7 @@ export async function request<T>(path: string, options: { method?: 'GET' | 'POST
 ## 8. 보안 주의
 
 - 토큰을 `localStorage`·`sessionStorage`·Zustand에 저장하지 않는다. 저장할 토큰 자체가 없다 (`HttpOnly`).
-- CSRF: 쿠키 `SameSite=Lax` + JSON 본문(`application/json`)으로 완화한다. CSRF 토큰 없음. 폼 `application/x-www-form-urlencoded` 전송을 쓰지 않는다.
+- CSRF: CORS 허용 목록(`CORS_ORIGIN`) + JSON 본문(`application/json`, 프리플라이트)으로 완화한다. 개발 쿠키는 `SameSite=Lax`, 운영은 다른 site 배포라 `None`. CSRF 토큰 없음. 폼 `application/x-www-form-urlencoded` 전송을 쓰지 않는다.
 - 입력 길이 제한은 서버가 검증한다 (`backend/src/routes/validate.js`). 프론트는 같은 값으로 `maxLength`·안내를 둔다. 서버 검증을 생략하지 않는다 (NFR-09).
 
 | 필드 | 제한 |

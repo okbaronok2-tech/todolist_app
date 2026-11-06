@@ -8,7 +8,7 @@
 | 현재 버전 | v0.13 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-04 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.14, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.13, `docs/6-arch-diagram.md` v0.9, `docs/7-erd.md` v0.6, `docs/schema.sql`, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.10 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.15, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8, `docs/5-project-principle.md` v0.14, `docs/6-arch-diagram.md` v0.9, `docs/7-erd.md` v0.6, `docs/schema.sql`, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
 
 ID 규칙: 이 문서가 새로 부여하는 ID는 Task ID뿐이다. `T-D` 데이터베이스, `T-B` 백엔드, `T-F` 프론트엔드, `T-X` 공통·통합. F, UC, BR, ST, US, SC, WF, CP, NFR, R, PR, AD, ERD는 각 문서의 ID를 참조만 한다. 일정 구간은 PRD 8장의 4구간(Day 1 오전/오후, Day 2 오전/오후)을 그대로 쓴다.
 

@@ -2,12 +2,12 @@
   "openapi": "3.0.3",
   "info": {
     "title": "TodoList API",
-    "version": "0.10.0",
-    "description": "TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.\n\n## 참조 문서\n- `docs/1-domain-definition.md` v0.9 (F, UC, BR, ST, D)\n- `docs/2-PRD.md` v0.14 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)\n- `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)\n- `docs/5-project-principle.md` v0.13 (4장 API 규칙, 6.2 쿠키)\n- `docs/6-arch-diagram.md` v0.9 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)\n- `docs/7-erd.md` v0.6\n- `docs/8-plan.md` v0.13 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)\n- `docs/schema.sql`\n- `docs/9-api-design.md` v0.6 (같은 내용의 표)\n\n## 공통 규칙\n- 모든 경로는 `/api` 접두어를 가진다 (PRD 6.3).\n- 필드명은 camelCase (원칙 4장). id는 정수(DB `BIGINT`)를 JSON 숫자로 보낸다 (PRD 7장).\n- 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열이다 (PRD 7장, PR-05). 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열이다.\n- 인증: 쿠키 `token`(액세스, JWT HS384, 15분)과 `refresh_token`(리프레시, 불투명, 14일, `Path=/api/auth`). 비보호 경로는 `GET /api/health`, `POST /api/auth/signup|login|refresh|logout` (AD-06, BR-01).\n- CORS: SPA와 API는 다른 origin이다. 서버는 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록의 Origin에만 `Access-Control-Allow-Origin`(요청 Origin 그대로)과 `Access-Control-Allow-Credentials: true`를 붙이고, `OPTIONS` 프리플라이트에 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`)를 준다. 클라이언트는 `credentials: 'include'`가 필요하다. 쿠키가 `SameSite=Lax`라 SPA와 API는 같은 site여야 한다 (NFR-06 (6)).\n- 거부 응답 본문은 `{ \"code\", \"message\" }`이며 `code`는 BR-51의 9개 중 하나다. HTTP status 매핑(PRD 6.3):\n  `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400,\n  `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.\n- 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식(양의 정수 15자리 이하, DB 조회 없이 `NOT_FOUND`) → 리소스 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 코드로 거부하고 부분 저장하지 않는다.\n- 경로·쿼리·본문의 ID가 양의 정수 형식이 아니거나, 타인 소유이거나, 없으면 모두 같은 본문의 `NOT_FOUND`다 (BR-02, BR-16, PRD 6.3). 스키마에 `integer`로 적었어도 형식 위반은 400이 아니라 404다.\n- 페이지네이션 없음, 전체 반환 (PRD NFR-05, PD-02). 요청 횟수 제한 없음 (PD-03).\n- 동시 수정은 last-write-wins (BR-54).\n- 본문이 JSON이 아니거나 100kb를 넘거나 charset이 지원되지 않으면 400 `VALIDATION_ERROR`(`invalid request body`)다 (`express.json` 기본 제한, `middlewares/error-handler.js`).\n- BR-51 목록 밖의 오류(예: BR-15 트랜잭션 내부 실패)는 500 `{ \"code\": \"INTERNAL_ERROR\", \"message\": \"internal server error\" }`다 (AD-A8). 모든 operation에 공통이라 operation별로 적지 않는다.\n- 개발 모드(`NODE_ENV !== 'production'`)에서만 `GET /api/docs`(Swagger UI)와 `GET /api/docs.json`(이 명세의 JSON, `swagger/swagger.json`)을 제공한다. 운영에서는 404. API 계약이 아니라 paths에 두지 않는다.\n"
+    "version": "0.11.0",
+    "description": "TodoList MVP의 REST + JSON API. PRD 6.3이 정본이며 이 명세는 그 내용을 OpenAPI로 옮긴 것이다.\n\n## 참조 문서\n- `docs/1-domain-definition.md` v0.9 (F, UC, BR, ST, D)\n- `docs/2-PRD.md` v0.15 (정본: 4.2, 6.3, 6.4, NFR-06, 7장)\n- `docs/3-user-scenario.md` v0.6 (US, 예시 데이터)\n- `docs/5-project-principle.md` v0.14 (4장 API 규칙, 6.2 쿠키)\n- `docs/6-arch-diagram.md` v0.9 (AD-06 라우트·오류 매핑, AD-07~16 시퀀스)\n- `docs/7-erd.md` v0.6\n- `docs/8-plan.md` v0.13 (T-X02 결정 AD-C3·C4·C5, T-B03~B08 완료 조건)\n- `docs/schema.sql`\n- `docs/9-api-design.md` v0.7 (같은 내용의 표)\n\n## 공통 규칙\n- 모든 경로는 `/api` 접두어를 가진다 (PRD 6.3).\n- 필드명은 camelCase (원칙 4장). id는 정수(DB `BIGINT`)를 JSON 숫자로 보낸다 (PRD 7장).\n- 날짜(`startDate`, `endDate`, `today`, `from`, `to`)는 `YYYY-MM-DD` 문자열이다 (PRD 7장, PR-05). 일시(`completedAt`, `createdAt`, `updatedAt`)는 ISO 8601 문자열이다.\n- 인증: 쿠키 `token`(액세스, JWT HS384, 15분)과 `refresh_token`(리프레시, 불투명, 14일, `Path=/api/auth`). 비보호 경로는 `GET /api/health`, `POST /api/auth/signup|login|refresh|logout` (AD-06, BR-01).\n- CORS: SPA와 API는 다른 origin이다. 서버는 환경변수 `CORS_ORIGIN`(쉼표 구분) 목록의 Origin에만 `Access-Control-Allow-Origin`(요청 Origin 그대로)과 `Access-Control-Allow-Credentials: true`를 붙이고, `OPTIONS` 프리플라이트에 204(`Allow-Methods: GET,POST,PATCH,DELETE`, `Allow-Headers: Content-Type`)를 준다. 클라이언트는 `credentials: 'include'`가 필요하다. 쿠키가 `SameSite=Lax`라 SPA와 API는 같은 site여야 한다 (NFR-06 (6)).\n- 거부 응답 본문은 `{ \"code\", \"message\" }`이며 `code`는 BR-51의 9개 중 하나다. HTTP status 매핑(PRD 6.3):\n  `UNAUTHORIZED`·`INVALID_CREDENTIALS` 401, `NOT_FOUND` 404, `VALIDATION_ERROR`·`INVALID_DATE_RANGE` 400,\n  `DUPLICATE_EMAIL`·`DUPLICATE_CATEGORY_NAME`·`CATEGORY_LIMIT_EXCEEDED` 409, `DEFAULT_CATEGORY_PROTECTED` 403.\n- 검증 순서(BR-52): 인증 → 입력 형식·길이 → 날짜 범위 → ID 형식(양의 정수 15자리 이하, DB 조회 없이 `NOT_FOUND`) → 리소스 존재·소유 → 보호 대상 → 중복·개수 제한 → 자격 증명. 첫 위반 코드로 거부하고 부분 저장하지 않는다.\n- 경로·쿼리·본문의 ID가 양의 정수 형식이 아니거나, 타인 소유이거나, 없으면 모두 같은 본문의 `NOT_FOUND`다 (BR-02, BR-16, PRD 6.3). 스키마에 `integer`로 적었어도 형식 위반은 400이 아니라 404다.\n- 페이지네이션 없음, 전체 반환 (PRD NFR-05, PD-02). 요청 횟수 제한 없음 (PD-03).\n- 동시 수정은 last-write-wins (BR-54).\n- 본문이 JSON이 아니거나 100kb를 넘거나 charset이 지원되지 않으면 400 `VALIDATION_ERROR`(`invalid request body`)다 (`express.json` 기본 제한, `middlewares/error-handler.js`).\n- BR-51 목록 밖의 오류(예: BR-15 트랜잭션 내부 실패)는 500 `{ \"code\": \"INTERNAL_ERROR\", \"message\": \"internal server error\" }`다 (AD-A8). 모든 operation에 공통이라 operation별로 적지 않는다.\n- 개발 모드(`NODE_ENV !== 'production'`)에서만 `GET /api/docs`(Swagger UI)와 `GET /api/docs.json`(이 명세의 JSON, `swagger/swagger.json`)을 제공한다. 운영에서는 404. API 계약이 아니라 paths에 두지 않는다.\n"
   },
   "x-document-info": {
     "name": "TodoList API 명세 (OpenAPI 3.0.3)",
-    "version": "v0.10",
+    "version": "v0.11",
     "status": "초안",
     "date": "2026-11-05",
     "references": [
@@ -17,7 +17,7 @@
       },
       {
         "path": "docs/2-PRD.md",
-        "version": "v0.14"
+        "version": "v0.15"
       },
       {
         "path": "docs/3-user-scenario.md",
@@ -25,7 +25,7 @@
       },
       {
         "path": "docs/5-project-principle.md",
-        "version": "v0.13"
+        "version": "v0.14"
       },
       {
         "path": "docs/6-arch-diagram.md",
@@ -45,7 +45,7 @@
       },
       {
         "path": "docs/9-api-design.md",
-        "version": "v0.6"
+        "version": "v0.7"
       }
     ]
   },
@@ -119,6 +119,13 @@
       "author": "-",
       "changes": "코드 대조: Email pattern 공백 거부, PATCH /api/users/me 200에 Set-Cookie 헤더 선언, 오류 example message를 실제 서버 영문 문구로, 참조 버전 갱신",
       "scope": "머리 주석, info, x-document-info, /api/users/me, Email, 오류 응답 example"
+    },
+    {
+      "version": "v0.11",
+      "date": "2026-11-06",
+      "author": "-",
+      "changes": "쿠키 SameSite 개발 Lax / 운영 None+Secure (PRD v0.15 NFR-06, Vercel 다른 site 배포), 참조 버전 갱신",
+      "scope": "머리 주석, info, x-document-info, cookieAuth, SetAuthCookies, ClearAuthCookies"
     }
   ],
   "servers": [
@@ -1151,12 +1158,12 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "token",
-        "description": "액세스 토큰 쿠키 (NFR-06). JWT, 서명 HS384 고정, claims `sub`(userId)·`iat`·`exp`.\n속성 `HttpOnly; SameSite=Lax; Path=/; Max-Age=900`, 운영(`NODE_ENV=production`)만 `Secure`.\n없음·무효·만료는 401 `UNAUTHORIZED` (BR-01, BR-53). 인증 미들웨어는 `refresh_token` 쿠키를 보지 않는다.\n"
+        "description": "액세스 토큰 쿠키 (NFR-06). JWT, 서명 HS384 고정, claims `sub`(userId)·`iat`·`exp`.\n속성 `HttpOnly; Path=/; Max-Age=900`. `SameSite`는 개발 `Lax`, 운영(`NODE_ENV=production`) `None` + `Secure` (SPA·API가 다른 site).\n없음·무효·만료는 401 `UNAUTHORIZED` (BR-01, BR-53). 인증 미들웨어는 `refresh_token` 쿠키를 보지 않는다.\n"
       }
     },
     "headers": {
       "SetAuthCookies": {
-        "description": "`Set-Cookie` 헤더가 2개 온다 (배열 두 개: `token`, `refresh_token`). 운영에서는 둘 다 `Secure`가 붙는다 (NFR-06).\n1. `token=<JWT HS384>; HttpOnly; SameSite=Lax; Path=/; Max-Age=900`\n2. `refresh_token=<불투명 난수 base64url>; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600`\n",
+        "description": "`Set-Cookie` 헤더가 2개 온다 (배열 두 개: `token`, `refresh_token`). 아래는 개발 값이며 운영에서는 둘 다 `SameSite=None; Secure`다 (NFR-06, 다른 site 배포).\n1. `token=<JWT HS384>; HttpOnly; SameSite=Lax; Path=/; Max-Age=900`\n2. `refresh_token=<불투명 난수 base64url>; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=1209600`\n",
         "schema": {
           "type": "array",
           "minItems": 2,
@@ -1171,7 +1178,7 @@
         ]
       },
       "ClearAuthCookies": {
-        "description": "`Set-Cookie` 헤더가 2개 온다 (배열 두 개: `token`, `refresh_token`). 둘 다 `Max-Age=0`으로 삭제한다 (PRD 6.4).\n1. `token=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`\n2. `refresh_token=; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=0`\n",
+        "description": "`Set-Cookie` 헤더가 2개 온다 (배열 두 개: `token`, `refresh_token`). 둘 다 `Max-Age=0`으로 삭제한다 (PRD 6.4). 아래는 개발 값이며 운영은 `SameSite=None; Secure`다.\n1. `token=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`\n2. `refresh_token=; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=0`\n",
         "schema": {
           "type": "array",
           "minItems": 2,

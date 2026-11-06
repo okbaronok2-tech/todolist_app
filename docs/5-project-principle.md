@@ -4,11 +4,11 @@
 
 | 항목 | 내용 |
 |------|------|
-| 현재 버전 | v0.13 |
+| 현재 버전 | v0.14 |
 | 상태 | 초안 |
 | 최초 작성일 | 2026-11-04 |
 | 최종 수정일 | 2026-11-05 |
-| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.14, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8 |
+| 참조 문서 | `docs/1-domain-definition.md` v0.9, `docs/2-PRD.md` v0.15, `docs/3-user-scenario.md` v0.6, `docs/4-wireframe.md` v0.8 |
 
 ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다. F, UC, BR, ST, D는 도메인 정의서, SC, NFR, R, A, PD는 PRD, US는 사용자 시나리오, WF, CP는 와이어프레임의 ID를 참조만 하며 재정의하지 않는다. 번호 공백은 허용하고, 삭제된 ID는 재사용하지 않는다.
 
@@ -29,6 +29,7 @@ ID 규칙: 이 문서에서 새로 부여하는 ID는 PR(설계 원칙)뿐이다
 | v0.11 | 2026-11-05 | - | 7.3 트리에 `lib/theme.ts`(다크 모드, 스타일 가이드 2.4)·`lib/log.ts`(개발 모드 콘솔 로그) 추가. 3.3에 개발 모드 로그 규칙(`import.meta.env.DEV`에서만, 비밀번호·토큰·본문 제외) 추가. 참조 버전 갱신 | 문서 정보, 3.3, 7.3 |
 | v0.12 | 2026-11-06 | - | 7.1 트리를 실제에 맞춤: `README.md` 5단계, `test/e2e/`(Playwright MCP 통합 테스트 스크립트·리포트·스크린샷) 추가. 참조 버전 갱신 | 문서 정보, 7.1 |
 | v0.13 | 2026-11-06 | - | 7.2 `app.js`에 default export 추가 기록(Vercel 서버리스가 default export 핸들러를 요구. `server.js`·테스트는 named export 유지). 참조 버전 갱신 | 문서 정보, 7.2 |
+| v0.14 | 2026-11-06 | - | 6.2 쿠키 `SameSite` 개발 `Lax` / 운영 `None`+`Secure` (PRD v0.15 NFR-06). 참조 버전 갱신 | 문서 정보, 6.2 |
 
 ---
 
@@ -191,7 +192,7 @@ pages (SC-01~07, 라우팅·화면 조립)
 
 - SQL은 `pg` 파라미터 바인딩(`$1`)만 쓴다. 문자열 연결·템플릿 리터럴로 SQL을 만들지 않는다 (NFR-09).
 - 비밀번호는 `bcrypt` cost 10으로 해시한다 (NFR-07). 응답·로그에 `password`, 해시, `token`·`refresh_token` 쿠키 값, `Cookie` 헤더를 출력하지 않는다.
-- 인증 쿠키는 둘이다 (NFR-06). 액세스 토큰 쿠키는 이름 `token`, `HttpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age=900`. 리프레시 토큰 쿠키는 이름 `refresh_token`, `HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, `Max-Age=1209600`. 둘 다 운영만 `Secure`다. 설정 코드는 `middlewares/auth.js` 한 곳에 둔다.
+- 인증 쿠키는 둘이다 (NFR-06). 액세스 토큰 쿠키는 이름 `token`, `HttpOnly`, `Path=/`, `Max-Age=900`. 리프레시 토큰 쿠키는 이름 `refresh_token`, `HttpOnly`, `Path=/api/auth`, `Max-Age=1209600`. `SameSite`는 개발(`NODE_ENV` 미설정, http)에서 `Lax`, 운영(`NODE_ENV=production`)에서 `None`(+`Secure`)이다. 운영은 SPA와 API가 다른 site(Vercel `*.vercel.app` 두 도메인)라 `Lax`면 브라우저가 쿠키를 보내지 않는다. 설정 코드는 `middlewares/auth.js` 한 곳에 둔다.
 - 액세스 토큰은 `jsonwebtoken` 검증 시 `algorithms: ['HS384']`로 고정한다 (NFR-06).
 - 리프레시 토큰 원문은 저장·로그 금지다. `refresh_tokens.token_hash`에 SHA-256 hex 해시만 저장한다 (NFR-06, PRD 7장).
 - 경로·쿼리·본문의 모든 ID는 양의 정수 정규식으로 먼저 검사하고, 아니면 DB 조회 없이 `NOT_FOUND`다 (PRD 6.3).

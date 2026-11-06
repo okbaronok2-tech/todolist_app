@@ -5,10 +5,10 @@
 | 항목 | 내용 |
 |------|------|
 | 문서명 | TodoList 백엔드 보안 검토 |
-| 현재 버전 | v0.4 |
+| 현재 버전 | v0.5 |
 | 상태 | 초안 |
 | 작성일 | 2026-11-05 |
-| 참조 문서 | `docs/2-PRD.md` v0.14, `docs/5-project-principle.md` v0.13, `docs/9-api-design.md` v0.6, `backend/swagger.yaml` v0.10 |
+| 참조 문서 | `docs/2-PRD.md` v0.15, `docs/5-project-principle.md` v0.14, `docs/9-api-design.md` v0.7, `backend/swagger.yaml` v0.11 |
 | 설계 근거 | PRD 6.4·NFR-06~10, 도메인 정의서 BR-01·02·06·51~53 |
 
 ## 변경 이력
@@ -19,6 +19,7 @@
 | v0.2 | 2026-11-05 | - | CORS 방식 전환(PRD v0.10) 반영. 설계 결정 표의 CORS 행을 `CORS_ORIGIN` 허용 목록으로, `SameSite=Lax` 같은 site 조건 행 추가, A05 근거에 `middlewares/cors.js`, 참조 버전 갱신 | 문서 정보, 1장, 2장 A05 |
 | v0.3 | 2026-11-05 | - | S-01~S-06 조치 완료 반영. 2장 결과를 양호로, 3장 각 항목에 조치 내용, 4장 체크. S-01은 PRD 6.4 규칙으로 승격(비밀번호 변경 시 리프레시 전부 폐기 + 새 쿠키) | 문서 정보, 2장, 3장, 4장 |
 | v0.4 | 2026-11-06 | - | 대상 파일 수 22→23 정정(`backend/src/**/*.js` 실제 개수). 참조 버전 갱신 | 문서 정보, 1장 |
+| v0.5 | 2026-11-06 | - | 설계 결정 표: 쿠키 `SameSite`를 운영 `None`+`Secure`로(Vercel 다른 site 배포), CSRF 완화 근거를 CORS 허용 목록 + JSON 본문 프리플라이트로 갱신. 참조 버전 갱신 | 문서 정보, 설계 결정 |
 
 ---
 
@@ -34,7 +35,7 @@
 | 항목 | 근거 |
 |------|------|
 | CORS 허용 목록은 환경변수 `CORS_ORIGIN`, 요청 Origin 정확 일치만 허용(`*` 없음), `Allow-Credentials: true` (`middlewares/cors.js`) | PRD NFR-06 (6), 8-plan T-X03 |
-| 쿠키 `SameSite=Lax` 유지. SPA와 API는 같은 site여야 하며 다른 site 배포(`SameSite=None; Secure`)는 미지원 | PRD NFR-06 (1)(2)(6) |
+| 쿠키 `SameSite`는 개발 `Lax`, 운영 `None`+`Secure`(SPA·API가 다른 site인 Vercel 배포). `None`이라 CSRF 완화는 CORS 허용 목록(`CORS_ORIGIN` 정확 일치, 아니면 응답 헤더 없음)과 JSON 본문이다: 상태 변경 요청은 `application/json` 본문이 필요해 프리플라이트를 거치고, 본문 없는 `POST /api/auth/logout`만 cross-site 폼으로 호출 가능(영향: 로그아웃뿐) | PRD NFR-06 (1)(2)(3)(6), `middlewares/auth.js` |
 | 서버 세션 없음, 로그아웃 후 액세스 토큰 최대 15분 잔존 | PRD 6.4, R-06, PD-01 |
 | `Secure` 쿠키는 `NODE_ENV=production`에서만 설정 | NFR-06 (3), `middlewares/auth.js` |
 | 로그인 시도 제한·rate limit 없음 | PD-03 (MVP 범위 밖) |

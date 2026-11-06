@@ -3,8 +3,11 @@ import { AppError } from '../errors/app-error.js';
 
 import { ACCESS_TTL_SEC, REFRESH_TTL_SEC } from '../services/auth-service.js';
 
-// NFR-06 두 쿠키 옵션. 운영만 Secure. 설정은 이 파일 한 곳 (원칙 6.2)
-const base = () => ({ httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+// NFR-06 두 쿠키 옵션. 설정은 이 파일 한 곳 (원칙 6.2)
+// 운영은 SPA와 API가 다른 site(예: *.vercel.app 두 도메인)라 SameSite=None + Secure가 아니면 브라우저가 쿠키를 보내지 않는다.
+// CSRF는 CORS 허용 목록(CORS_ORIGIN) + JSON 본문(프리플라이트)으로 막는다 (11-security). 개발(http)은 Lax
+const prod = () => process.env.NODE_ENV === 'production';
+const base = () => ({ httpOnly: true, sameSite: prod() ? 'none' : 'lax', secure: prod() });
 const accessOpts = () => ({ ...base(), path: '/' });
 const refreshOpts = () => ({ ...base(), path: '/api/auth' });
 
